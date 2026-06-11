@@ -68,6 +68,11 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .urinals-area{display:flex;gap:6px;justify-content:center;width:100%;flex-wrap:nowrap}
 @media(max-width:480px){
   .urinals-area.six-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+  @media(max-width:480px){
+    /* 5格單排擠壓模式 */
+    .urinals-area.tight-5 .uscrub-hint-text{display:none}
+    .urinals-area.tight-5 .dur-bar{display:none}
+  }
 }
 .us.asgn{cursor:pointer;border-color:#3a3a60}
 .us.asgn:hover{border-color:var(--accent3)!important;background:rgba(184,255,0,.04);box-shadow:0 0 14px rgba(184,255,0,.15)}
@@ -473,7 +478,7 @@ const CONFIG={
   DELINQUENT_SURGE:30,           // 事件持續秒（舊值，已由 WAVES 取代）
   DELINQUENT_WAVE_DELAY:10,      // 批次間隔(s)
   DELINQUENT_WAVES:3,            // 總批次數
-  DELINQUENT_BREAK_RATE:10,      // 用壞馬桶機率%
+  DELINQUENT_BREAK_RATE:9,      // 用壞馬桶機率%
 
   // ── 阿兵哥設定 ──
   UNLOCK_SOLDIER:6,              // 解鎖格數
@@ -529,8 +534,8 @@ const ITEM_DEFS={
   },
   cleaner:{
     id:'cleaner',emoji:'🧹',name:'清掃助理',group:'assistant',
-    price:20,desc:'髒污>40%自動清潔全場\n60%清潔費 / 25次',
-    durLimit:null,cleanLimit:25,effects:{autoClean:true}
+    price:20,desc:'髒污>40%自動清潔全場\n60%清潔費 / 30次',
+    durLimit:null,cleanLimit:30,effects:{autoClean:true}
   },
   repair:{
     id:'repair',emoji:'🔧',name:'修復工',group:'repair',
@@ -661,7 +666,7 @@ const MC_PREVIEW={
   target:      '便宜入門，減少15%髒污，先從這個開始。',
   fly_tape:    '比標靶貼更耐用，減10%髒污，撐35人。',
   aroma:       '入廁費漲一半，裝越多芳香劑客人越有耐心，還能無視髒污減速！',
-  cleaner:     '一鍵清潔，25次機會，高峰時救命用的。',
+  cleaner:     '清潔助理幫忙把控全場，清掃25次馬桶，高峰時必用的。',
   repair:      '馬桶壞了才用，拖到損壞的便斗上。',
   extra_urinal:'多一格便斗，入廁費提高£0.4，長期投資。',
   bullet_op:   '花£30，子彈時間內可以操作30秒。值得。',
@@ -1573,6 +1578,7 @@ function finishPee(u){
 function buildUrinalDOM(){
   const area=document.getElementById('urinals-area');area.innerHTML='';
   area.classList.toggle('six-grid', state.urinals.length===6);
+  area.classList.toggle('tight-5', state.urinals.length===5);
   state.urinals.forEach(u=>area.appendChild(mkUrinalEl(u)));
 }
 function mkUrinalEl(u){
@@ -1644,7 +1650,7 @@ function mkUrinalEl(u){
     `<div class="u-sp" id="usp-${u.id}" style="visibility:hidden"></div>`+
     `<div style="display:flex;align-items:center;gap:5px;align-self:flex-start;width:100%">`+
     `<div class="u-dl" id="udl-${u.id}">髒污 0%</div>`+
-    `<span id="uscrub-${u.id}" style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--accent);opacity:0;transition:opacity .2s;white-space:nowrap">↕ 摩擦清潔</span>`+
+    `<span id="uscrub-${u.id}" style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--accent);opacity:0;transition:opacity .2s;white-space:nowrap">↕<span class="uscrub-hint-text"> 摩擦清潔</span></span>`+
     `</div>`+
     `<div class="u-dw"><div class="u-db" id="udb-${u.id}" style="width:0%"></div></div>`+
     `<div class="u-st" id="ust-${u.id}"></div>`+
@@ -1968,7 +1974,7 @@ const MC_LINES={
   first_peak:  '高峰期！客人蜂擁而至。子彈時間可以讓你冷靜帶位。',
   dirty_35:    '髒污超過35%，小費已有40%加成。刷還是不刷，你來決定。',
   dirty_60:    '髒污超過60%，小費加成80%！繼續撐著刷，越髒越值錢。但別超過100%，那就麻煩了。',
-  warn_dirty:  '危險！再進一個客人就要壞了。快去摩擦清潔，或裝清掃助理一鍵解決！',
+  warn_dirty:  '危險！再進一個客人就要壞了。快去摩擦清潔，或裝清掃助理掌控全局！',
   broken:      '壞了壞了…去商店買修復工拖到便斗上，才能繼續用。',
   delinquent_break: '這個年代的青少年真的⋯難搞，但他只是個孩紙兒⋯⋯',
   left_1:      '有人等不耐煩走了。還有兩次機會，加快帶位節奏。',
