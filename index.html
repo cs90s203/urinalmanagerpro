@@ -290,7 +290,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
   </div>
 
   <div class="eff-bar">
-    <span>降速：</span><span id="eff-text" style="color:var(--muted)">暫無</span>
+    <span>控尿狀態：</span><span id="eff-text" style="color:var(--muted)">暫無</span>
     <span id="drag-hint" class="eff-drag-hint" style="display:none">← 拖放至便斗</span>
     <span id="item-hint" style="display:none;font-family:'Silkscreen',monospace;font-size:8px;color:#c084fc">← 拖放道具至目標</span>
     <span style="margin-left:auto">
@@ -346,10 +346,10 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
   </div>
 </div>
 
-<script type="module">
-import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import{getDatabase,ref,push,query,orderByChild,limitToLast,get,serverTimestamp}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
-const firebaseConfig={
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+firebase.initializeApp({
   apiKey:"AIzaSyDQeFDMzAdpGe95umJdRlAsNa-9Nn_eJVU",
   authDomain:"loole-game.firebaseapp.com",
   databaseURL:"https://loole-game-default-rtdb.firebaseio.com",
@@ -357,18 +357,22 @@ const firebaseConfig={
   storageBucket:"loole-game.firebasestorage.app",
   messagingSenderId:"200911767223",
   appId:"1:200911767223:web:a8e7668c1db8d885f22f32"
-};
-const fbApp=initializeApp(firebaseConfig);
-const db=getDatabase(fbApp);
+});
+const _fbDb=firebase.database();
+
 window.submitGlobalScore=async function(name,score,money,served,date){
-  try{await push(ref(db,'leaderboard'),{name,score,money:parseFloat(money),served,date,ts:serverTimestamp()});return true;}
-  catch(e){console.error('FB write:',e);return false;}
+  try{
+    await _fbDb.ref('leaderboard').push({name,score,money:parseFloat(money),served,date,ts:firebase.database.ServerValue.TIMESTAMP});
+    return true;
+  }catch(e){console.error('FB write:',e);return false;}
 };
+
 window.loadGlobalLeaderboard=async function(){
   try{
-    const q=query(ref(db,'leaderboard'),orderByChild('score'),limitToLast(10));
-    const snap=await get(q);if(!snap.exists())return[];
-    const rows=[];snap.forEach(c=>{rows.push(c.val());});
+    const snap=await _fbDb.ref('leaderboard').orderByChild('score').limitToLast(10).get();
+    if(!snap.exists())return[];
+    const rows=[];
+    snap.forEach(c=>{rows.push(c.val());});
     return rows.sort((a,b)=>b.score!==a.score?b.score-a.score:b.money-a.money);
   }catch(e){console.error('FB read:',e);return[];}
 };
@@ -461,7 +465,7 @@ const CONFIG={
   // ── 中二生設定 ──
   UNLOCK_DELINQUENT:5,           // 解鎖格數
   DELINQUENT_RATE:40,            // 高峰觸發機率%
-  DELINQUENT_GROUP:4,            // 每批進場人數
+  DELINQUENT_GROUP:2,            // 每批進場人數
   DELINQUENT_WAIT:12,            // 等待上限(s)
   DELINQUENT_PEE:8,              // 如廁時間(s)
   DELINQUENT_DIRTY:35,           // 髒污量%
