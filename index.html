@@ -230,7 +230,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 <div id="screen-title" class="screen active">
   <div class="title-art">尿斗管理大師</div>
   <div class="title-sub">URINAL MANAGER PRO</div>
-  <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);letter-spacing:2px">v4.3</div>
+  <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);letter-spacing:2px">v4.8.6</div>
   <div style="font-size:42px;margin:4px 0">🚽</div>
   <div style="font-size:12px;color:var(--muted);max-width:300px;text-align:center;line-height:2">
     安排客人、清潔廁所、購買道具、賺取最高收入<br>
@@ -1975,14 +1975,9 @@ function endGame(){
   const submitMsg=document.getElementById('rs-submit-msg');
   _pendingSubmit={score:s,money:m,served:state.servedCount,date:dateStr,playTime};
   if(submitArea){
-    submitArea.style.display='none';
+    submitArea.style.display='block'; // 直接顯示，不需要先讀Firebase
     if(nameInput)nameInput.value='';
     if(submitMsg)submitMsg.textContent='';
-    (async()=>{
-      const rows=await(window.loadGlobalLeaderboard?window.loadGlobalLeaderboard():[]);
-      const qualifies=rows.length<10||s>rows[rows.length-1].score;
-      if(qualifies)submitArea.style.display='block';
-    })();
   }
   renderGlobalLeaderboard('global-lb-result',s,10);
   showScreen('screen-result');
