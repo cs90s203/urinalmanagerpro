@@ -235,7 +235,7 @@ input[type=range].slim::-moz-range-thumb{width:8px;height:8px;border-radius:50%;
 <div id="screen-title" class="screen active">
   <div class="title-art">尿斗管理大師</div>
   <div class="title-sub">URINAL MANAGER PRO</div>
-  <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);letter-spacing:2px">v4.8.9</div>
+  <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);letter-spacing:2px">v4.9.0</div>
   <div style="font-size:42px;margin:4px 0">🚽</div>
   <div style="font-size:12px;color:var(--muted);max-width:300px;text-align:center;line-height:2">
     安排客人、清潔廁所、購買道具、賺取最高收入<br>
@@ -336,14 +336,16 @@ input[type=range].slim::-moz-range-thumb{width:8px;height:8px;border-radius:50%;
     <div><div style="font-family:'Silkscreen',monospace;font-size:9px;color:var(--muted);margin-bottom:4px">SCORE</div><div class="rs-score" id="rs-score">0</div></div>
     <div><div style="font-family:'Silkscreen',monospace;font-size:9px;color:var(--muted);margin-bottom:4px">REVENUE</div><div class="rs-money" id="rs-money">£0.00</div></div>
   </div>
-  <div class="rs-stats">
-    <div class="rstat"><div class="rstat-v" id="rs-served">0</div><div class="rstat-l">服務</div></div>
-    <div class="rstat"><div class="rstat-v" id="rs-left">0</div><div class="rstat-l">氣走</div></div>
-    <div class="rstat"><div class="rstat-v" id="rs-scrub-earn">£0</div><div class="rstat-l">清潔收入</div></div>
-    <div class="rstat"><div class="rstat-v" id="rs-item-spend">£0</div><div class="rstat-l">道具支出</div></div>
-  </div>
   <div id="rs-feedback" style="max-width:340px;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:10px 14px;font-size:12px;line-height:1.9;color:var(--text);text-align:left"></div>
+  <!-- 角色圖鑑 -->
+  <div id="rs-codex" style="width:100%;max-width:380px;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:10px 14px">
+    <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);text-align:center;letter-spacing:2px;margin-bottom:8px">— 角色圖鑑 —</div>
+    <div id="rs-codex-chars" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"></div>
+    <div id="rs-codex-msg" style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--accent3);text-align:center;margin-top:8px"></div>
+  </div>
+  <!-- 本局紀錄（合併統計）-->
   <div id="rs-leaderboard" style="width:100%;max-width:380px"></div>
+  <!-- 全球排行榜提交 -->
   <div id="rs-submit-area" style="display:none;width:100%;max-width:380px;background:var(--panel);border:1px solid var(--accent);border-radius:6px;padding:12px 16px">
     <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--accent);letter-spacing:2px;margin-bottom:8px">🌐 進入全球排行榜！輸入你的名字</div>
     <div style="display:flex;gap:8px">
@@ -353,6 +355,7 @@ input[type=range].slim::-moz-range-thumb{width:8px;height:8px;border-radius:50%;
     </div>
     <div id="rs-submit-msg" style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);margin-top:6px;min-height:14px"></div>
   </div>
+  <!-- 全球排行榜 -->
   <div style="width:100%;max-width:380px">
     <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);text-align:center;letter-spacing:2px;margin-bottom:4px">🌐 全球排行榜</div>
     <div id="global-lb-result"></div>
@@ -823,7 +826,7 @@ function installItem(uid,itemId){
     if(state.urinals.length>=6){notify('馬桶已達上限 6 格！','var(--warn)');return false;}
     state.money-=def.price;state.itemSpend+=def.price;
     state.urinals.push(mkUrinal(state.urinals.length));
-    buildUrinalDOM();notify('✅ 新增馬桶！','var(--success)');mcSay('add_urinal');
+    buildUrinalDOM();notify('新增 🚽 成功！','var(--success)');mcSay('add_urinal');
     log(`ITEM addUrinal → ${state.urinals.length}`,'item');return true;
   }
   if(def.effects.repairBroken){
@@ -946,6 +949,43 @@ async function submitScore(){
     _pendingSubmit=null;
   } else {
     msgEl.textContent='❌ 提交失敗，請檢查網路';msgEl.style.color='var(--danger)';
+  }
+}
+
+// ════════════════════════════════════
+//  角色圖鑑
+// ════════════════════════════════════
+const CHAR_ORDER=['small','elder','med','large','drunk','delinquent','soldier','gangster'];
+const CODEX_KEY='loole_seen_chars';
+
+function markCharSeen(type){
+  const seen=JSON.parse(localStorage.getItem(CODEX_KEY)||'[]');
+  if(!seen.includes(type)){seen.push(type);localStorage.setItem(CODEX_KEY,JSON.stringify(seen));}
+}
+
+function renderCharCodex(){
+  const el=document.getElementById('rs-codex-chars');
+  const msg=document.getElementById('rs-codex-msg');
+  if(!el)return;
+  const seen=JSON.parse(localStorage.getItem(CODEX_KEY)||'[]');
+  const total=CHAR_ORDER.length;
+  const unseenCount=CHAR_ORDER.filter(t=>!seen.includes(t)).length;
+
+  el.innerHTML=CHAR_ORDER.map(type=>{
+    const d=TDEFS[type];
+    const isSeen=seen.includes(type);
+    return `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;min-width:36px">
+      <span style="font-size:20px;${isSeen?'':'filter:grayscale(1);opacity:0.3'}">${isSeen?d.emoji:'❓'}</span>
+      <span style="font-family:'Silkscreen',monospace;font-size:6px;color:${isSeen?'var(--muted)':'var(--border)'}">${isSeen?d.label:'?'}</span>
+    </div>`;
+  }).join('');
+
+  if(unseenCount===0){
+    msg.textContent='🎉 已探索所有角色！';
+    msg.style.color='var(--money)';
+  } else {
+    msg.textContent=`還有 ${unseenCount} 個角色等你探索！增加馬桶數量來解鎖更多。`;
+    msg.style.color='var(--accent3)';
   }
 }
 
@@ -1233,6 +1273,7 @@ function tryAssign(cid,uid){
   const idx=state.queue.findIndex(c=>c.id===cid);if(idx===-1)return false;
   const c=state.queue.splice(idx,1)[0];
   u.occupied=c;u.peeElapsed=0;
+  markCharSeen(c.type);
   // 黑尿幫：鎖定左右相鄰，已有客人1秒嚇跑
   if(c.type==='gangster'){
     state.urinals.forEach(nb=>{
@@ -1944,29 +1985,46 @@ function endGame(){
   let rank=ranks[0];
   for(const r of ranks){if(s>=r.min&&totalSec>=r.sec)rank=r;}
 
-  // ── FEEDBACK：最多2條，選最相關的 ──
+  // ── FEEDBACK：最多2條 ──
   const leaveRate=state.servedCount>0?state.leftCount/(state.leftCount+state.servedCount):0;
   const scrubRatio=state.scrubEarned>0?state.scrubEarned/parseFloat(m):0;
   const itemsUsed=state.itemSpend>0;
+  const moneyVal=parseFloat(m);
+  const hadBroken=state.urinals.some(u=>u.broken);
+  const hadSpecial=state.delinquentSurgeCount>0||state.gangsterSurgeEnd>0;
+  const pick=arr=>arr[Math.floor(Math.random()*arr.length)];
   const lines=[];
 
-  // 第1條：最重要的結果（失敗 > 時間 > 收入）
+  // 第1條：最重要結果
   if(state.failed){
-    lines.push('💨 差一點就成功了，再試一次？');
+    if(totalSec<60)
+      lines.push(pick(['💨 廁所才開業就倒了，下次加油。','💨 連馬桶都放棄你了。']));
+    else if(totalSec<180)
+      lines.push(pick(['💨 撐了'+timeStr+'，差那麼一點。','💨 客人寧可尿褲子也不想等你，你知道嗎。']));
+    else
+      lines.push(pick(['💨 已經很厲害了，可惜功虧一簣。','💨 老夫行走江湖這麼多年，沒見過管理這麼混亂的廁所。']));
+  } else if(moneyVal>=2000){
+    lines.push('💰 哇！財富自由了，管理之神！！');
   } else if(totalSec>=300){
-    lines.push('⏱ '+timeStr+'！這個廁所幾乎是你的傳說。');
-  } else if(parseFloat(m)>100){
-    lines.push('💰 總收入£'+m+'！這家廁所賺翻了。');
+    lines.push(pick(['⏱ '+timeStr+'！這個廁所幾乎是你的傳說。','⏱ 老夫宣布：這是全倫敦最乾淨的廁所。（可能啦）','⏱ 客人來了又走，走了又來，你的廁所有魔力。']));
   } else {
     lines.push('⏱ 撐了'+timeStr+'。');
   }
 
-  // 第2條：最突出的行為特徵
-  if(scrubRatio>0.35)          lines.push('🧹 超過35%收入來自清潔費，越髒越賺，你懂的。');
-  else if(state.scrubEarned===0)lines.push('🧹 完全沒摩擦清潔？馬桶快哭了。');
-  else if(state.itemSpend>=50)  lines.push('🛒 花了£'+state.itemSpend.toFixed(0)+'在道具上，懂得投資。');
-  else if(!itemsUsed)           lines.push('🛒 全程沒買道具，純靠技術。');
-  else                          lines.push('💰 收入£'+m+'，'+(parseFloat(m)>30?'夠交房租了。':'還不夠買馬桶刷。'));
+  // 第2條：候選池，符合條件的全部加入，隨機選一條
+  const pool2=[];
+  if(scrubRatio>0.35)           pool2.push('🧹 越髒越賺，你懂的。');
+  if(state.scrubEarned===0)     pool2.push('🧹 完全沒摩擦清潔？馬桶快哭了。');
+  if(state.itemSpend>=50)       pool2.push('🛒 花了£'+state.itemSpend.toFixed(0)+'在道具上，懂得投資。');
+  if(!itemsUsed)                pool2.push('🛒 全程沒買道具，純靠技術。');
+  if(state.leftCount===0)       pool2.push('😤 零氣走！每個客人都心滿意足離開了。');
+  if(state.servedCount>=30)     pool2.push('🚽 服務了'+state.servedCount+'個人，廁所界的勞模。');
+  if(moneyVal<10)               pool2.push('💰 收入£'+m+'，連馬桶刷都買不起。');
+  else if(moneyVal<30)          pool2.push('💰 收入£'+m+'，夠買個便宜便當了。');
+  if(hadBroken)                 pool2.push('🔧 馬桶壞了還撐下去，韌性十足。');
+  if(hadSpecial)                pool2.push('🧑‍🎤 麻煩人物也擋不住你，有點東西。');
+  if(pool2.length===0)          pool2.push('💰 收入£'+m+'，'+(moneyVal>30?'夠交房租了。':'還不夠買馬桶刷。'));
+  lines.push(pick(pool2));
 
   // 判斷是否新紀錄（存檔後比較）
   const histAfter=loadHistory();
@@ -1980,14 +2038,11 @@ function endGame(){
   document.getElementById('rs-score').textContent=s;
   document.getElementById('rs-score').style.color=isNewRecord?'var(--money)':rank.color;
   document.getElementById('rs-money').textContent='£'+m;
-  document.getElementById('rs-served').textContent=state.servedCount;
-  document.getElementById('rs-left').textContent=state.leftCount;
-  document.getElementById('rs-scrub-earn').textContent='£'+state.scrubEarned.toFixed(2);
-  document.getElementById('rs-item-spend').textContent='£'+state.itemSpend.toFixed(2);
+  // 統計已併入 rs-leaderboard 表格，不需要獨立更新
   document.getElementById('rs-feedback').innerHTML=lines.map(l=>`<div>${l}</div>`).join('');
   document.getElementById('rs-msg').textContent=`存活 ${timeStr} — 氣走 ${state.leftCount}/${CONFIG.FAIL_LEAVE_COUNT} 人`;
 
-  // 本局紀錄
+  // 本局紀錄（合併統計）
   const lb=document.getElementById('rs-leaderboard');
   if(lb){
     lb.innerHTML=`
@@ -2003,9 +2058,17 @@ function endGame(){
         <td style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--text);padding:3px 8px">${state.servedCount}</td>
         <td style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);padding:3px 8px">時長</td>
         <td style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--text);padding:3px 8px">${timeStr}</td>
+      </tr><tr>
+        <td style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);padding:3px 8px">清潔收入</td>
+        <td style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--money);padding:3px 8px">£${state.scrubEarned.toFixed(2)}</td>
+        <td style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);padding:3px 8px">道具支出</td>
+        <td style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--danger);padding:3px 8px">£${state.itemSpend.toFixed(2)}</td>
       </tr>
     </table>`;
   }
+
+  // 角色圖鑑
+  renderCharCodex();
 
   // 馬蓋仙結尾
   const endKey=isNewRecord?'end_record':s>=60?'end_good':s>=20?'end_mid':'end_bad';
