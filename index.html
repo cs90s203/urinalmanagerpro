@@ -230,7 +230,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 <div id="screen-title" class="screen active">
   <div class="title-art">尿斗管理大師</div>
   <div class="title-sub">URINAL MANAGER PRO</div>
-  <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);letter-spacing:2px">v4.8.6</div>
+  <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);letter-spacing:2px">v4.8.7</div>
   <div style="font-size:42px;margin:4px 0">🚽</div>
   <div style="font-size:12px;color:var(--muted);max-width:300px;text-align:center;line-height:2">
     安排客人、清潔廁所、購買道具、賺取最高收入<br>
@@ -368,7 +368,7 @@ window.submitGlobalScore=async function(name,score,money,served,date,playTime){
   try{
     await _fbDb.ref('leaderboard').push({name,score,money:parseFloat(money),served,date,playTime,ts:firebase.database.ServerValue.TIMESTAMP});
     return true;
-  }catch(e){console.error('FB write:',e);return false;}
+  }catch(e){console.error('FB write:',e);alert('Firebase寫入失敗：'+e.message);return false;}
 };
 
 window.loadGlobalLeaderboard=async function(){
@@ -378,7 +378,7 @@ window.loadGlobalLeaderboard=async function(){
     const rows=[];
     snap.forEach(c=>{rows.push(c.val());});
     return rows.sort((a,b)=>b.score!==a.score?b.score-a.score:b.money-a.money);
-  }catch(e){console.error('FB read:',e);return[];}
+  }catch(e){console.error('FB read:',e);alert('Firebase讀取失敗：'+e.message);return[];}
 };
 </script>
 <script>
