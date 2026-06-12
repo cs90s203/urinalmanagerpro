@@ -616,6 +616,8 @@ const isDev=new URLSearchParams(location.search).has('dev');
     if(ss)ss.value=CONFIG.UI_SCALE;
     if(bs)bs.value=bright||'1.0';
     applyUIScale(CONFIG.UI_SCALE);
+    // 頁面載入時立即載入全球排行榜
+    renderGlobalLeaderboard('global-lb-title',undefined,5);
   });
 })();
 function initDevTools(){
