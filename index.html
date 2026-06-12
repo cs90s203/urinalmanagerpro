@@ -138,6 +138,11 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 #item-drag-ghost{position:fixed;pointer-events:none;z-index:9501;background:var(--tile);border:2px solid #c084fc;border-radius:6px;padding:6px 8px;display:none;flex-direction:column;align-items:center;gap:3px;box-shadow:0 0 18px rgba(192,132,252,.5);opacity:.92;font-family:'Silkscreen',monospace;font-size:22px}
 
 /* ── EFFECTS BAR ── */
+input[type=range].slim{-webkit-appearance:none;appearance:none;background:transparent;cursor:pointer;flex:1;min-width:0}
+input[type=range].slim::-webkit-slider-runnable-track{height:1px;background:rgba(0,229,255,.2);border-radius:1px}
+input[type=range].slim::-webkit-slider-thumb{-webkit-appearance:none;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-top:-3.5px;opacity:0.8}
+input[type=range].slim::-moz-range-track{height:1px;background:rgba(0,229,255,.2);border-radius:1px}
+input[type=range].slim::-moz-range-thumb{width:8px;height:8px;border-radius:50%;background:var(--accent);border:none;opacity:0.8}
 .eff-bar{width:100%;background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:5px 10px;font-family:'Silkscreen',monospace;font-size:var(--fs-sm);color:var(--muted);min-height:24px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .eff-item{color:var(--warn)}.eff-drag-hint{color:var(--accent3);font-size:var(--fs-sm);letter-spacing:1px}
 
@@ -230,7 +235,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 <div id="screen-title" class="screen active">
   <div class="title-art">尿斗管理大師</div>
   <div class="title-sub">URINAL MANAGER PRO</div>
-  <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);letter-spacing:2px">v4.8.8</div>
+  <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);letter-spacing:2px">v4.8.9</div>
   <div style="font-size:42px;margin:4px 0">🚽</div>
   <div style="font-size:12px;color:var(--muted);max-width:300px;text-align:center;line-height:2">
     安排客人、清潔廁所、購買道具、賺取最高收入<br>
@@ -293,13 +298,22 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
     <div class="shop-items" id="shop-items"></div>
   </div>
 
-  <div class="eff-bar">
+  <div class="eff-bar" style="flex-wrap:wrap;row-gap:6px">
     <span>控尿狀態：</span><span id="eff-text" style="color:var(--muted)">暫無</span>
     <span id="drag-hint" class="eff-drag-hint" style="display:none">← 拖放至便斗</span>
     <span id="item-hint" style="display:none;font-family:'Silkscreen',monospace;font-size:8px;color:#c084fc">← 拖放道具至目標</span>
     <span style="margin-left:auto">
       <button onclick="toggleTips()" style="font-family:'Silkscreen',monospace;font-size:9px;background:transparent;border:1px solid var(--border);color:var(--muted);padding:2px 8px;cursor:pointer;border-radius:3px">💡 Tips</button>
     </span>
+    <!-- 第二行：字體 & 亮度 slider -->
+    <div style="width:100%;display:flex;align-items:center;gap:8px">
+      <span style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);flex-shrink:0">字</span>
+      <input type="range" id="ui-scale-slider" class="slim" min="0.7" max="2.5" step="0.05"
+        oninput="applyUIScale(this.value);localStorage.setItem('loole_ui_scale',this.value)">
+      <span style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);flex-shrink:0">亮</span>
+      <input type="range" id="brightness-slider" class="slim" min="0.3" max="1.0" step="0.05"
+        oninput="document.body.style.filter='brightness('+this.value+')';localStorage.setItem('loole_brightness',this.value)">
+    </div>
   </div>
   <!-- TIPS PANEL -->
   <div id="tips-panel" style="display:none;width:100%;background:var(--panel);border:1px solid rgba(255,184,0,.3);border-radius:6px;padding:10px 14px">
@@ -590,6 +604,20 @@ function flushLog(){
 function toggleDebug(){const p=document.getElementById('debug-panel'),a=document.getElementById('dbg-arrow');const o=p.classList.toggle('open');a.textContent=o?'▲':'▼';if(o)flushLog();}
 // ── Dev mode：網址加 ?dev=true 才顯示調整工具 ──
 const isDev=new URLSearchParams(location.search).has('dev');
+// 載入儲存的字體大小和亮度
+(function loadSavedPrefs(){
+  const scale=localStorage.getItem('loole_ui_scale');
+  const bright=localStorage.getItem('loole_brightness');
+  if(scale)CONFIG.UI_SCALE=parseFloat(scale);
+  if(bright)document.body.style.filter='brightness('+bright+')';
+  window.addEventListener('load',()=>{
+    const ss=document.getElementById('ui-scale-slider');
+    const bs=document.getElementById('brightness-slider');
+    if(ss)ss.value=CONFIG.UI_SCALE;
+    if(bs)bs.value=bright||'1.0';
+    applyUIScale(CONFIG.UI_SCALE);
+  });
+})();
 function initDevTools(){
   const dashBtn=document.getElementById('title-dash-btn');
   const dbgBtn=document.getElementById('dbg-btn');
