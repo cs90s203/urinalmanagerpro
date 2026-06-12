@@ -230,7 +230,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 <div id="screen-title" class="screen active">
   <div class="title-art">尿斗管理大師</div>
   <div class="title-sub">URINAL MANAGER PRO</div>
-  <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);letter-spacing:2px">v4.8.7</div>
+  <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);letter-spacing:2px">v4.8.8</div>
   <div style="font-size:42px;margin:4px 0">🚽</div>
   <div style="font-size:12px;color:var(--muted);max-width:300px;text-align:center;line-height:2">
     安排客人、清潔廁所、購買道具、賺取最高收入<br>
@@ -241,7 +241,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
     <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);text-align:center;letter-spacing:2px;margin-bottom:4px">🌐 全球排行榜 TOP 5</div>
     <div id="global-lb-title"></div>
   </div>
-  <button class="btn-s" onclick="toggleTitleDash()">⚙ 調整數值</button>
+  <button id="title-dash-btn" class="btn-s" onclick="toggleTitleDash()">⚙ 調整數值</button>
   <div id="title-dash-wrap" style="display:none;width:100%;max-width:720px;margin-top:8px">
     <div id="title-dash-inner" class="dash-panel open"></div>
   </div>
@@ -307,9 +307,9 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
     <div id="tips-list" style="display:flex;flex-direction:column;gap:6px;font-size:11px;line-height:1.7;color:var(--text)"></div>
   </div>
 
-  <button class="tog-btn" onclick="toggleDebug()"><span>🖥 DEBUG LOG</span><span id="dbg-arrow">▼</span></button>
+  <button id="dbg-btn" class="tog-btn" onclick="toggleDebug()"><span>🖥 DEBUG LOG</span><span id="dbg-arrow">▼</span></button>
   <div class="debug-panel" id="debug-panel"></div>
-  <button class="dash-tog" onclick="toggleGameDash()"><span>⚙ CONFIG DASHBOARD</span><span id="dash-arrow">▼</span></button>
+  <button id="cfg-btn" class="dash-tog" onclick="toggleGameDash()"><span>⚙ CONFIG DASHBOARD</span><span id="dash-arrow">▼</span></button>
   <div class="dash-panel" id="game-dashboard"></div>
 </div>
 
@@ -588,6 +588,17 @@ function flushLog(){
   p.innerHTML=logBuf.slice().reverse().map(l=>`<div class="ll ${l.type}">[${l.ts}] ${l.msg}</div>`).join('');
 }
 function toggleDebug(){const p=document.getElementById('debug-panel'),a=document.getElementById('dbg-arrow');const o=p.classList.toggle('open');a.textContent=o?'▲':'▼';if(o)flushLog();}
+// ── Dev mode：網址加 ?dev=true 才顯示調整工具 ──
+const isDev=new URLSearchParams(location.search).has('dev');
+function initDevTools(){
+  const dashBtn=document.getElementById('title-dash-btn');
+  const dbgBtn=document.getElementById('dbg-btn');
+  const cfgBtn=document.getElementById('cfg-btn');
+  if(dashBtn)dashBtn.style.display=isDev?'':'none';
+  if(dbgBtn)dbgBtn.style.display=isDev?'':'none';
+  if(cfgBtn)cfgBtn.style.display=isDev?'':'none';
+}
+window.addEventListener('load',initDevTools);
 
 // ════════════════════════════════════
 //  LOCAL STORAGE — HISTORY
