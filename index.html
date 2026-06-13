@@ -52,7 +52,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 /* ── QUEUE ── */
 .queue-area{width:100%;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:8px 12px}
 .queue-lbl{font-family:'Silkscreen',monospace;font-size:var(--fs-sm);color:var(--muted);letter-spacing:2px;margin-bottom:6px}
-.queue-list{display:flex;gap:6px;flex-wrap:nowrap;min-height:52px;align-items:center;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;padding-bottom:4px;scrollbar-width:none;}
+.queue-list{display:flex;gap:6px;flex-wrap:nowrap;min-height:52px;align-items:center;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;padding-bottom:4px;scrollbar-width:none;touch-action:pan-x;}
 .queue-list::-webkit-scrollbar{display:none;}
 
 /* ── CUSTOMER CARD ── */
@@ -85,7 +85,11 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .us.warn-dirty{border-color:var(--warn)!important}
 @keyframes wpulse{0%,100%{box-shadow:0 0 0 rgba(255,184,0,0)}50%{box-shadow:0 0 12px rgba(255,184,0,.5)}}.us.warn-dirty{animation:wpulse 1s ease-in-out infinite}
 .us{flex:1;min-width:80px;max-width:140px;background:var(--panel);border:2px solid var(--border);border-radius:8px;padding:6px;display:flex;flex-direction:column;align-items:center;gap:3px}
-.us.gangster-locked{border-color:#fb923c!important;background:rgba(251,146,60,.08)!important;}
+@keyframes inspector-card-glow{0%,100%{box-shadow:0 0 6px rgba(255,215,0,.3);border-color:rgba(255,215,0,.5)}50%{box-shadow:0 0 18px rgba(255,215,0,.9);border-color:#ffd700}}
+.cc.inspector-glow{animation:inspector-card-glow .6s ease-in-out infinite!important}
+@keyframes inspect-glow{0%,100%{box-shadow:0 0 8px rgba(255,255,255,.3),inset 0 0 4px rgba(255,255,255,.1)}50%{box-shadow:0 0 24px rgba(255,215,0,.9),inset 0 0 8px rgba(255,215,0,.2)}}
+.us.inspecting{animation:inspect-glow .5s ease-in-out infinite;border-color:#ffd700!important}
+.us.gangster-locked{border-color:#fb923c!important;background:rgba(251,146,60,.06)!important;}
 .us.gangster-locked::after{content:'🕴️';position:absolute;top:2px;right:4px;font-size:10px;opacity:.7}
 @keyframes bpulse{0%,100%{box-shadow:0 0 0 rgba(255,51,85,0)}50%{box-shadow:0 0 16px rgba(255,51,85,.5)}}.us.broken{animation:bpulse .8s ease-in-out infinite}
 .u-n{font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);align-self:flex-start}
@@ -180,7 +184,7 @@ input[type=range].slim::-moz-range-thumb{width:8px;height:8px;border-radius:50%;
 /* ── FX ── */
 .score-pop{position:fixed;font-family:'Silkscreen',monospace;font-size:16px;font-weight:700;pointer-events:none;z-index:9200;animation:fup .9s ease-out forwards}
 @keyframes fup{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-55px) scale(1.3)}}
-.peak-banner{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Silkscreen',monospace;font-size:clamp(16px,4vw,28px);color:var(--danger);text-shadow:0 0 20px var(--danger);letter-spacing:4px;z-index:9300;pointer-events:none;text-align:center;animation:pflash .5s ease-in-out 3}
+.peak-banner{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Silkscreen',monospace;font-size:clamp(16px,4vw,28px);color:var(--danger);text-shadow:0 0 20px var(--danger);letter-spacing:4px;z-index:9300;pointer-events:none;text-align:center;animation:pflash .5s ease-in-out 6}
 @keyframes pflash{0%{opacity:0;transform:translate(-50%,-50%) scale(.8)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}80%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-50%) scale(.95)}}
 .notify-banner{position:fixed;top:80px;left:50%;transform:translateX(-50%);font-family:'Silkscreen',monospace;font-size:11px;padding:8px 18px;border-radius:4px;z-index:9400;animation:nslide .8s ease-out 1.5s forwards;opacity:1;white-space:nowrap}
 @keyframes nslide{0%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-10px)}}
@@ -235,13 +239,14 @@ input[type=range].slim::-moz-range-thumb{width:8px;height:8px;border-radius:50%;
 <div id="screen-title" class="screen active">
   <div class="title-art">尿斗管理大師</div>
   <div class="title-sub">URINAL MANAGER PRO</div>
-  <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);letter-spacing:2px">v4.9.0</div>
+  <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);letter-spacing:2px">v5.0.0</div>
   <div style="font-size:42px;margin:4px 0">🚽</div>
   <div style="font-size:12px;color:var(--muted);max-width:300px;text-align:center;line-height:2">
     安排客人、清潔廁所、購買道具、賺取最高收入<br>
     <span style="color:var(--accent3);font-family:'Silkscreen',monospace;font-size:9px">拖曳客人至便斗 | 拖曳道具裝備</span>
   </div>
   <button class="btn-p" onclick="startGame()">開始遊戲</button>
+  <div style="display:flex;gap:8px;justify-content:center" id="title-ach-list"></div>
   <div style="width:100%;max-width:480px">
     <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);text-align:center;letter-spacing:2px;margin-bottom:4px">🌐 全球排行榜 TOP 5</div>
     <div id="global-lb-title"></div>
@@ -274,7 +279,7 @@ input[type=range].slim::-moz-range-thumb{width:8px;height:8px;border-radius:50%;
 
   <div class="urinals-area" id="urinals-area"></div>
 
-  <div class="queue-area" id="queue-area" ontouchstart="handleQueueTouchStart(event)" ontouchend="handleQueueTouchEnd(event)">
+  <div class="queue-area" id="queue-area">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
       <div class="queue-lbl">▶ 等待區 — 拖曳至便斗 或 點選後點便斗</div>
       <div id="wait-boost-badge" style="display:none;font-family:'Silkscreen',monospace;font-size:var(--fs-sm);color:var(--money);background:rgba(255,215,0,.12);border:1px solid rgba(255,215,0,.3);padding:2px 8px;border-radius:12px"></div>
@@ -337,6 +342,11 @@ input[type=range].slim::-moz-range-thumb{width:8px;height:8px;border-radius:50%;
     <div><div style="font-family:'Silkscreen',monospace;font-size:9px;color:var(--muted);margin-bottom:4px">REVENUE</div><div class="rs-money" id="rs-money">£0.00</div></div>
   </div>
   <div id="rs-feedback" style="max-width:340px;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:10px 14px;font-size:12px;line-height:1.9;color:var(--text);text-align:left"></div>
+  <!-- 成就 -->
+  <div id="rs-achievements" style="width:100%;max-width:380px;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:10px 14px">
+    <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);text-align:center;letter-spacing:2px;margin-bottom:8px">— 成就 —</div>
+    <div id="rs-ach-list" style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"></div>
+  </div>
   <!-- 角色圖鑑 -->
   <div id="rs-codex" style="width:100%;max-width:380px;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:10px 14px">
     <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);text-align:center;letter-spacing:2px;margin-bottom:8px">— 角色圖鑑 —</div>
@@ -428,6 +438,23 @@ const CONFIG={
   DIRTY_MAX_SLOW:85,             // 髒污100%時最大減速%
   CLEANER_AUTO_THRESH:40,        // 清掃助理自動觸發髒污閾值%
   REPAIR_TIME:10,                // 修復工修復時間(s)
+
+  // ── 馬蓋仙巡查 ──
+  INSPECTION_WAIT:18,          // 等待區倒數(s)
+  INSPECTION_SCAN_TIME:2,      // 每格掃描時間(s)
+  INSPECTION_DIRTY_THRESH:30,  // 髒污判定閾值%
+  INSPECTION_SCORE:250,        // 巡查成功得分
+  INSPECTION_MONEY:250,        // 巡查成功金錢£
+  INSPECTION_PENALTY:100,      // 巡查失敗扣分
+  INSPECTION_TRIGGER_COUNT:3,  // 每N次特殊角色觸發巡查
+  INSPECTION_RATE:50,          // 巡查觸發機率%
+  INSPECTION_SOLDIER_WAVES:2,  // 解鎖所需阿兵哥波數
+
+  // ── 分數階段變色加速 ──
+  PHASE_START_SCORE:1000,      // 開始變化的分數
+  PHASE_INTERVAL:1000,          // 每幾分變一次
+  PHASE_SPEED_MULT:0.8,        // 每階段生成間隔乘以此值(縮短20%)
+  PHASE_MAX_STAGES:7,          // 最多7個階段
   SCRUB_DISTANCE:40,             // 摩擦清潔最小移動距離(px)
   SCRUB_AMOUNT:15,               // 每次摩擦清潔量%
 
@@ -507,7 +534,7 @@ const CONFIG={
   SOLDIER_SURGE:30,              // 事件持續秒（舊值，已由 WAVES 取代）
   SOLDIER_WAVES:5,               // 總批次數
   SOLDIER_WAVE_DELAY:8,          // 批次間隔(s)
-  SURGE_PEAK_DELAY:50,           // 特殊事件觸發後高峰延遲(s)
+  SURGE_PEAK_DELAY:25,           // 特殊事件觸發後高峰延遲(s)
 
   // ── 新手輔助 ──
   SOFT_START_DURATION:30,        // 慢速開局持續時間(s)
@@ -550,12 +577,12 @@ const ITEM_DEFS={
   },
   cleaner:{
     id:'cleaner',emoji:'🧹',name:'清掃助理',group:'assistant',
-    price:20,desc:'髒污>40%自動清潔全場\n60%清潔費 / 30次',
+    price:100,desc:'髒污>40%自動清潔全場\n60%清潔費 / 30次',
     durLimit:null,cleanLimit:30,effects:{autoClean:true}
   },
   repair:{
     id:'repair',emoji:'🔧',name:'修復工',group:'repair',
-    price:15,desc:'修復損壞馬桶 / 單次',
+    price:35,desc:'修復損壞馬桶 / 單次',
     durLimit:null,singleUse:true,effects:{repairBroken:true}
   },
   extra_urinal:{
@@ -619,8 +646,16 @@ const isDev=new URLSearchParams(location.search).has('dev');
     if(ss)ss.value=CONFIG.UI_SCALE;
     if(bs)bs.value=bright||'1.0';
     applyUIScale(CONFIG.UI_SCALE);
-    // 頁面載入時立即載入全球排行榜
     renderGlobalLeaderboard('global-lb-title',undefined,5);
+    // 成就列表初始化
+    const titleAch=document.getElementById('title-ach-list');
+    if(titleAch){
+      const unlocked=loadAchievements();
+      titleAch.innerHTML=Object.values(ACHIEVEMENTS).map(a=>{
+        const done=unlocked[a.id];
+        return `<span title="${done?a.name:'???'}" style="font-size:18px;${done?'':'opacity:0.3'}">${done?a.emoji:'❓'}</span>`;
+      }).join('');
+    }
   });
 })();
 function initDevTools(){
@@ -730,6 +765,7 @@ const TDEFS={
   delinquent: {label:'中二生',  emoji:'🧑‍🎤',cv:'#f472b6',  wk:'DELINQUENT_WAIT',pk:'DELINQUENT_PEE', dk:'DELINQUENT_DIRTY',sk:'DELINQUENT_SCORE'},
   soldier:    {label:'阿兵哥',  emoji:'💂', cv:'#86efac',  wk:'SOLDIER_WAIT',   pk:'SOLDIER_PEE',    dk:'SOLDIER_DIRTY',   sk:'SOLDIER_SCORE'},
   gangster:   {label:'黑尿幫',  emoji:'🕴️', cv:'#fb923c',  wk:'GANGSTER_WAIT',  pk:'GANGSTER_PEE',   dk:'GANGSTER_DIRTY',  sk:'GANGSTER_SCORE'},
+  inspector:  {label:'馬蓋仙', emoji:'🧙', cv:'var(--accent)', wk:'INSPECTION_WAIT', pk:'INSPECTION_WAIT', dk:'DIRTY_SMALL', sk:'INSPECTION_SCORE'},
 };
 
 function rndType(){
@@ -796,10 +832,11 @@ function installItem(uid,itemId){
   // 子彈時間：便斗或等待區均可
   if(def.effects.bulletOp){
     state.money-=def.price;state.itemSpend+=def.price;
-    state.bulletOpEnd=state.elapsed+CONFIG.BULLET_OP_DURATION;
+    if(state.itemsBoughtThisRun)state.itemsBoughtThisRun.add(itemId);
+    state.bulletOpRemain=(state.bulletOpRemain||0)+CONFIG.BULLET_OP_DURATION;
     if(!state.bulletTime)toggleBulletTime();
-    notify(`⚡ 子彈時間操作啟動！${CONFIG.BULLET_OP_DURATION}秒`,'var(--accent)');
-    log(`ITEM bullet_op activated`,'item');
+    notify(`⚡ 子彈操作已購買！進入子彈時間後開始倒數 ${CONFIG.BULLET_OP_DURATION}秒`,'var(--accent)');
+    log(`ITEM bullet_op activated remain=${state.bulletOpRemain}s`,'item');
     buildShop();return true;
   }
   // 等待加時道具：放在等待區
@@ -848,6 +885,8 @@ function installItem(uid,itemId){
   const inst={def,durAccum:0,cleanCount:0};
   u.items.push(inst);
   state.money-=def.price;state.itemSpend+=def.price;
+  if(state.itemsBoughtThisRun)state.itemsBoughtThisRun.add(itemId);
+  checkAchievements();
   log(`ITEM install ${itemId} on #${uid+1} cost=£${def.price}`,'item');
   notify(`${def.emoji} ${def.name} 已安裝至 #${uid+1}`,'#c084fc');
   // 芳香劑：安裝後立即套用等待加成到現有等待區客人
@@ -955,7 +994,47 @@ async function submitScore(){
 // ════════════════════════════════════
 //  角色圖鑑
 // ════════════════════════════════════
-const CHAR_ORDER=['small','elder','med','large','drunk','delinquent','soldier','gangster'];
+const CHAR_ORDER=['small','elder','med','large','drunk','delinquent','soldier','gangster','inspector'];
+
+// ════════════════════════════════════
+//  成就系統
+// ════════════════════════════════════
+const ACHIEVEMENTS={
+  wealth:    {id:'wealth',   emoji:'🌎', name:'財富自由',   desc:'單局收入達£5000',   check:()=>state.totalEarned>=5000},
+  all_items: {id:'all_items',emoji:'🚨', name:'全副武裝',   desc:'單局買過所有道具',   check:()=>checkAllItems()},
+  all_chars: {id:'all_chars',emoji:'🚀', name:'全角色圖鑑', desc:'見過所有角色',        check:()=>checkAllChars()},
+  all_broken:{id:'all_broken',emoji:'🚫',name:'一片廢墟',   desc:'六個馬桶同時損壞',   check:()=>state.urinals.length===6&&state.urinals.every(u=>u.broken)},
+  no_leave:  {id:'no_leave', emoji:'✌️', name:'零逃客',     desc:'六格前零氣走',       check:()=>state.leftCount===0&&state.urinals.length>=6},
+};
+const ACH_KEY='loole_achievements';
+
+function loadAchievements(){try{return JSON.parse(localStorage.getItem(ACH_KEY)||'{}');}catch(e){return{};}}
+function checkAllItems(){
+  const allIds=Object.keys(ITEM_DEFS);
+  if(!state.itemsBoughtThisRun||!(state.itemsBoughtThisRun instanceof Set))return false;
+  return allIds.every(id=>state.itemsBoughtThisRun.has(id));
+}
+function checkAllChars(){
+  const seen=JSON.parse(localStorage.getItem(CODEX_KEY)||'[]');
+  return CHAR_ORDER.every(t=>seen.includes(t));
+}
+function checkAchievements(){
+  const unlocked=loadAchievements();
+  let newUnlock=false;
+  Object.values(ACHIEVEMENTS).forEach(a=>{
+    if(!unlocked[a.id]&&a.check()){
+      unlocked[a.id]=true;newUnlock=true;
+      notify(`${a.emoji} 成就解鎖：${a.name}！`,'var(--accent3)');
+      log(`ACHIEVEMENT ${a.id}`,'ev');
+    }
+  });
+  if(newUnlock)localStorage.setItem(ACH_KEY,JSON.stringify(unlocked));
+  return unlocked;
+}
+function allAchievementsUnlocked(){
+  const unlocked=loadAchievements();
+  return Object.keys(ACHIEVEMENTS).every(k=>unlocked[k]);
+}
 const CODEX_KEY='loole_seen_chars';
 
 function markCharSeen(type){
@@ -974,9 +1053,9 @@ function renderCharCodex(){
   el.innerHTML=CHAR_ORDER.map(type=>{
     const d=TDEFS[type];
     const isSeen=seen.includes(type);
-    return `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;min-width:36px">
-      <span style="font-size:20px;${isSeen?'':'filter:grayscale(1);opacity:0.3'}">${isSeen?d.emoji:'❓'}</span>
-      <span style="font-family:'Silkscreen',monospace;font-size:6px;color:${isSeen?'var(--muted)':'var(--border)'}">${isSeen?d.label:'?'}</span>
+    return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:44px">
+      <span style="font-size:24px;${isSeen?'':'filter:grayscale(1);opacity:0.3'}">${isSeen?d.emoji:'❓'}</span>
+      <span style="font-family:'Silkscreen',monospace;font-size:9px;color:${isSeen?'var(--muted)':'var(--border)'}">${isSeen?d.label:'?'}</span>
     </div>`;
   }).join('');
 
@@ -989,6 +1068,22 @@ function renderCharCodex(){
   }
 }
 
+const PHASE_COLORS=['','#a5f3fc','#bbf7d0','#fef08a','#fed7aa','#fecaca','#ede9fe','#ffd700'];
+const PHASE_GLOW  =['','','','','','','','rgba(255,215,0,.5)'];
+function applyPhaseStyle(stage){
+  const color=PHASE_COLORS[stage]||'';
+  const glow=PHASE_GLOW[stage]||'';
+  document.querySelectorAll('.us').forEach(el=>{
+    el.style.borderColor=color||'';
+    el.style.boxShadow=glow?`0 0 10px ${glow}`:'';
+  });
+  if(stage>0){
+    const mult=Math.pow(CONFIG.PHASE_SPEED_MULT,stage);
+    notify(`🔥 第${stage}階段！生成速度 ×${(1/mult).toFixed(1)}`,'var(--warn)');
+  }
+  log(`PHASE ${stage}`,'ev');
+}
+
 function startGame(){
   cidCounter=0;
   state={
@@ -998,14 +1093,25 @@ function startGame(){
     queue:[],selectedId:null,
     nextPeak:CONFIG.PEAK_INTERVAL,spawnAccum:0,running:true,failed:false,
     bulletTime:false,
+    bulletOpRemain:0,   // 子彈操作剩餘秒數（只在子彈時間開啟時扣）
     surgeType:null,surgeEnd:0,
-    bulletOpEnd:0,
+    bulletOpEnd:0, // legacy, replaced by bulletOpRemain
     waitBoostEnd:0,waitBoostEmoji:'',
     itemPreview:false,
     pendingWaves:[],
-    delinquentSurgeCount:0,  // 累計中二生 surge 次數
-    gangsterSurgeEnd:0,      // 黑尿幫 surge 結束時間  // [{type, at}] 排程中的 wave 批次
-    peaksFired:0,        // 高峰期觸發次數
+    delinquentSurgeCount:0,
+    gangsterSurgeEnd:0,
+    soldierWavesFired:0,
+    specialEventCount:0,
+    inspectionReady:false,
+    inspectionActive:false,
+    inspectionScanIdx:0,
+    inspectionScanElapsed:0,
+    inspectionPassed:true,
+    inspectionCid:null,
+    phaseStage:0,
+    itemsBoughtThisRun:new Set(),
+    peaksFired:0,
   };
   logBuf.length=0;
   log('=== GAME START ===','ok');
@@ -1025,7 +1131,6 @@ function mkUrinal(id){
   return{id,dirty:0,occupied:null,peeElapsed:0,
     cleaning:false,cleanElapsed:0,cleanDuration:CONFIG.CLEAN_TIME,
     repairing:false,repairElapsed:0,
-    gangsterLocked:false,
     broken:false,items:[]};
 }
 
@@ -1043,11 +1148,18 @@ function gameTick(){
   const dt=rawDt*timeScale;
   state.elapsed+=dt;
 
+  // 子彈操作倒數：只在子彈時間開啟時扣，用真實時間（rawDt），不受 timeScale 影響
+  if(state.bulletTime&&state.bulletOpRemain>0){
+    state.bulletOpRemain-=rawDt;
+    if(state.bulletOpRemain<=0){state.bulletOpRemain=0;}
+  }
+
   // soft start: double spawn interval during first SOFT_START_DURATION seconds
   const inSoftStart=state.elapsed<CONFIG.SOFT_START_DURATION;
-  const spawnInterval=CONFIG.SPAWN_INTERVAL*(inSoftStart?CONFIG.SOFT_START_SPAWN_MULT:1);
+  const phaseSpeedMult=state.phaseStage>0?Math.pow(CONFIG.PHASE_SPEED_MULT,state.phaseStage):1;
+  const spawnInterval=CONFIG.SPAWN_INTERVAL*(inSoftStart?CONFIG.SOFT_START_SPAWN_MULT:1)*phaseSpeedMult;
 
-  if(state.elapsed>=state.nextPeak){
+  if(state.elapsed>=state.nextPeak&&!state.inspectionActive&&!state.inspectionCid){
     state.nextPeak+=CONFIG.PEAK_INTERVAL;
     state.peaksFired++;
     log(`PEAK #${state.peaksFired}`,'ev');showPeakBanner();
@@ -1071,8 +1183,8 @@ function gameTick(){
     }
   }
 
-  // 處理排程中的 wave 批次
-  if(state.pendingWaves.length>0){
+  // 處理排程中的 wave 批次（巡查等待期間暫停）
+  if(!state.inspectionCid&&!state.inspectionActive&&state.pendingWaves.length>0){
     const now=state.elapsed;
     const due=state.pendingWaves.filter(w=>w.at<=now);
     state.pendingWaves=state.pendingWaves.filter(w=>w.at>now);
@@ -1082,11 +1194,35 @@ function gameTick(){
     });
   }
   state.spawnAccum+=dt;
-  if(state.spawnAccum>=spawnInterval){state.spawnAccum=0;if(state.queue.length<7)spawnCustomer();}
+  if(state.spawnAccum>=spawnInterval){
+    state.spawnAccum=0;
+    // 巡查期間不生成新客人
+    if(!state.inspectionActive&&!state.inspectionCid&&state.queue.length<7)spawnCustomer();
+  }
 
   const leaving=[];
-  state.queue.forEach(c=>{c.waitElapsed+=dt;if(c.waitElapsed>=c.waitMax)leaving.push(c.id);});
+  state.queue.forEach(c=>{
+    c.waitElapsed+=dt; // 所有客人（含馬蓋仙）統一累積
+    if(c.isInspector)return; // 馬蓋仙不算氣走
+    if(c.waitElapsed>=c.waitMax)leaving.push(c.id);
+  });
   leaving.forEach(customerLeave);
+
+  // 馬蓋仙等待超時 → 自動安排到第一格可用便斗
+  if(state.inspectionCid&&!state.inspectionActive){
+    const mc=state.queue.find(c=>c.id===state.inspectionCid);
+    if(mc&&mc.waitElapsed>=mc.waitMax){
+      const freeU=state.urinals.find(u=>!u.occupied&&!u.broken&&!u.repairing);
+      if(freeU){tryAssign(state.inspectionCid,freeU.id);}
+      else{
+        // 無可用便斗，直接開始掃描
+        state.queue=state.queue.filter(c=>c.id!==state.inspectionCid);
+        const el=document.getElementById('cc-'+state.inspectionCid);if(el)el.remove();
+        startInspection(0);
+      }
+      state.inspectionCid=null;
+    }
+  }
 
   state.urinals.forEach(u=>{
     if(u.repairing){
@@ -1141,21 +1277,36 @@ function gameTick(){
   }
   updateSoftStartBanner();
   updateQueueGlow();
-  syncQueueDOM();syncUrinalDOM();updateHUD();updateEffects();
-  // 子彈時間按鈕更新倒數
-  if(state.bulletTime){
-    const btn=document.getElementById('bullet-btn');
-    const opActive=state.bulletOpEnd>state.elapsed;
-    if(btn){
-      if(opActive){const rem=Math.ceil(state.bulletOpEnd-state.elapsed);btn.textContent=`⚡ 操作模式 ON — ${rem}s`;}
-      else btn.textContent='🐌 觀察模式 ON (無法操作)';
+  // 巡查進行中
+  if(state.inspectionActive){
+    tickInspection(dt);
+    // 高峰時間同步往後推，確保巡查結束後不立刻觸發
+    if(state.elapsed>=state.nextPeak)state.nextPeak=state.elapsed+CONFIG.PEAK_INTERVAL;
+  }
+
+  // 分數階段變色加速
+  if(state.score>=CONFIG.PHASE_START_SCORE){
+    const newStage=Math.min(
+      Math.floor((state.score-CONFIG.PHASE_START_SCORE)/CONFIG.PHASE_INTERVAL)+1,
+      CONFIG.PHASE_MAX_STAGES
+    );
+    if(newStage!==state.phaseStage){
+      state.phaseStage=newStage;
+      applyPhaseStyle(newStage);
     }
   }
-  // 子彈時間操作到期
-  if(state.bulletOpEnd>0&&state.elapsed>=state.bulletOpEnd){
-    state.bulletOpEnd=0;
-    log('bullet_op expired','item');
-    notify('⚡ 子彈時間操作結束','var(--muted)');
+
+  syncQueueDOM();syncUrinalDOM();updateHUD();updateEffects();
+  // 子彈時間按鈕更新倒數
+  const btn=document.getElementById('bullet-btn');
+  if(btn){
+    if(state.bulletTime){
+      if(state.bulletOpRemain>0){const rem=Math.ceil(state.bulletOpRemain);btn.textContent=`⚡ 操作模式 ON — ${rem}s`;}
+      else btn.textContent='👁 觀察模式 (無法操作)';
+    } else {
+      if(state.bulletOpRemain>0){const rem=Math.ceil(state.bulletOpRemain);btn.textContent=`🐌 子彈時間 [剩餘 ${rem}s]`;}
+      else btn.textContent='🐌 子彈時間 [按住慢速]';
+    }
   }
   // 等待加時效果到期
   if(state.waitBoostEnd>0&&state.elapsed>=state.waitBoostEnd){
@@ -1219,16 +1370,140 @@ function triggerSurge(type){
     state.delinquentSurgeCount++;
     if(state.delinquentSurgeCount>=CONFIG.GANGSTER_UNLOCK_COUNT&&
        Math.random()*100<CONFIG.GANGSTER_RATE){
-      // 黑尿幫混入：在第一批後5秒進場
       state.pendingWaves.push({type:'gangster',at:state.elapsed+5,group:1});
       state.gangsterSurgeEnd=state.elapsed+CONFIG.GANGSTER_SURGE_DUR+5;
-      showSurgeBanner('🕴️ 地頭蛇現身！旁邊的人嚇尿了！');
+      showSurgeBanner('🕴️  地頭蛇現身！旁邊的人嚇尿了！');
       log('GANGSTER mixed into delinquent surge','ev');
     }
   }
 
+  if(type==='soldier'){
+    state.soldierWavesFired++;
+    if(state.soldierWavesFired===CONFIG.INSPECTION_SOLDIER_WAVES){
+      mcSayForced('soldier_done');
+      state.inspectionReady=true;
+    }
+  }
+
+  // 特殊事件計數 → 巡查觸發（延遲3秒，避免與其他banner重疊）
+  state.specialEventCount++;
+  if(state.inspectionReady&&!state.inspectionActive&&!state.inspectionCid&&
+     state.specialEventCount%CONFIG.INSPECTION_TRIGGER_COUNT===0&&
+     Math.random()*100<CONFIG.INSPECTION_RATE){
+    setTimeout(()=>{
+      // 再次確認巡查未被其他事件觸發
+      if(!state.inspectionActive&&!state.inspectionCid)triggerInspection();
+    },3000);
+  }
+
   state.nextPeak=Math.max(state.nextPeak,state.elapsed+CONFIG.SURGE_PEAK_DELAY);
   log(`SURGE ${type} waves=${waves} delay=${delay}s`,'ev');
+}
+
+// 動態計算黑尿幫鎖定，不存狀態，每次即時判斷
+function isGangsterLocked(uid){
+  return state.urinals.some(u=>Math.abs(u.id-uid)===1&&u.occupied&&u.occupied.type==='gangster');
+}
+
+function triggerInspection(){
+  if(state.inspectionActive)return;
+  const arrive=Math.random()<0.5?'inspection_arrive_1':'inspection_arrive_2';
+  mcSayForced(arrive);
+  // 加馬蓋仙到等待區
+  const c={id:++cidCounter,type:'inspector',label:'馬蓋仙',emoji:'🧙',
+    cv:'var(--accent)',waitMax:CONFIG.INSPECTION_WAIT,peeBase:CONFIG.INSPECTION_WAIT,
+    dirtyAmt:0,score:0,waitElapsed:0,isInspector:true};
+  state.queue.push(c);
+  state.inspectionCid=c.id;
+  markCharSeen('inspector');
+  const el=mkCardEl(c);
+  el.classList.add('inspector-glow');
+  const list=document.getElementById('queue-list');
+  const ph=list.querySelector('.qph');if(ph)ph.remove();
+  list.appendChild(el);
+  log('INSPECTION triggered','ev');
+}
+
+function startInspection(uid){
+  state.inspectionActive=true;
+  state.inspectionScanIdx=0;
+  state.inspectionScanElapsed=0;
+  state.inspectionPassed=true;
+  showSurgeBanner('🧙 馬蓋仙巡查開始！');
+  log('INSPECTION start from #'+(uid+1),'ev');
+}
+
+function tickInspection(dt){
+  if(!state.inspectionActive)return;
+  state.inspectionScanElapsed+=dt;
+  // 視覺：目前掃描格顯示 🧙 + 進度條 + 金色閃光
+  const scanU=state.urinals[state.inspectionScanIdx];
+  if(scanU){
+    // 清除其他格的 inspecting class
+    state.urinals.forEach(u=>{
+      const s=document.getElementById('us-'+u.id);
+      if(s)s.classList.toggle('inspecting',u.id===scanU.id);
+    });
+    const ic=document.getElementById('ui-'+scanU.id);
+    const pw=document.getElementById('upw-'+scanU.id);
+    const pb=document.getElementById('upb-'+scanU.id);
+    if(ic)ic.textContent='🧙';
+    if(pw)pw.style.visibility='visible';
+    if(pb){pb.style.width=(state.inspectionScanElapsed/CONFIG.INSPECTION_SCAN_TIME*100)+'%';pb.style.background='var(--accent3)';}
+  }
+  if(state.inspectionScanElapsed>=CONFIG.INSPECTION_SCAN_TIME){
+    state.inspectionScanElapsed=0;
+    const u=state.urinals[state.inspectionScanIdx];
+    if(u){
+      // 先判定
+      if(u.dirty>CONFIG.INSPECTION_DIRTY_THRESH||u.broken){
+        state.inspectionPassed=false;
+        mcSayForced('inspection_scan_fail');
+      } else {
+        mcSayForced('inspection_scan_ok');
+      }
+      // 後清潔
+      u.dirty=0;u.cleaning=false;
+    }
+    state.inspectionScanIdx++;
+    if(state.inspectionScanIdx>=state.urinals.length){
+      endInspection();
+    }
+  }
+}
+
+function endInspection(){
+  state.inspectionActive=false;
+  // 清除所有巡查閃光
+  state.urinals.forEach(u=>{const s=document.getElementById('us-'+u.id);if(s)s.classList.remove('inspecting');});
+  // pendingWaves 重排：從現在起依序執行，避免瞬間爆發
+  if(state.pendingWaves.length>0){
+    state.pendingWaves.forEach((w,i)=>{w.at=state.elapsed+(i+1)*3;});
+    log(`pendingWaves reordered count=${state.pendingWaves.length}`,'ev');
+  }
+  if(state.inspectionPassed){
+    state.score+=CONFIG.INSPECTION_SCORE;
+    state.money+=CONFIG.INSPECTION_MONEY;
+    state.totalEarned+=CONFIG.INSPECTION_MONEY;
+    showScorePop('+'+CONFIG.INSPECTION_SCORE,'var(--accent3)');
+    showScorePop(`+£${CONFIG.INSPECTION_MONEY}`,'var(--money)');
+    const key=Math.random()<0.5?'inspection_pass_1':'inspection_pass_2';
+    mcSayForced(key);
+    notify(`🧙 巡查通過！+${CONFIG.INSPECTION_SCORE}分 +£${CONFIG.INSPECTION_MONEY}`,'var(--success)');
+  } else {
+    state.score=Math.max(0,state.score-CONFIG.INSPECTION_PENALTY);
+    const key=Math.random()<0.5?'inspection_fail_1':'inspection_fail_2';
+    mcSayForced(key);
+    notify(`🧙 巡查失敗！-${CONFIG.INSPECTION_PENALTY}分`,'var(--danger)');
+  }
+  log(`INSPECTION end passed=${state.inspectionPassed}`,'ev');
+  // 強制重置所有巡查相關 state，防止任何殘留導致遊戲停滯
+  state.inspectionActive=false;
+  state.inspectionCid=null;
+  state.inspectionScanIdx=0;
+  state.inspectionScanElapsed=0;
+  // 確保 nextPeak 不會卡住
+  if(state.nextPeak<=state.elapsed)state.nextPeak=state.elapsed+CONFIG.PEAK_INTERVAL;
 }
 
 function triggerGangsterOnly(){
@@ -1269,29 +1544,47 @@ function tryAssign(cid,uid){
   if(!u){return false;}
   if(u.broken){log(`assign FAIL #${uid+1} broken`,'warn');return false;}
   if(u.occupied||u.cleaning){log(`assign FAIL #${uid+1} busy`,'warn');return false;}
-  if(u.gangsterLocked){log(`assign FAIL #${uid+1} gangster locked`,'warn');notify(`#${uid+1} 被黑尿幫嚇到，沒人敢進去！`,'var(--warn)');return false;}
+  // 先查客人身份，供後續判斷使用
+  const pendingC=state.queue.find(c=>c.id===cid);
+  if(isGangsterLocked(uid)){
+    if(!pendingC||(pendingC.type!=='gangster'&&!pendingC.isInspector)){
+      log(`assign FAIL #${uid+1} gangster locked`,'warn');
+      notify(`#${uid+1} 被黑尿幫嚇到，沒人敢進去！`,'var(--warn)');
+      return false;
+    }
+  }
+  const isInspectorAssign=pendingC&&pendingC.isInspector;
+  if(!isInspectorAssign&&state.inspectionActive){
+    log(`assign FAIL inspection active`,'warn');notify('巡查中，請稍候！','var(--warn)');return false;
+  }
   const idx=state.queue.findIndex(c=>c.id===cid);if(idx===-1)return false;
   const c=state.queue.splice(idx,1)[0];
+  // 馬蓋仙巡查
+  if(c.isInspector){
+    const list=document.getElementById('queue-list');
+    const el=document.getElementById('cc-'+c.id);if(el)el.remove();
+    if(!list.children.length)addQPH();
+    clearSelection();
+    startInspection(uid);
+    return true;
+  }
   u.occupied=c;u.peeElapsed=0;
   markCharSeen(c.type);
-  // 黑尿幫：鎖定左右相鄰，已有客人1秒嚇跑
+  checkAchievements();
+  // 黑尿幫：左右已有客人1秒嚇跑（鎖定改為動態計算，不需設定狀態）
   if(c.type==='gangster'){
     state.urinals.forEach(nb=>{
-      if(Math.abs(nb.id-u.id)===1){
-        nb.gangsterLocked=true;
-        if(nb.occupied){
-          // 嚇跑：1秒後強制離開，不算氣走，不給錢
-          setTimeout(()=>{
-            if(nb.occupied){
-              log(`GANGSTER scared away ${nb.occupied.label} from #${nb.id+1}`,'ev');
-              notify(`🕴️ 黑尿幫嚇跑了 #${nb.id+1} 的客人！`,'var(--warn)');
-              const scared=nb.occupied;
-              nb.occupied=null;nb.peeElapsed=0;
-              state.queue=state.queue.filter(x=>x.id!==scared.id);
-              const el=document.getElementById('cc-'+scared.id);if(el)el.remove();
-            }
-          },1000);
-        }
+      if(Math.abs(nb.id-u.id)===1&&nb.occupied){
+        setTimeout(()=>{
+          if(nb.occupied&&nb.occupied.type!=='gangster'){
+            log(`GANGSTER scared away ${nb.occupied.label} from #${nb.id+1}`,'ev');
+            notify(`🕴️ 黑尿幫嚇跑了 #${nb.id+1} 的客人！`,'var(--warn)');
+            const scared=nb.occupied;
+            nb.occupied=null;nb.peeElapsed=0;
+            state.queue=state.queue.filter(x=>x.id!==scared.id);
+            const el=document.getElementById('cc-'+scared.id);if(el)el.remove();
+          }
+        },1000);
       }
     });
   }
@@ -1307,20 +1600,20 @@ function tryAssign(cid,uid){
 //  SELECT / CLICK
 // ════════════════════════════════════
 function isBulletLocked(){
-  // 子彈時間中且沒有操作道具 → 鎖定
-  return state.bulletTime&&!(state.bulletOpEnd>state.elapsed);
+  return state.bulletTime&&!(state.bulletOpRemain>0);
 }
 
 function clickSelect(cid){
   if(drag.active||itemDrag.active)return;
   if(isBulletLocked())return;
+  const c=state.queue.find(x=>x.id===cid);
+  if(c&&c.isInspector)return; // 馬蓋仙不能被選取
   const prev=state.selectedId;clearSelection();
   if(prev===cid)return;
   state.selectedId=cid;
   const el=document.getElementById('cc-'+cid);if(el)el.classList.add('sel');
   setAssignableClass(true);
   // 新人物初次選中說明
-  const c=state.queue.find(x=>x.id===cid);
   if(c)mcSayNewChar(c.type);
 }
 function clearSelection(){
@@ -1357,10 +1650,11 @@ function clearAllLongPressTimers(){
 }
 
 function startDrag(cid,cx,cy){
-  clearAllLongPressTimers(); // 拖曳啟動時清除所有長按計時器
+  clearAllLongPressTimers();
   if(itemDrag.active)return;
   if(isBulletLocked())return;
   const c=state.queue.find(x=>x.id===cid);if(!c)return;
+  if(c.isInspector)return; // 馬蓋仙不能被拖曳
   drag.active=true;drag.cid=cid;clearSelection();
   // 新人物初次拖曳說明
   const cc=state.queue.find(x=>x.id===cid);
@@ -1619,7 +1913,7 @@ function finishPee(u){
   u.dirty=Math.min(120,u.dirty+dirtyAdd);
   // 髒污超過100%立即損壞
   if(!u.broken&&u.dirty>=CONFIG.DIRTY_BREAK_THRESH){
-    u.broken=true;
+    u.broken=true;u.items=[];
     notify(`💥 #${u.id+1} 號便斗因髒污過高損壞了！`,'var(--danger)');
     log(`#${u.id+1} BROKEN by dirty=${Math.round(u.dirty)}%`,'err');
   }
@@ -1642,16 +1936,16 @@ function finishPee(u){
       log(`GANGSTER loot £${CONFIG.GANGSTER_LOOT}`,'money');
     }
     if(Math.random()*100<CONFIG.GANGSTER_BREAK_RATE){
-      u.broken=true;
+      u.broken=true;u.items=[];
       showScorePop('💥','var(--danger)');
       notify(`🕴️ 黑尿幫踹爆了 #${u.id+1} 號便斗！`,'var(--danger)');
       log(`GANGSTER broke #${u.id+1}`,'err');
     }
-    state.urinals.forEach(nb=>{if(Math.abs(nb.id-u.id)===1)nb.gangsterLocked=false;});
+    // 鎖定改為動態計算，不需要解鎖
   }
   // 中二生：10% 機率用壞馬桶
   if(c.type==='delinquent'&&Math.random()*100<CONFIG.DELINQUENT_BREAK_RATE){
-    u.broken=true;
+    u.broken=true;u.items=[];
     showScorePop('💥','var(--danger)');
     notify(`🧑‍🎤 中二生踹爆了 #${u.id+1} 號便斗！`,'var(--danger)');
     mcSayForced('delinquent_break');
@@ -1810,8 +2104,8 @@ function buildShop(){
     card.id='sc-'+def.id;
     card.title=def.desc;
     let extraBadge='';
-    if(def.effects&&def.effects.bulletOp&&state.bulletOpEnd>state.elapsed){
-      const rem=Math.ceil(state.bulletOpEnd-state.elapsed);
+    if(def.effects&&def.effects.bulletOp&&state.bulletOpRemain>0){
+      const rem=Math.ceil(state.bulletOpRemain);
       extraBadge=`<div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--accent);border:1px solid var(--accent);border-radius:3px;padding:1px 4px;margin-top:1px">${rem}s</div>`;
     }
     card.innerHTML=
@@ -1860,6 +2154,8 @@ function syncQueueDOM(){
 function syncUrinalDOM(){
   state.urinals.forEach(u=>{
     const slot=document.getElementById('us-'+u.id);if(!slot)return;
+    // 巡查中：跳過當前掃描格，讓 tickInspection 的動畫不被蓋掉
+    if(state.inspectionActive&&u.id===state.inspectionScanIdx)return;
     const icon=document.getElementById('ui-'+u.id);
     const stl=document.getElementById('usl-'+u.id);
     const pwrap=document.getElementById('upw-'+u.id);
@@ -1873,7 +2169,7 @@ function syncUrinalDOM(){
 
     const flags={occupied:!!u.occupied,cleaning:u.cleaning,broken:u.broken,
       'warn-dirty':!u.broken&&u.dirty>=CONFIG.DIRTY_WARN_THRESH,
-      'gangster-locked':!!u.gangsterLocked};
+      'gangster-locked':isGangsterLocked(u.id)&&!u.occupied};
     Object.entries(flags).forEach(([cls,val])=>{if(slot.classList.contains(cls)!==val)slot.classList.toggle(cls,val);});
     if(u.dirty>=CONFIG.DIRTY_WARN_THRESH){checkTip('warn_dirty');mcSay('warn_dirty');}
     if(u.broken){checkTip('broken');if(!u.repairing)mcSay('broken');}
@@ -1963,6 +2259,13 @@ function updateEffects(){
 // ════════════════════════════════════
 function endGame(){
   state.running=false;clearInterval(gameLoop);endDrag();endScrub();endItemDrag();
+  // 成就最終檢查
+  checkAchievements();
+  // 全成就加分
+  if(allAchievementsUnlocked()){
+    state.score+=1000;
+    notify('🏅 全成就達成！+1000分','var(--money)');
+  }
   const s=state.score,m=state.totalEarned.toFixed(2);
   const mm=Math.floor(state.elapsed/60),ss=Math.floor(state.elapsed%60);
   const timeStr=`${mm}:${String(ss).padStart(2,'0')}`;
@@ -2067,6 +2370,19 @@ function endGame(){
     </table>`;
   }
 
+  // 成就顯示
+  const unlocked=loadAchievements();
+  const achEl=document.getElementById('rs-ach-list');
+  if(achEl){
+    achEl.innerHTML=Object.values(ACHIEVEMENTS).map(a=>{
+      const done=unlocked[a.id];
+      return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:50px" title="${done?a.name+'：'+a.desc:a.name}">
+        <span style="font-size:26px;${done?'':'opacity:0.4'}">${done?a.emoji:'❓'}</span>
+        <span style="font-family:'Silkscreen',monospace;font-size:11px;color:${done?'var(--accent3)':'var(--border)'}">${a.name}</span>
+      </div>`;
+    }).join('');
+  }
+
   // 角色圖鑑
   renderCharCodex();
 
@@ -2100,7 +2416,15 @@ const MC_LINES={
   dirty_60:    '髒污超過60%，小費加成80%！繼續撐著刷，越髒越值錢。但別超過100%，那就麻煩了。',
   warn_dirty:  '危險！再進一個客人就要壞了。快去摩擦清潔，或裝清掃助理掌控全局！',
   broken:      '壞了壞了…去商店買修復工拖到便斗上，才能繼續用。',
-  delinquent_break: '這個年代的青少年真的⋯難搞，但他只是個孩紙兒⋯⋯',
+  soldier_done:    '不錯不錯！老夫將會下凡巡視，好好表現必有重賞！',
+  inspection_arrive_1: '老夫親自來視察！等你收尾，老夫要親自巡廁，給我準備好！',
+  inspection_arrive_2: '坐不住了！老夫要來巡查，馬桶髒了別想過關！',
+  inspection_scan_ok:  '嗯…這格還行…',
+  inspection_scan_fail:'髒！不行不行不行…',
+  inspection_pass_1:   '勉強及格，老夫賞你了。',
+  inspection_pass_2:   '不錯，老夫的廁所果然乾淨！',
+  inspection_fail_1:   '這是廁所？豬圈還比較乾淨呢？！真是大失所望！',
+  inspection_fail_2:   '讓老夫失望了…倒行逆施，老夫心灰意冷。',
   left_1:      '有人等不耐煩走了。還有兩次機會，加快帶位節奏。',
   left_2:      '第二個走了！再走一個就全盤皆輸，現在要全力帶位。',
   money_10:    '有錢了！標靶貼只要£5，裝上去馬上少髒15%。值得投資。',
@@ -2202,9 +2526,21 @@ function mcSayCantAfford(def){
   mcQueue.unshift({text:line,explain:true});if(!mcBusy)_mcNext();
 }
 
-// ── 等待區長按說明 ──
+// ── 等待區長按說明 + 防頁面滑動 ──
 var _queueLPTimer=null;
+window.addEventListener('load',()=>{
+  const qa=document.getElementById('queue-area');
+  if(!qa)return;
+  qa.addEventListener('touchstart',e=>{
+    e.preventDefault(); // 整個等待區阻止縱向滑動，水平捲動由 touch-action:pan-x 處理
+    handleQueueTouchStart(e);
+  },{passive:false});
+  qa.addEventListener('touchend',handleQueueTouchEnd,{passive:false});
+});
 function handleQueueTouchStart(e){
+  // 阻止縱向滑動頁面，但允許水平捲動 queue-list
+  if(e.target.closest('.queue-list')){return;} // 讓 queue-list 自己處理水平捲動
+  e.preventDefault();
   if(drag.active||itemDrag.active)return;
   _queueLPTimer=setTimeout(()=>{
     const line=MC_LINES['explain_queue'];
@@ -2322,22 +2658,22 @@ function toggleBulletTime(){
   state.bulletTime=!state.bulletTime;
   const btn=document.getElementById('bullet-btn');
   const screen=document.getElementById('screen-game');
-  const opActive=state.bulletOpEnd>state.elapsed;
   if(state.bulletTime){
     btn.classList.add('active');
     screen.classList.add('bullet');
-    if(opActive){
-      const rem=Math.ceil(state.bulletOpEnd-state.elapsed);
-      btn.textContent=`⚡ 操作模式 ON — ${rem}s 剩餘`;
+    if(state.bulletOpRemain>0){
+      const rem=Math.ceil(state.bulletOpRemain);
+      btn.textContent=`⚡ 操作模式 ON — ${rem}s`;
     } else {
-      btn.textContent='🐌 觀察模式 ON (無法操作)';
+      btn.textContent='👁 觀察模式 (無法操作)';
     }
-    log('Bullet time ON opActive='+opActive,'info');
+    log('Bullet time ON remain='+state.bulletOpRemain,'info');
   } else {
     btn.classList.remove('active');
     screen.classList.remove('bullet');
-    btn.textContent='🐌 子彈時間 [按住慢速]';
-    log('Bullet time OFF','info');
+    if(state.bulletOpRemain>0){const rem=Math.ceil(state.bulletOpRemain);btn.textContent=`🐌 子彈時間 [剩餘 ${rem}s]`;}
+    else btn.textContent='🐌 子彈時間 [按住慢速]';
+    log('Bullet time OFF remain='+state.bulletOpRemain,'info');
   }
 }
 function toggleTitleDash(){const w=document.getElementById('title-dash-wrap');if(w.style.display==='none'){w.style.display='block';renderDash('title-dash-inner');}else w.style.display='none';}
@@ -2380,6 +2716,15 @@ function showScreen(id){
   document.getElementById(id).classList.add('active');lastTick=Date.now();
   if(id==='screen-title'){
     renderGlobalLeaderboard('global-lb-title',undefined,5);
+    // 主選單成就
+    const titleAch=document.getElementById('title-ach-list');
+    if(titleAch){
+      const unlocked=loadAchievements();
+      titleAch.innerHTML=Object.values(ACHIEVEMENTS).map(a=>{
+        const done=unlocked[a.id];
+        return `<span title="${done?a.name:'???'}" style="font-size:18px;${done?'':'opacity:0.3'}">${done?a.emoji:'❓'}</span>`;
+      }).join('');
+    }
   }
 }
 function showScorePop(txt,color){
@@ -2392,7 +2737,7 @@ function showScorePop(txt,color){
 }
 function showPeakBanner(){
   const el=document.createElement('div');el.className='peak-banner';el.textContent='⚠ 高峰期！';
-  document.body.appendChild(el);setTimeout(()=>el.remove(),1500);
+  document.body.appendChild(el);setTimeout(()=>el.remove(),3000);
 }
 function notify(msg,color='var(--accent)'){
   const el=document.createElement('div');el.className='notify-banner';el.textContent=msg;
