@@ -239,7 +239,7 @@ input[type=range].slim::-moz-range-thumb{width:8px;height:8px;border-radius:50%;
 <div id="screen-title" class="screen active">
   <div class="title-art">尿斗管理大師</div>
   <div class="title-sub">URINAL MANAGER PRO</div>
-  <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);letter-spacing:2px">v5.0.0</div>
+  <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);letter-spacing:2px">v5.0.1</div>
   <div style="font-size:42px;margin:4px 0">🚽</div>
   <div style="font-size:12px;color:var(--muted);max-width:300px;text-align:center;line-height:2">
     安排客人、清潔廁所、購買道具、賺取最高收入<br>
@@ -440,7 +440,7 @@ const CONFIG={
   REPAIR_TIME:10,                // 修復工修復時間(s)
 
   // ── 馬蓋仙巡查 ──
-  INSPECTION_WAIT:18,          // 等待區倒數(s)
+  INSPECTION_WAIT:10,          // 等待區倒數(s)
   INSPECTION_SCAN_TIME:2,      // 每格掃描時間(s)
   INSPECTION_DIRTY_THRESH:30,  // 髒污判定閾值%
   INSPECTION_SCORE:250,        // 巡查成功得分
@@ -1447,7 +1447,7 @@ function tickInspection(dt){
     const ic=document.getElementById('ui-'+scanU.id);
     const pw=document.getElementById('upw-'+scanU.id);
     const pb=document.getElementById('upb-'+scanU.id);
-    if(ic)ic.textContent='🧙';
+    if(ic){ic.textContent='🧙';ic.style.opacity='1';}
     if(pw)pw.style.visibility='visible';
     if(pb){pb.style.width=(state.inspectionScanElapsed/CONFIG.INSPECTION_SCAN_TIME*100)+'%';pb.style.background='var(--accent3)';}
   }
@@ -1607,7 +1607,11 @@ function clickSelect(cid){
   if(drag.active||itemDrag.active)return;
   if(isBulletLocked())return;
   const c=state.queue.find(x=>x.id===cid);
-  if(c&&c.isInspector)return; // 馬蓋仙不能被選取
+  if(c&&c.isInspector){
+    // 馬蓋仙不能被選取，但點擊時 MC 說話
+    mcSayForced('inspection_tap');
+    return;
+  }
   const prev=state.selectedId;clearSelection();
   if(prev===cid)return;
   state.selectedId=cid;
@@ -1654,7 +1658,7 @@ function startDrag(cid,cx,cy){
   if(itemDrag.active)return;
   if(isBulletLocked())return;
   const c=state.queue.find(x=>x.id===cid);if(!c)return;
-  if(c.isInspector)return; // 馬蓋仙不能被拖曳
+  if(c.isInspector){mcSayForced('inspection_tap');return;} // 馬蓋仙不能被拖曳
   drag.active=true;drag.cid=cid;clearSelection();
   // 新人物初次拖曳說明
   const cc=state.queue.find(x=>x.id===cid);
@@ -2419,6 +2423,7 @@ const MC_LINES={
   soldier_done:    '不錯不錯！老夫將會下凡巡視，好好表現必有重賞！',
   inspection_arrive_1: '老夫親自來視察！等你收尾，老夫要親自巡廁，給我準備好！',
   inspection_arrive_2: '坐不住了！老夫要來巡查，馬桶髒了別想過關！',
+  inspection_tap:      '老夫下凡巡查賞罰分明，還不好好準備！',
   inspection_scan_ok:  '嗯…這格還行…',
   inspection_scan_fail:'髒！不行不行不行…',
   inspection_pass_1:   '勉強及格，老夫賞你了。',
