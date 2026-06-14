@@ -248,7 +248,7 @@ input[type=range].slim::-moz-range-thumb{width:8px;height:8px;border-radius:50%;
 <div id="screen-title" class="screen active">
   <div class="title-art">尿斗管理大師</div>
   <div class="title-sub">URINAL MANAGER PRO</div>
-  <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);letter-spacing:2px">v5.0.3</div>
+  <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);letter-spacing:2px">v5.1.0</div>
   <div style="font-size:42px;margin:4px 0">🚽</div>
   <div style="font-size:12px;color:var(--muted);max-width:300px;text-align:center;line-height:2">
     安排客人、清潔廁所、購買道具、賺取最高收入<br>
@@ -386,7 +386,146 @@ input[type=range].slim::-moz-range-thumb{width:8px;height:8px;border-radius:50%;
   </div>
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script>
+// ════════════════════════════════════
+//  AUDIO ENGINE
+// ════════════════════════════════════
+let _actx=null,_bgmScheduled=[],_bgmNodes=[],_currentBGM=null,_audioVol=0.4;
+
+function _getCtx(){
+  if(!_actx)_actx=new(window.AudioContext||window.webkitAudioContext)();
+  return _actx;
+}
+function _beep(freq,dur,type='square',t,g=0.3,slide=0){
+  const c=_getCtx();if(!t)t=c.currentTime;
+  const o=c.createOscillator(),gn=c.createGain();
+  o.connect(gn);gn.connect(c.destination);
+  o.type=type;o.frequency.setValueAtTime(freq,t);
+  if(slide)o.frequency.linearRampToValueAtTime(slide,t+dur);
+  gn.gain.setValueAtTime(g*_audioVol,t);gn.gain.exponentialRampToValueAtTime(0.001,t+dur);
+  o.start(t);o.stop(t+dur+0.05);_bgmNodes.push(o);
+}
+function _noise(dur,t,g=0.2,freq=800){
+  const c=_getCtx();if(!t)t=c.currentTime;
+  const buf=c.createBuffer(1,c.sampleRate*dur,c.sampleRate);
+  const d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+  const src=c.createBufferSource(),gn=c.createGain(),f=c.createBiquadFilter();
+  src.buffer=buf;f.type='bandpass';f.frequency.value=freq;
+  src.connect(f);f.connect(gn);gn.connect(c.destination);
+  gn.gain.setValueAtTime(g*_audioVol,t);gn.gain.exponentialRampToValueAtTime(0.001,t+dur);
+  src.start(t);src.stop(t+dur+0.05);_bgmNodes.push(src);
+}
+function _stopBGM(){
+  _currentBGM=null;
+  _bgmScheduled.forEach(clearTimeout);_bgmScheduled=[];
+  _bgmNodes.forEach(n=>{try{n.stop();}catch(e){}});_bgmNodes=[];
+}
+function playSFX(name){
+  const c=_getCtx();c.resume();const t=c.currentTime;
+  switch(name){
+    case 'assign': _beep(440,.05,'square',t,.2);_beep(660,.08,'square',t+.05,.2);break;
+    case 'done': _beep(523,.07,'square',t,.2);_beep(659,.07,'square',t+.07,.2);_beep(784,.12,'square',t+.14,.25);break;
+    case 'leave': _beep(400,.08,'square',t,.2,200);_beep(200,.15,'square',t+.08,.2,100);break;
+    case 'break':
+      _noise(.02,t,.8,100);_noise(.04,t,.6,300);_noise(.08,t,.5,600);
+      _noise(.15,t,.4,1500);_noise(.3,t,.2,4000);
+      _beep(80,.4,'sine',t,.5,20);_beep(50,.6,'sine',t,.4,15);
+      _noise(.1,t+.05,.3,200);_noise(.2,t+.1,.2,80);break;
+    case 'peak': [0,.15,.3].forEach(d=>{_beep(880,.08,'square',t+d,.25);_beep(440,.08,'square',t+d+.04,.15);});break;
+    case 'inspector': _beep(392,.15,'square',t,.2);_beep(523,.15,'square',t+.15,.2);_beep(659,.15,'square',t+.3,.2);_beep(784,.3,'square',t+.45,.3);break;
+    case 'achievement': [523,659,784,1047].forEach((f,i)=>_beep(f,.12,'square',t+i*.1,.2+(i*.03)));_beep(1047,.3,'square',t+.4,.3);break;
+    case 'bullet': _beep(880,.5,'sine',t,.2,220);_beep(440,.5,'sine',t,.1,110);break;
+    case 'buy': _beep(1047,.04,'square',t,.2);_beep(1319,.08,'square',t+.05,.25);break;
+    case 'scrub': [0,.04,.08,.12,.16].forEach(d=>{_noise(.04,t+d,.15);_noise(.03,t+d,.1,6000);});break;
+    case 'gangster': _beep(220,.1,'sawtooth',t,.3);_beep(185,.1,'sawtooth',t+.1,.3);_beep(165,.2,'sawtooth',t+.2,.35);break;
+    case 'inspect_pass': [523,659,784,1047,1319].forEach((f,i)=>_beep(f,.1,'square',t+i*.08,.2));break;
+    case 'inspect_fail':
+      _beep(440,.2,'sawtooth',t,.3,300);_beep(330,.25,'sawtooth',t+.2,.3,220);
+      _beep(220,.3,'sawtooth',t+.4,.3,147);_beep(147,.4,'sawtooth',t+.65,.3,110);
+      _noise(.15,t+.8,.25,100);break;
+  }
+}
+
+const _N={C3:131,D3:147,E3:165,F3:175,G3:196,A3:220,Bb3:233,B3:247,F3s:185,C4:262,D4:294,E4:330,F4:349,G4:392,A4:440,Bb4:466,B4:494,C5:523,D5:587,E5:659,F5:698,G5:784,A5:880,B5:988,C6:1047,R:0};
+function _sched(f,d,t,type='square',g=0.15){if(f>0)_beep(f,d*.88,type,t,g);}
+
+function playBGM(type){
+  if(_currentBGM===type)return;
+  _stopBGM();
+  _getCtx().resume();
+  _currentBGM=type;
+  ({normal:_loopNormal,peak:_loopPeak,delinquent:_loopDelinquent,soldier:_loopSoldier,boss:_loopBoss})[type]?.();
+}
+
+function _loopNormal(){
+  if(_currentBGM!=='normal')return;
+  const c=_getCtx(),t=c.currentTime,b=0.15;
+  const mel=[[_N.E5,2],[_N.G5,2],[_N.A5,4],[_N.G5,2],[_N.E5,2],[_N.C5,4],[_N.D5,2],[_N.F5,2],[_N.G5,4],[_N.F5,2],[_N.D5,2],[_N.C5,4],[_N.E5,2],[_N.G5,2],[_N.A5,2],[_N.C6,2],[_N.B5,4],[_N.R,4],[_N.G5,2],[_N.F5,2],[_N.E5,2],[_N.D5,2],[_N.C5,8]];
+  const bass=[[_N.C4,4],[_N.C4,4],[_N.F4,4],[_N.F4,4],[_N.G4,4],[_N.G4,4],[_N.F4,4],[_N.F4,4],[_N.C4,4],[_N.E4,4],[_N.F4,4],[_N.G4,4],[_N.C4,8]];
+  let mt=t;mel.forEach(([f,d])=>{_sched(f,d*b,mt,'square',.15);mt+=d*b;});
+  let bt=t;bass.forEach(([f,d])=>{_sched(f,d*b,bt,'square',.08);bt+=d*b;});
+  for(let i=0;i<16;i++){_noise(.05,t+i*b*4,.18,60);if(i%2===1)_noise(.04,t+i*b*4+b*2,.1,2000);}
+  const total=mel.reduce((s,[,d])=>s+d,0)*b;
+  _bgmScheduled.push(setTimeout(()=>_loopNormal(),(total*1000)-80));
+}
+
+function _loopPeak(){
+  if(_currentBGM!=='peak')return;
+  const c=_getCtx(),t=c.currentTime,b=0.1;
+  const mel=[[_N.E5,2],[_N.G5,2],[_N.A5,4],[_N.G5,2],[_N.E5,2],[_N.C5,4],[_N.D5,2],[_N.F5,2],[_N.G5,4],[_N.F5,2],[_N.D5,2],[_N.C5,4],[_N.E5,2],[_N.G5,2],[_N.A5,2],[_N.C6,2],[_N.B5,4],[_N.R,4],[_N.G5,2],[_N.F5,2],[_N.E5,2],[_N.D5,2],[_N.C5,8]];
+  const bass=[[_N.C4,4],[_N.C4,4],[_N.F4,4],[_N.F4,4],[_N.G4,4],[_N.G4,4],[_N.F4,4],[_N.F4,4],[_N.C4,4],[_N.E4,4],[_N.F4,4],[_N.G4,4],[_N.C4,8]];
+  let mt=t;mel.forEach(([f,d])=>{_sched(f,d*b,mt,'sawtooth',.15);mt+=d*b;});
+  let bt=t;bass.forEach(([f,d])=>{_sched(f,d*b,bt,'sawtooth',.1);bt+=d*b;});
+  const total=mel.reduce((s,[,d])=>s+d,0)*b;
+  const bars=Math.floor(total/(b*8));
+  for(let i=0;i<bars*2;i++){_noise(.05,t+i*b*4,.25,60);_noise(.04,t+i*b*4+b*2,.2,3000);for(let j=0;j<8;j++)_noise(.015,t+i*b*4+j*b,.06,8000);_beep(110,.08,'sawtooth',t+i*b*4,.12);_beep(110,.08,'sawtooth',t+i*b*4+b*2,.1);}
+  _bgmScheduled.push(setTimeout(()=>_loopPeak(),(total*1000)-80));
+}
+
+function _loopDelinquent(){
+  if(_currentBGM!=='delinquent')return;
+  const c=_getCtx(),t=c.currentTime,b=0.1;
+  const mel=[[_N.A4,1],[_N.R,1],[_N.A4,1],[_N.R,1],[_N.C5,2],[_N.B4,1],[_N.A4,1],[_N.G4,1],[_N.R,1],[_N.G4,1],[_N.R,1],[_N.Bb4,2],[_N.A4,2],[_N.F4,1],[_N.R,1],[_N.F4,1],[_N.G4,1],[_N.A4,2],[_N.R,2],[_N.E4,1],[_N.F4,1],[_N.G4,1],[_N.A4,1],[_N.B4,2],[_N.A4,2]];
+  const bass=[[_N.A3,2],[_N.A3,2],[_N.C4,2],[_N.C4,2],[_N.G3,2],[_N.G3,2],[_N.F3,2],[_N.F3,2],[_N.A3,2],[_N.A3,2],[_N.E4,2],[_N.E4,2],[_N.A3,4],[_N.G3,4]];
+  let mt=t;mel.forEach(([f,d])=>{_sched(f,d*b,mt,'sawtooth',.15);mt+=d*b;});
+  let bt=t;bass.forEach(([f,d])=>{_sched(f,d*b,bt,'square',.1);bt+=d*b;});
+  for(let i=0;i<16;i++){_noise(.04,t+i*b*2,.2,60);if(i%2===1)_noise(.03,t+i*b*2,.12,3000);_noise(.02,t+i*b,.08,8000);}
+  const total=mel.reduce((s,[,d])=>s+d,0)*b;
+  _bgmScheduled.push(setTimeout(()=>_loopDelinquent(),(total*1000)-80));
+}
+
+function _loopSoldier(){
+  if(_currentBGM!=='soldier')return;
+  const c=_getCtx(),t=c.currentTime,b=0.1;
+  const mel=[[_N.C5,1],[_N.C5,1],[_N.G5,2],[_N.G5,1],[_N.F5,1],[_N.E5,1],[_N.D5,1],[_N.C5,4],[_N.R,2],[_N.G4,1],[_N.G4,1],[_N.C5,1],[_N.E5,1],[_N.G5,2],[_N.F5,1],[_N.E5,1],[_N.D5,1],[_N.C5,1],[_N.G4,4],[_N.R,4],[_N.C5,1],[_N.D5,1],[_N.E5,1],[_N.F5,1],[_N.G5,2],[_N.G5,2],[_N.A5,1],[_N.G5,1],[_N.F5,1],[_N.E5,1],[_N.D5,2],[_N.R,2],[_N.G4,1],[_N.C5,1],[_N.E5,1],[_N.G5,1],[_N.F5,2],[_N.E5,2],[_N.D5,1],[_N.G4,1],[_N.B4,1],[_N.D5,1],[_N.C5,4]];
+  const bass=[[_N.C4,2],[_N.G3,2],[_N.C4,2],[_N.G3,2],[_N.C4,2],[_N.G3,2],[_N.C4,2],[_N.G3,2],[_N.F3,2],[_N.C4,2],[_N.G3,2],[_N.C4,2],[_N.F3,2],[_N.G3,2],[_N.C4,2],[_N.G3,2]];
+  let mt=t;mel.forEach(([f,d])=>{_sched(f,d*b,mt,'square',.2);mt+=d*b;});
+  let bt=t;bass.forEach(([f,d])=>{_sched(f,d*b,bt,'square',.12);bt+=d*b;});
+  const total=mel.reduce((s,[,d])=>s+d,0)*b;
+  const beats=Math.floor(total/(b*4));
+  for(let i=0;i<beats;i++){_noise(.06,t+i*b*4,.3,120);_noise(.05,t+i*b*4+b*2,.25,3000);for(let j=0;j<4;j++)_noise(.02,t+i*b*4+j*b,.08,8000);}
+  _bgmScheduled.push(setTimeout(()=>_loopSoldier(),(total*1000)-80));
+}
+
+function _loopBoss(){
+  if(_currentBGM!=='boss')return;
+  const c=_getCtx(),t=c.currentTime,b=0.13;
+  const mel=[[_N.D5,2],[_N.R,2],[_N.C5,2],[_N.Bb4,2],[_N.A4,4],[_N.R,2],[_N.A4,2],[_N.G4,2],[_N.R,2],[_N.F4,2],[_N.G4,2],[_N.A4,6],[_N.R,2],[_N.Bb4,2],[_N.R,2],[_N.A4,2],[_N.G4,2],[_N.F4,4],[_N.R,2],[_N.E4,2],[_N.F4,2],[_N.G4,2],[_N.A4,2],[_N.R,2],[_N.D4,8]];
+  const bass=[[_N.D3,4],[_N.D3,4],[_N.A3,4],[_N.A3,4],[_N.G3,4],[_N.G3,4],[_N.D3,4],[_N.D3,4],[_N.Bb3,4],[_N.Bb3,4],[_N.F3,4],[_N.G3,4],[_N.A3,4],[_N.A3,4],[_N.D3,8]];
+  let mt=t;mel.forEach(([f,d])=>{_sched(f,d*b,mt,'sawtooth',.18);_sched(f*2,d*b,mt,'square',.06);mt+=d*b;});
+  let bt=t;bass.forEach(([f,d])=>{_sched(f,d*b,bt,'sawtooth',.15);bt+=d*b;});
+  const total=mel.reduce((s,[,d])=>s+d,0)*b;
+  const bars=Math.floor(total/(b*8));
+  for(let i=0;i<bars;i++){
+    _noise(.08,t+i*b*8,.4,60);_beep(60,.1,'sine',t+i*b*8,.3,20);
+    _noise(.08,t+i*b*8+b*4,.35,60);
+    _noise(.06,t+i*b*8+b*2,.25,2000);_noise(.06,t+i*b*8+b*6,.25,2000);
+    for(let j=0;j<8;j++)_noise(.02,t+i*b*8+j*b,.08,10000);
+    _beep(_N.D3,.1,'sawtooth',t+i*b*8,.2);_beep(_N.A3,.1,'sawtooth',t+i*b*8+b*4,.18);
+  }
+  _bgmScheduled.push(setTimeout(()=>_loopBoss(),(total*1000)-80));
+}
+</script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script>
 firebase.initializeApp({
@@ -901,6 +1040,7 @@ function installItem(uid,itemId){
   checkAchievements();
   log(`ITEM install ${itemId} on #${uid+1} cost=£${def.price}`,'item');
   notify(`${def.emoji} ${def.name} 已安裝至 #${uid+1}`,'#c084fc');
+  playSFX('buy');
   checkAchievements();
   // 芳香劑：安裝後立即套用等待加成到現有等待區客人
   if(def.effects&&def.effects.entryFeeBonus){
@@ -1045,6 +1185,7 @@ function checkAchievements(){
     }
   });
   if(newUnlock)localStorage.setItem(ACH_KEY,JSON.stringify(unlocked));
+  if(newUnlock)playSFX('achievement');
   return unlocked;
 }
 function allAchievementsUnlocked(){
@@ -1133,6 +1274,7 @@ function startGame(){
   log('=== GAME START ===','ok');
   endDrag();endScrub();endItemDrag();
   showScreen('screen-game');
+  playBGM('normal');
   buildUrinalDOM();buildQueueDOM();buildShop();
   updateHUD();spawnCustomer();
   // 馬蓋仙開場
@@ -1179,6 +1321,7 @@ function gameTick(){
     state.nextPeak+=CONFIG.PEAK_INTERVAL;
     state.peaksFired++;
     log(`PEAK #${state.peaksFired}`,'ev');showPeakBanner();
+    playBGM('peak');
     checkTip('first_peak');mcSay('first_peak');
     if(state.peaksFired===2)mcSay('peak_second');
     // 高峰抽籤：看是否觸發特殊事件
@@ -1376,6 +1519,7 @@ function triggerSurge(type){
 
   showSurgeBanner(bannerMsg);
   mcSayForced(isDelinquent?'delinquent':'soldier');
+  playBGM(isDelinquent?'delinquent':'soldier');
 
   for(let w=0;w<waves;w++){
     state.pendingWaves.push({type,at:state.elapsed+w*delay,group});
@@ -1389,6 +1533,7 @@ function triggerSurge(type){
       state.pendingWaves.push({type:'gangster',at:state.elapsed+5,group:1});
       state.gangsterSurgeEnd=state.elapsed+CONFIG.GANGSTER_SURGE_DUR+5;
       showSurgeBanner('🕴️  地頭蛇現身！旁邊的人嚇尿了！');
+      playSFX('gangster');
       log('GANGSTER mixed into delinquent surge','ev');
     }
   }
@@ -1425,6 +1570,8 @@ function triggerInspection(){
   if(state.inspectionActive)return;
   const arrive=Math.random()<0.5?'inspection_arrive_1':'inspection_arrive_2';
   mcSayForced(arrive);
+  playSFX('inspector');
+  playBGM('boss');
   // 加馬蓋仙到等待區
   const c={id:++cidCounter,type:'inspector',label:'馬蓋仙',emoji:'🧙',
     cv:'var(--accent)',waitMax:CONFIG.INSPECTION_WAIT,peeBase:CONFIG.INSPECTION_WAIT,
@@ -1506,11 +1653,13 @@ function endInspection(){
     const key=Math.random()<0.5?'inspection_pass_1':'inspection_pass_2';
     mcSayForced(key);
     notify(`🧙 巡查通過！+${CONFIG.INSPECTION_SCORE}分 +£${CONFIG.INSPECTION_MONEY}`,'var(--success)');
+    playSFX('inspect_pass');
   } else {
     state.score=Math.max(0,state.score-CONFIG.INSPECTION_PENALTY);
     const key=Math.random()<0.5?'inspection_fail_1':'inspection_fail_2';
     mcSayForced(key);
     notify(`🧙 巡查失敗！-${CONFIG.INSPECTION_PENALTY}分`,'var(--danger)');
+    playSFX('inspect_fail');
   }
   log(`INSPECTION end passed=${state.inspectionPassed}`,'ev');
   // 強制重置所有巡查相關 state，防止任何殘留導致遊戲停滯
@@ -1518,8 +1667,8 @@ function endInspection(){
   state.inspectionCid=null;
   state.inspectionScanIdx=0;
   state.inspectionScanElapsed=0;
-  // 確保 nextPeak 不會卡住
   if(state.nextPeak<=state.elapsed)state.nextPeak=state.elapsed+CONFIG.PEAK_INTERVAL;
+  playBGM('normal');
 }
 
 function triggerGangsterOnly(){
@@ -1586,6 +1735,7 @@ function tryAssign(cid,uid){
   }
   u.occupied=c;u.peeElapsed=0;
   markCharSeen(c.type);
+  playSFX('assign');
   checkAchievements();
   // 黑尿幫：左右已有客人1秒嚇跑（鎖定改為動態計算，不需設定狀態）
   if(c.type==='gangster'){
@@ -1893,6 +2043,7 @@ function applyScrub(uid){
   else if(u.dirty>=CONFIG.SCRUB_TIP_MED_THRESH)fee*=CONFIG.SCRUB_TIP_MED_MULT;
   const before=u.dirty;
   u.dirty=Math.max(0,u.dirty-CONFIG.SCRUB_AMOUNT);
+  playSFX('scrub');
   state.money+=fee;state.scrubEarned+=fee;state.totalEarned+=fee;
   log(`SCRUB #${uid+1} ${Math.round(before)}%→${Math.round(u.dirty)}% +£${fee.toFixed(2)}`,'money');
   const el=document.getElementById('us-'+uid);
@@ -1908,6 +2059,7 @@ function applyScrub(uid){
 function customerLeave(id){
   const idx=state.queue.findIndex(c=>c.id===id);if(idx===-1)return;
   const c=state.queue.splice(idx,1)[0];
+  playSFX('leave');
   state.leftCount++;state.score=Math.max(0,state.score-CONFIG.LEAVE_PENALTY);
   log(`LEFT ${c.label}(${c.id}) left=${state.leftCount}`,'err');
   showScorePop('-'+CONFIG.LEAVE_PENALTY,'var(--danger)');
@@ -1934,6 +2086,7 @@ function finishPee(u){
   // 髒污超過100%立即損壞
   if(!u.broken&&u.dirty>=CONFIG.DIRTY_BREAK_THRESH){
     u.broken=true;u.items=[];
+    playSFX('break');
     notify(`💥 #${u.id+1} 號便斗因髒污過高損壞了！`,'var(--danger)');
     log(`#${u.id+1} BROKEN by dirty=${Math.round(u.dirty)}%`,'err');
   }
@@ -1946,6 +2099,7 @@ function finishPee(u){
   if(state.urinals.length>=CONFIG.UNLOCK_SOLDIER)checkTip('unlock_soldier'); // count by customer, not dirty%
   log(`DONE #${u.id+1}: ${c.label}(${c.id}) +${c.score}pt +£${fee.toFixed(2)} dirty=${Math.round(u.dirty)}%`,'ok');
   u.occupied=null;u.peeElapsed=0;
+  playSFX('done');
   // 黑尿幫：不付錢，10%贓款，20%壞馬桶，離開後解鎖相鄰
   if(c.type==='gangster'){
     state.money-=fee;state.totalEarned-=fee; // 扣回，不付錢
@@ -2279,6 +2433,7 @@ function updateEffects(){
 // ════════════════════════════════════
 function endGame(){
   state.running=false;clearInterval(gameLoop);endDrag();endScrub();endItemDrag();
+  _stopBGM();
   // 成就最終檢查
   checkAchievements();
   // 全成就加分
@@ -2676,6 +2831,7 @@ function applyConfig(tid){
 function toggleBulletTime(){
   if(!state.running)return;
   state.bulletTime=!state.bulletTime;
+  if(state.bulletTime)playSFX('bullet');
   const btn=document.getElementById('bullet-btn');
   const screen=document.getElementById('screen-game');
   if(state.bulletTime){
@@ -2758,6 +2914,7 @@ function showScorePop(txt,color){
 function showPeakBanner(){
   const el=document.createElement('div');el.className='peak-banner';el.textContent='⚠ 高峰期！';
   document.body.appendChild(el);setTimeout(()=>el.remove(),3000);
+  playSFX('peak');
 }
 function notify(msg,color='var(--accent)'){
   const el=document.createElement('div');el.className='notify-banner';el.textContent=msg;
