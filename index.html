@@ -390,7 +390,7 @@ input[type=range].slim::-moz-range-thumb{width:8px;height:8px;border-radius:50%;
 // ════════════════════════════════════
 //  AUDIO ENGINE
 // ════════════════════════════════════
-let _actx=null,_bgmScheduled=[],_bgmNodes=[],_currentBGM=null,_audioVol=0.4;
+let _actx=null,_bgmScheduled=[],_bgmNodes=[],_currentBGM=null,_audioVol=0.4,_bgmReturnTimer=null;
 
 function _getCtx(){
   if(!_actx)_actx=new(window.AudioContext||window.webkitAudioContext)();
@@ -419,6 +419,7 @@ function _stopBGM(){
   _currentBGM=null;
   _bgmScheduled.forEach(clearTimeout);_bgmScheduled=[];
   _bgmNodes.forEach(n=>{try{n.stop();}catch(e){}});_bgmNodes=[];
+  if(_bgmReturnTimer){clearTimeout(_bgmReturnTimer);_bgmReturnTimer=null;}
 }
 function playSFX(name){
   const c=_getCtx();c.resume();const t=c.currentTime;
@@ -427,10 +428,25 @@ function playSFX(name){
     case 'done': _beep(523,.07,'square',t,.2);_beep(659,.07,'square',t+.07,.2);_beep(784,.12,'square',t+.14,.25);break;
     case 'leave': _beep(400,.08,'square',t,.2,200);_beep(200,.15,'square',t+.08,.2,100);break;
     case 'break':
-      _noise(.02,t,.8,100);_noise(.04,t,.6,300);_noise(.08,t,.5,600);
-      _noise(.15,t,.4,1500);_noise(.3,t,.2,4000);
-      _beep(80,.4,'sine',t,.5,20);_beep(50,.6,'sine',t,.4,15);
-      _noise(.1,t+.05,.3,200);_noise(.2,t+.1,.2,80);break;
+      _beep(55,.03,'square',t,1.0,40);
+      _noise(.03,t,1.0,60);_noise(.06,t,.8,120);_noise(.15,t,.6,250);
+      _noise(.02,t,.8,4000);_noise(.04,t+.02,.7,2000);_noise(.06,t+.04,.6,800);
+      _beep(300,.06,'sawtooth',t,.4,100);_beep(200,.08,'sawtooth',t+.02,.3,60);
+      _noise(.3,t+.06,.4,400);_noise(.3,t+.08,.35,200);_noise(.3,t+.1,.3,100);
+      _beep(40,.5,'sine',t+.02,.7,20);_beep(50,.4,'sine',t+.04,.6,25);_beep(35,.6,'sine',t+.06,.5,18);
+      _noise(.04,t+.18,.5,80);_noise(.08,t+.19,.4,150);_beep(45,.3,'sine',t+.18,.4,22);
+      _noise(.06,t+.25,.5,4000);_beep(400,.05,'sawtooth',t+.25,.3,200);
+      _noise(.08,t+.32,.4,2000);_beep(250,.06,'sawtooth',t+.32,.25,150);
+      _noise(.1,t+.4,.35,800);_beep(150,.07,'sawtooth',t+.4,.2,100);
+      _noise(.25,t+.5,.25,200);_noise(.3,t+.55,.18,100);_noise(.2,t+.6,.12,80);
+      break;
+    case 'extra_urinal':
+      _beep(262,.1,'square',t,.15);_beep(330,.1,'square',t+.1,.18);
+      _beep(392,.1,'square',t+.2,.2);_beep(523,.12,'square',t+.3,.22);
+      _beep(659,.12,'square',t+.42,.24);_beep(784,.15,'square',t+.54,.27);
+      _beep(1047,.35,'square',t+.69,.3);
+      _noise(.08,t+.69,.15,3000);_noise(.12,t+.75,.1,5000);
+      break;
     case 'peak': [0,.15,.3].forEach(d=>{_beep(880,.08,'square',t+d,.25);_beep(440,.08,'square',t+d+.04,.15);});break;
     case 'inspector': _beep(392,.15,'square',t,.2);_beep(523,.15,'square',t+.15,.2);_beep(659,.15,'square',t+.3,.2);_beep(784,.3,'square',t+.45,.3);break;
     case 'achievement': [523,659,784,1047].forEach((f,i)=>_beep(f,.12,'square',t+i*.1,.2+(i*.03)));_beep(1047,.3,'square',t+.4,.3);break;
@@ -449,12 +465,16 @@ function playSFX(name){
 const _N={C3:131,D3:147,E3:165,F3:175,G3:196,A3:220,Bb3:233,B3:247,F3s:185,C4:262,D4:294,E4:330,F4:349,G4:392,A4:440,Bb4:466,B4:494,C5:523,D5:587,E5:659,F5:698,G5:784,A5:880,B5:988,C6:1047,R:0};
 function _sched(f,d,t,type='square',g=0.15){if(f>0)_beep(f,d*.88,type,t,g);}
 
-function playBGM(type){
+function playBGM(type,returnAfterMs=0){
   if(_currentBGM===type)return;
   _stopBGM();
   _getCtx().resume();
   _currentBGM=type;
   ({normal:_loopNormal,peak:_loopPeak,delinquent:_loopDelinquent,soldier:_loopSoldier,boss:_loopBoss})[type]?.();
+  // 自動回 normal
+  if(returnAfterMs>0){
+    _bgmReturnTimer=setTimeout(()=>{if(_currentBGM===type)playBGM('normal');},returnAfterMs);
+  }
 }
 
 function _loopNormal(){
@@ -1013,6 +1033,7 @@ function installItem(uid,itemId){
     state.money-=def.price;state.itemSpend+=def.price;
     if(state.itemsBoughtThisRun)state.itemsBoughtThisRun.add(itemId);
     state.urinals.push(mkUrinal(state.urinals.length));
+    playSFX('extra_urinal');
     buildUrinalDOM();notify('新增 🚽 成功！','var(--success)');mcSay('add_urinal');
     log(`ITEM addUrinal → ${state.urinals.length}`,'item');return true;
   }
@@ -1268,7 +1289,9 @@ function startGame(){
     inspectionCid:null,
     phaseStage:0,
     itemsBoughtThisRun:new Set(),
+    peakBGMEnd:0,
     peaksFired:0,
+    peakBGMEnd:0,
   };
   logBuf.length=0;
   log('=== GAME START ===','ok');
@@ -1321,7 +1344,9 @@ function gameTick(){
     state.nextPeak+=CONFIG.PEAK_INTERVAL;
     state.peaksFired++;
     log(`PEAK #${state.peaksFired}`,'ev');showPeakBanner();
-    playBGM('peak');
+    playBGM('peak',12000);
+    state.peakBGMEnd=state.elapsed+30; // peak BGM 持續30秒後回 normal
+    state.peakBGMEnd=state.elapsed+30;
     checkTip('first_peak');mcSay('first_peak');
     if(state.peaksFired===2)mcSay('peak_second');
     // 高峰抽籤：看是否觸發特殊事件
@@ -1436,10 +1461,19 @@ function gameTick(){
   }
   updateSoftStartBanner();
   updateQueueGlow();
+  // BGM 自動回 normal：surge/waves 結束且不在巡查中
+  if(_currentBGM&&_currentBGM!=='normal'&&_currentBGM!=='boss'){
+    const notInspection=!state.inspectionActive&&!state.inspectionCid;
+    const wavesDone=state.pendingWaves.length===0&&state.gangsterSurgeEnd<=state.elapsed;
+    const peakDone=_currentBGM==='peak'?state.peakBGMEnd>0&&state.elapsed>=state.peakBGMEnd:true;
+    if(notInspection&&wavesDone&&peakDone){
+      state.peakBGMEnd=0;
+      playBGM('normal');
+    }
+  }
   // 巡查進行中
   if(state.inspectionActive){
     tickInspection(dt);
-    // 高峰時間同步往後推，確保巡查結束後不立刻觸發
     if(state.elapsed>=state.nextPeak)state.nextPeak=state.elapsed+CONFIG.PEAK_INTERVAL;
   }
 
@@ -1519,7 +1553,8 @@ function triggerSurge(type){
 
   showSurgeBanner(bannerMsg);
   mcSayForced(isDelinquent?'delinquent':'soldier');
-  playBGM(isDelinquent?'delinquent':'soldier');
+  playBGM(isDelinquent?'delinquent':'soldier',10000);
+  state.peakBGMEnd=state.elapsed+CONFIG.SURGE_PEAK_DELAY;
 
   for(let w=0;w<waves;w++){
     state.pendingWaves.push({type,at:state.elapsed+w*delay,group});
@@ -2113,6 +2148,7 @@ function finishPee(u){
       u.broken=true;u.items=[];
       showScorePop('💥','var(--danger)');
       notify(`🕴️ 黑尿幫踹爆了 #${u.id+1} 號便斗！`,'var(--danger)');
+      playSFX('break');
       log(`GANGSTER broke #${u.id+1}`,'err');
     }
     // 鎖定改為動態計算，不需要解鎖
@@ -2122,6 +2158,7 @@ function finishPee(u){
     u.broken=true;u.items=[];
     showScorePop('💥','var(--danger)');
     notify(`🧑‍🎤 中二生踹爆了 #${u.id+1} 號便斗！`,'var(--danger)');
+    playSFX('break');
     mcSayForced('delinquent_break');
     log(`DELINQUENT broke #${u.id+1}`,'err');
   }
@@ -2434,6 +2471,9 @@ function updateEffects(){
 function endGame(){
   state.running=false;clearInterval(gameLoop);endDrag();endScrub();endItemDrag();
   _stopBGM();
+  playSFX('inspect_fail');
+  playSFX('inspect_fail');
+  playSFX('inspect_fail');
   // 成就最終檢查
   checkAchievements();
   // 全成就加分
