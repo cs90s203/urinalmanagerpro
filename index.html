@@ -546,6 +546,7 @@ function _loopBoss(){
   _bgmScheduled.push(setTimeout(()=>_loopBoss(),(total*1000)-80));
 }
 </script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script>
 firebase.initializeApp({
@@ -815,15 +816,6 @@ const isDev=new URLSearchParams(location.search).has('dev');
     if(bs)bs.value=bright||'1.0';
     applyUIScale(CONFIG.UI_SCALE);
     renderGlobalLeaderboard('global-lb-title',undefined,5);
-    // 成就列表初始化
-    const titleAch=document.getElementById('title-ach-list');
-    if(titleAch){
-      const unlocked=loadAchievements();
-      titleAch.innerHTML=Object.values(ACHIEVEMENTS).map(a=>{
-        const done=unlocked[a.id];
-        return `<span title="${done?a.name:'???'}" style="font-size:18px;${done?'':'opacity:0.3'}">${done?a.emoji:'❓'}</span>`;
-      }).join('');
-    }
   });
 })();
 function initDevTools(){
@@ -835,6 +827,17 @@ function initDevTools(){
   if(cfgBtn)cfgBtn.style.display=isDev?'':'none';
 }
 window.addEventListener('load',initDevTools);
+window.addEventListener('load',()=>{
+  // 成就列表初始化
+  const titleAch=document.getElementById('title-ach-list');
+  if(titleAch){
+    const unlocked=loadAchievements();
+    titleAch.innerHTML=Object.values(ACHIEVEMENTS).map(a=>{
+      const done=unlocked[a.id];
+      return `<span title="${done?a.name:'???'}" style="font-size:18px;${done?'':'opacity:0.3'}">${done?a.emoji:'❓'}</span>`;
+    }).join('');
+  }
+});
 
 // ════════════════════════════════════
 //  LOCAL STORAGE — HISTORY
