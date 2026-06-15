@@ -250,7 +250,7 @@ input[type=range].slim::-moz-range-thumb{width:8px;height:8px;border-radius:50%;
 <div id="screen-title" class="screen active">
   <div class="title-art">尿斗管理大師</div>
   <div class="title-sub">URINAL MANAGER PRO</div>
-  <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);letter-spacing:2px">v5.1.3</div>
+  <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);letter-spacing:2px">v5.1.4</div>
   <div style="font-size:42px;margin:4px 0">🚽</div>
   <div style="font-size:12px;color:var(--muted);max-width:300px;text-align:center;line-height:2">
     安排客人、清潔廁所、購買道具、賺取最高收入<br>
@@ -417,10 +417,6 @@ function _noise(dur,t,g=0.2,freq=800){
   gn.gain.setValueAtTime(g*_audioVol,t);gn.gain.exponentialRampToValueAtTime(0.001,t+dur);
   src.start(t);src.stop(t+dur+0.05);_bgmNodes.push(src);
 }
-// 頁面回到前台時恢復 AudioContext
-document.addEventListener('visibilitychange',()=>{
-  if(document.visibilityState==='visible'&&_actx)_actx.resume();
-});
 function _stopBGM(){
   _currentBGM=null;
   _bgmScheduled.forEach(clearTimeout);_bgmScheduled=[];
@@ -917,6 +913,51 @@ let lastTick=Date.now();
 const drag={active:false,cid:null};
 const scrub={uid:-1,active:false,lastY:0,accum:0};
 const itemDrag={active:false,itemId:null};
+
+// 頁面背景暫停，回來顯示繼續畫面
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='hidden'){
+    // 背景：暫停 game loop
+    if(gameLoop){clearInterval(gameLoop);gameLoop=null;}
+    if(_actx&&_actx.state==='running')_actx.suspend();
+    _stopBGM();
+  } else {
+    // 前台：如果遊戲進行中，顯示暫停畫面
+    if(typeof state!=='undefined'&&state&&state.running){
+      _showPauseScreen();
+    }
+  }
+});
+
+function _showPauseScreen(){
+  let overlay=document.getElementById('pause-overlay');
+  if(!overlay){
+    overlay=document.createElement('div');
+    overlay.id='pause-overlay';
+    overlay.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.75);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;cursor:pointer';
+    overlay.innerHTML=`
+      <div style="font-size:48px">⏸</div>
+      <div style="font-family:'Silkscreen',monospace;font-size:16px;color:#00e5ff;letter-spacing:3px">遊戲暫停</div>
+      <div style="font-family:'Silkscreen',monospace;font-size:11px;color:#64748b;letter-spacing:2px;margin-top:4px">點擊任何地方繼續</div>
+    `;
+    overlay.onclick=_resumeGame;
+    document.body.appendChild(overlay);
+  }
+  overlay.style.display='flex';
+}
+
+function _resumeGame(){
+  const overlay=document.getElementById('pause-overlay');
+  if(overlay)overlay.style.display='none';
+  // 用戶手勢：resume AudioContext 並重啟 BGM
+  if(_actx)_actx.resume();
+  if(_currentBGM)playBGM(_currentBGM);
+  // 重啟 game loop
+  if(typeof state!=='undefined'&&state&&state.running&&!gameLoop){
+    lastTick=Date.now();
+    gameLoop=setInterval(gameTick,80);
+  }
+}
 
 const MC_PREVIEW={
   target:      '便宜入門，減少15%髒污，先從這個開始。',
