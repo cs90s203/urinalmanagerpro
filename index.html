@@ -250,7 +250,7 @@ input[type=range].slim::-moz-range-thumb{width:8px;height:8px;border-radius:50%;
 <div id="screen-title" class="screen active">
   <div class="title-art">尿斗管理大師</div>
   <div class="title-sub">URINAL MANAGER PRO</div>
-  <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);letter-spacing:2px">v5.1.2</div>
+  <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);letter-spacing:2px">v5.1.3</div>
   <div style="font-size:42px;margin:4px 0">🚽</div>
   <div style="font-size:12px;color:var(--muted);max-width:300px;text-align:center;line-height:2">
     安排客人、清潔廁所、購買道具、賺取最高收入<br>
@@ -417,7 +417,10 @@ function _noise(dur,t,g=0.2,freq=800){
   gn.gain.setValueAtTime(g*_audioVol,t);gn.gain.exponentialRampToValueAtTime(0.001,t+dur);
   src.start(t);src.stop(t+dur+0.05);_bgmNodes.push(src);
 }
-function _stopBGM(){
+// 頁面回到前台時恢復 AudioContext
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible'&&_actx)_actx.resume();
+});
   _currentBGM=null;
   _bgmScheduled.forEach(clearTimeout);_bgmScheduled=[];
   _bgmNodes.forEach(n=>{try{n.stop();}catch(e){}});_bgmNodes=[];
