@@ -97,6 +97,8 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .cc.inspector-glow{animation:inspector-card-glow .6s ease-in-out infinite!important}
 @keyframes inspect-glow{0%,100%{box-shadow:0 0 8px rgba(255,255,255,.3),inset 0 0 4px rgba(255,255,255,.1)}50%{box-shadow:0 0 24px rgba(255,215,0,.9),inset 0 0 8px rgba(255,215,0,.2)}}
 .us.inspecting{animation:inspect-glow .5s ease-in-out infinite;border-color:#ffd700!important}
+@keyframes rainbow-glow{0%{text-shadow:0 0 8px #a5f3fc}15%{text-shadow:0 0 8px #bbf7d0}30%{text-shadow:0 0 8px #fef08a}50%{text-shadow:0 0 8px #fed7aa}65%{text-shadow:0 0 8px #fecaca}80%{text-shadow:0 0 8px #ede9fe}100%{text-shadow:0 0 12px #ffd700}}
+@keyframes rainbow-text{0%{color:#a5f3fc}15%{color:#bbf7d0}30%{color:#fef08a}50%{color:#fed7aa}65%{color:#fecaca}80%{color:#ede9fe}100%{color:#ffd700}}
 .us.gangster-locked{border-color:#fb923c!important;background:rgba(251,146,60,.06)!important;}
 .us.gangster-locked::after{content:'🕴️';position:absolute;top:2px;right:4px;font-size:10px;opacity:.7}
 @keyframes bpulse{0%,100%{box-shadow:0 0 0 rgba(255,51,85,0)}50%{box-shadow:0 0 16px rgba(255,51,85,.5)}}.us.broken{animation:bpulse .8s ease-in-out infinite}
@@ -248,7 +250,7 @@ input[type=range].slim::-moz-range-thumb{width:8px;height:8px;border-radius:50%;
 <div id="screen-title" class="screen active">
   <div class="title-art">尿斗管理大師</div>
   <div class="title-sub">URINAL MANAGER PRO</div>
-  <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);letter-spacing:2px">v5.1.1</div>
+  <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);letter-spacing:2px">v5.1.2</div>
   <div style="font-size:42px;margin:4px 0">🚽</div>
   <div style="font-size:12px;color:var(--muted);max-width:300px;text-align:center;line-height:2">
     安排客人、清潔廁所、購買道具、賺取最高收入<br>
@@ -839,17 +841,6 @@ function initDevTools(){
   }
 }
 window.addEventListener('load',initDevTools);
-window.addEventListener('load',()=>{
-  // 成就列表初始化
-  const titleAch=document.getElementById('title-ach-list');
-  if(titleAch){
-    const unlocked=loadAchievements();
-    titleAch.innerHTML=Object.values(ACHIEVEMENTS).map(a=>{
-      const done=unlocked[a.id];
-      return `<span title="${done?a.name:'???'}" style="font-size:18px;${done?'':'opacity:0.3'}">${done?a.emoji:'❓'}</span>`;
-    }).join('');
-  }
-});
 
 // ════════════════════════════════════
 //  LOCAL STORAGE — HISTORY
@@ -1189,6 +1180,7 @@ const CHAR_ORDER=['small','elder','med','large','drunk','delinquent','soldier','
 //  成就系統
 // ════════════════════════════════════
 const ACHIEVEMENTS={
+  rainbow:   {id:'rainbow',  emoji:'🌈', name:'彩虹',       desc:'積分達7000分集齊全部顏色', check:()=>state.phaseStage>=CONFIG.PHASE_MAX_STAGES},
   wealth:    {id:'wealth',   emoji:'🌎', name:'財富自由',   desc:'單局收入達£5000',   check:()=>state.totalEarned>=5000},
   all_items: {id:'all_items',emoji:'🚨', name:'全副武裝',   desc:'單局買過所有道具',   check:()=>checkAllItems()},
   all_chars: {id:'all_chars',emoji:'🚀', name:'全角色圖鑑', desc:'見過所有角色',        check:()=>checkAllChars()},
@@ -2604,13 +2596,22 @@ function endGame(){
   const unlocked=loadAchievements();
   const achEl=document.getElementById('rs-ach-list');
   if(achEl){
-    achEl.innerHTML=Object.values(ACHIEVEMENTS).map(a=>{
+    const achList=Object.values(ACHIEVEMENTS);
+    const rainbow=achList[0]; // 彩虹永遠第一個
+    const rest=achList.slice(1);
+    const renderAch=(a)=>{
       const done=unlocked[a.id];
+      const rainbowStyle=done&&a.id==='rainbow'?'animation:rainbow-glow 2s linear infinite':'';
+      const nameStyle=done&&a.id==='rainbow'?'animation:rainbow-text 2s linear infinite;':'';
       return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:50px" title="${done?a.name+'：'+a.desc:a.name}">
-        <span style="font-size:26px;${done?'':'opacity:0.4'}">${done?a.emoji:'❓'}</span>
-        <span style="font-family:'Silkscreen',monospace;font-size:11px;color:${done?'var(--accent3)':'var(--border)'}">${a.name}</span>
+        <span style="font-size:26px;${done?rainbowStyle:'opacity:0.4'}">${done?a.emoji:'❓'}</span>
+        <span style="font-family:'Silkscreen',monospace;font-size:11px;${done?'color:var(--accent3);'+nameStyle:'color:var(--border)'}">${a.name}</span>
       </div>`;
-    }).join('');
+    };
+    achEl.innerHTML=`
+      <div style="display:flex;justify-content:center;margin-bottom:8px">${renderAch(rainbow)}</div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">${rest.map(renderAch).join('')}</div>
+    `;
   }
 
   // 角色圖鑑
@@ -2763,10 +2764,12 @@ window.addEventListener('load',()=>{
   const qa=document.getElementById('queue-area');
   if(!qa)return;
   qa.addEventListener('touchstart',e=>{
-    e.preventDefault(); // 整個等待區阻止縱向滑動，水平捲動由 touch-action:pan-x 處理
+    e.preventDefault();
     handleQueueTouchStart(e);
   },{passive:false});
   qa.addEventListener('touchend',handleQueueTouchEnd,{passive:false});
+  // 主選單成就初始化（在主 script 執行後才跑，確保 ACHIEVEMENTS 已定義）
+  renderTitleAch();
 });
 function handleQueueTouchStart(e){
   // 阻止縱向滑動頁面，但允許水平捲動 queue-list
@@ -2942,20 +2945,23 @@ function updateSoftStartBanner(){
 // ════════════════════════════════════
 //  UTILS
 // ════════════════════════════════════
+function renderTitleAch(){
+  const titleAch=document.getElementById('title-ach-list');
+  if(!titleAch||typeof ACHIEVEMENTS==='undefined')return;
+  const unlocked=loadAchievements();
+  titleAch.innerHTML=Object.values(ACHIEVEMENTS).map(a=>{
+    const done=unlocked[a.id];
+    const s=done&&a.id==='rainbow'?'animation:rainbow-glow 2s linear infinite':'';
+    return `<span title="${done?a.name:'???'}" style="font-size:18px;${done?s:'opacity:0.3'}">${done?a.emoji:'❓'}</span>`;
+  }).join('');
+}
+
 function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');lastTick=Date.now();
   if(id==='screen-title'){
     renderGlobalLeaderboard('global-lb-title',undefined,5);
-    // 主選單成就
-    const titleAch=document.getElementById('title-ach-list');
-    if(titleAch){
-      const unlocked=loadAchievements();
-      titleAch.innerHTML=Object.values(ACHIEVEMENTS).map(a=>{
-        const done=unlocked[a.id];
-        return `<span title="${done?a.name:'???'}" style="font-size:18px;${done?'':'opacity:0.3'}">${done?a.emoji:'❓'}</span>`;
-      }).join('');
-    }
+    renderTitleAch();
   }
 }
 function showScorePop(txt,color){
