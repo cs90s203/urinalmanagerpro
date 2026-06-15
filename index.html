@@ -421,6 +421,7 @@ function _noise(dur,t,g=0.2,freq=800){
 document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='visible'&&_actx)_actx.resume();
 });
+function _stopBGM(){
   _currentBGM=null;
   _bgmScheduled.forEach(clearTimeout);_bgmScheduled=[];
   _bgmNodes.forEach(n=>{try{n.stop();}catch(e){}});_bgmNodes=[];
