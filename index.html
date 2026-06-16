@@ -213,6 +213,8 @@ input[type=range].slim::-moz-range-thumb{width:8px;height:8px;border-radius:50%;
 }
 #screen-game.bullet{outline:6px solid var(--accent);outline-offset:-6px;animation:bullet-border 1s ease-in-out infinite}
 #bullet-btn.active{background:rgba(0,229,255,.18)!important;border-color:var(--accent)!important;color:var(--accent)!important;box-shadow:0 0 18px rgba(0,229,255,.45);font-size:var(--fs-md)!important}
+#dispatch-btn:hover:not(.low-money){background:rgba(255,215,0,.1)!important;border-color:var(--money)!important;color:var(--money)!important}
+#dispatch-btn.low-money{opacity:0.5;cursor:not-allowed}
 
 /* wait boost glow */
 @keyframes qglow{0%,100%{box-shadow:0 0 0 rgba(255,215,0,0)}50%{box-shadow:0 0 16px rgba(255,215,0,.45)}}
@@ -302,12 +304,20 @@ input[type=range].slim::-moz-range-thumb{width:8px;height:8px;border-radius:50%;
     <div class="queue-list" id="queue-list"></div>
   </div>
 
-  <button id="bullet-btn" onclick="toggleBulletTime()" style="
-    width:100%;font-family:'Silkscreen',monospace;font-size:11px;
-    background:var(--panel);border:1px solid var(--border);color:var(--muted);
-    padding:7px;cursor:pointer;border-radius:4px;letter-spacing:2px;
-    transition:all .15s;
-  ">🐌 子彈時間 [按住慢速]</button>
+  <div style="display:flex;gap:6px;width:100%">
+    <button id="dispatch-btn" onclick="dispatchCustomer()" style="
+      flex:1;font-family:'Silkscreen',monospace;font-size:11px;
+      background:var(--panel);border:1px solid var(--border);color:var(--muted);
+      padding:7px;cursor:pointer;border-radius:4px;letter-spacing:2px;
+      transition:all .15s;
+    ">🚨 來人啊！ [£5]</button>
+    <button id="bullet-btn" onclick="toggleBulletTime()" style="
+      flex:1;font-family:'Silkscreen',monospace;font-size:11px;
+      background:var(--panel);border:1px solid var(--border);color:var(--muted);
+      padding:7px;cursor:pointer;border-radius:4px;letter-spacing:2px;
+      transition:all .15s;
+    ">🐌 子彈時間 [按住慢速]</button>
+  </div>
 
   <!-- SHOP -->
   <div class="shop-area" id="shop-area-el">
@@ -2522,6 +2532,9 @@ function updateHUD(){
   const m=Math.floor(state.elapsed/60),s=Math.floor(state.elapsed%60);
   document.getElementById('hud-time').textContent=`${m}:${String(s).padStart(2,'0')}`;
   const sb=document.getElementById('shop-bal');if(sb)sb.textContent='£'+state.money.toFixed(2);
+  // 派遣按鈕狀態
+  const dispatchBtn=document.getElementById('dispatch-btn');
+  if(dispatchBtn)dispatchBtn.classList.toggle('low-money',state.money<5);
 }
 function updateEffects(){
   const eff=[];
@@ -2739,6 +2752,8 @@ const MC_LINES={
   new_char_gangster:   '完了，黑尿幫來了，沒人敢在他旁邊！',
   new_char_delinquent: '中二生！而且是成群的，一次三個，接下來30秒持續補充，撐住！',
   new_char_soldier:    '阿兵哥！五個人一起衝進來，等不了多久，動作要快，這是最大考驗！',
+  // 派遣客人
+  dispatch:            'oh!! 游刃有餘啊，不錯不錯，照顧客人的膀胱是我們的天職',
   // 長按區域說明
   explain_urinal_empty:  '這是便斗。把客人拖過來安排，或手指上下摩擦清潔。',
   explain_urinal_dirty:  '髒污超過35%，清潔費就有加成。越髒越值錢——但別讓它超過100%！',
@@ -2945,6 +2960,52 @@ function applyConfig(tid){
   DFIELDS.forEach(s=>s.fields.forEach(f=>{const e=document.getElementById('c-'+tid+'-'+f.k);if(e){const v=parseFloat(e.value);if(!isNaN(v))CONFIG[f.k]=v;}}));
   log('Config applied','ok');
 }
+function dispatchCustomer(){
+  if(!state.running)return;
+  
+  const DISPATCH_COST=5;
+  
+  // 檢查金錢
+  if(state.money<DISPATCH_COST){
+    const shortage=DISPATCH_COST-Math.floor(state.money);
+    const msg=`錢不夠啊！派遣客人需要£5，你還差£${shortage}。先去賺錢吧。`;
+    mcQueue.push(msg);
+    if(!mcBusy)_mcNext();
+    return;
+  }
+  
+  // 扣錢
+  state.money-=DISPATCH_COST;
+  
+  // 決定觸發哪個 Surge
+  // 優先度：soldier > delinquent > peak
+  // 根據解鎖條件和隨機機率決定
+  const uc=state.urinals.length;
+  let triggered=false;
+  
+  if(uc>=CONFIG.UNLOCK_SOLDIER&&Math.random()*100<CONFIG.SOLDIER_RATE){
+    triggerSurge('soldier');
+    triggered=true;
+  } else if(uc>=CONFIG.UNLOCK_DELINQUENT&&Math.random()*100<CONFIG.DELINQUENT_RATE){
+    triggerSurge('delinquent');
+    triggered=true;
+  }
+  
+  // 若都沒觸發，進普通高峰
+  if(!triggered){
+    for(let k=0;k<CONFIG.PEAK_COUNT;k++)spawnCustomer();
+    state.peaksFired++;
+  }
+  
+  // 播放音效
+  playSFX('buy');
+  
+  // 馬蓋仙台詞
+  mcSay('dispatch',true);
+  
+  updateHUD();
+}
+
 function toggleBulletTime(){
   if(!state.running)return;
   state.bulletTime=!state.bulletTime;
