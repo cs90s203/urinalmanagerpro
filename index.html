@@ -67,11 +67,14 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .queue-list::-webkit-scrollbar{display:none;}
 
 /* ── CUSTOMER CARD ── */
-.cc{width:63px;background:var(--tile);border:2px solid var(--border);border-radius:6px;padding:5px;cursor:grab;display:flex;flex-direction:column;align-items:center;gap:2px;user-select:none;transition:border-color .12s,box-shadow .12s;flex-shrink:0}
+.cc{width:63px;background:var(--tile);border:2px solid var(--border);border-radius:6px;padding:5px;cursor:grab;display:flex;flex-direction:column;align-items:center;gap:2px;user-select:none;transition:border-color .12s,box-shadow .12s;flex-shrink:0;position:relative}
 .cc:hover{border-color:var(--accent)}.cc.sel{border-color:var(--accent3)!important;box-shadow:0 0 10px rgba(184,255,0,.35)!important}
 .cc.urgent{border-color:var(--warn);box-shadow:0 0 8px rgba(255,184,0,.3)}.cc.urgent.sel{border-color:var(--accent3)!important;box-shadow:0 0 10px rgba(184,255,0,.35)!important}
 .cc.dragging{opacity:.45;cursor:grabbing;border-color:var(--accent3)!important}
-.cc-e{font-size:18px;line-height:1;pointer-events:none}.cc-t{font-family:'Silkscreen',monospace;font-size:calc(var(--fs-sm)*0.9);pointer-events:none}
+.cc-e{font-size:18px;line-height:1;pointer-events:none}
+.cc-e.dispatch-glow,.u-ic.dispatch-glow{animation:dispatch-glow 1.2s ease-in-out infinite;}
+@keyframes dispatch-glow{0%,100%{opacity:1;filter:drop-shadow(0 0 4px rgba(255,255,255,0.6));}50%{opacity:0.8;filter:drop-shadow(0 0 12px rgba(255,255,255,0.9));}}
+.cc-t{font-family:'Silkscreen',monospace;font-size:calc(var(--fs-sm)*0.9);pointer-events:none}
 .cc-bw{width:100%;height:3px;background:var(--border);border-radius:2px;overflow:hidden;pointer-events:none}.cc-b{height:100%;border-radius:2px}
 .cc-tm{font-family:'Silkscreen',monospace;font-size:calc(var(--fs-sm)*0.9);color:var(--muted);pointer-events:none}
 
@@ -256,7 +259,7 @@ input[type=range].slim::-moz-range-thumb{width:8px;height:8px;border-radius:50%;
 <div id="screen-title" class="screen active">
   <div class="title-art">尿斗管理大師</div>
   <div class="title-sub">URINAL MANAGER PRO</div>
-  <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);letter-spacing:2px">v5.1.6</div>
+  <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);letter-spacing:2px">v5.1.7</div>
   <div style="font-size:42px;margin:4px 0">🚽</div>
   <div style="font-size:12px;color:var(--muted);max-width:300px;text-align:center;line-height:2">
     安排客人、清潔廁所、購買道具、賺取最高收入<br>
@@ -1357,7 +1360,7 @@ function startGame(){
     itemsBoughtThisRun:new Set(),
     peakBGMEnd:0,
     peaksFired:0,
-    peakBGMEnd:0,
+    dispatchedWaveTypes:[],
   };
   logBuf.length=0;
   log('=== GAME START ===','ok');
@@ -1440,7 +1443,18 @@ function gameTick(){
     state.pendingWaves=state.pendingWaves.filter(w=>w.at>now);
     due.forEach(w=>{
       log(`WAVE ${w.type} x${w.group} at ${now.toFixed(1)}s`,'ev');
-      for(let i=0;i<w.group;i++)_addToQueue(w.type);
+      for(let i=0;i<w.group;i++){
+        const c=_addToQueue(w.type);
+        if(w.isDispatched&&c){
+          c.isDispatched=true;
+          // 更新卡片的 emoji 發光效果
+          const el=document.getElementById('cc-'+c.id);
+          if(el){
+            const emojiEl=el.querySelector('.cc-e');
+            if(emojiEl)emojiEl.classList.add('dispatch-glow');
+          }
+        }
+      }
     });
   }
   state.spawnAccum+=dt;
@@ -1622,8 +1636,18 @@ function triggerSurge(type){
   playBGM(isDelinquent?'delinquent':'soldier',10000);
   state.peakBGMEnd=state.elapsed+CONFIG.SURGE_PEAK_DELAY;
 
+  const isDispatched=state.dispatchedWaveTypes.includes(type);
+  
   for(let w=0;w<waves;w++){
-    state.pendingWaves.push({type,at:state.elapsed+w*delay,group});
+    const waveObj={type,at:state.elapsed+w*delay,group};
+    if(isDispatched)waveObj.isDispatched=true;
+    state.pendingWaves.push(waveObj);
+  }
+  
+  // 派遣該 type 的 wave 後，從清單移除避免重複標記
+  if(isDispatched){
+    const idx=state.dispatchedWaveTypes.indexOf(type);
+    if(idx>=0)state.dispatchedWaveTypes.splice(idx,1);
   }
 
   // 中二生計數 + 黑尿幫混入
@@ -1782,11 +1806,11 @@ function triggerGangsterOnly(){
 
 function spawnCustomer(forcedType){
   const type=forcedType||rndType();
-  _addToQueue(type);
+  return _addToQueue(type);
 }
 
 function _addToQueue(type){
-  if(state.queue.length>=10)return;
+  if(state.queue.length>=10)return null;
   const d=TDEFS[type];
   const dirtyAmt=d.isDrunk?CONFIG[d.dk]+CONFIG.DRUNK_DIRTY_BONUS:CONFIG[d.dk];
   const c={id:++cidCounter,type,label:d.label,emoji:d.emoji,cv:d.cv,
@@ -1804,6 +1828,7 @@ function _addToQueue(type){
   list.appendChild(el);
   checkTip('first_spawn');
   mcSay('first_spawn');
+  return c;
 }
 function tryAssign(cid,uid){
   const u=state.urinals.find(x=>x.id===uid);
@@ -2181,6 +2206,8 @@ function finishPee(u){
   // entry fee (base + urinal bonus, then aroma multiplier)
   let fee=calcEntryFee();
   const efb=getEffect(u,'entryFeeBonus');if(efb!==undefined)fee*=efb;
+  // 派遣客人 x2
+  if(c.isDispatched)fee*=2;
 
   state.score+=c.score;state.money+=fee;state.totalEarned+=fee;state.servedCount++;
   u.dirty=Math.min(120,u.dirty+dirtyAdd);
@@ -2198,7 +2225,7 @@ function finishPee(u){
   if(state.urinals.length>=CONFIG.UNLOCK_LARGE)checkTip('unlock_large');
   if(state.urinals.length>=CONFIG.UNLOCK_DELINQUENT)checkTip('unlock_delinquent');
   if(state.urinals.length>=CONFIG.UNLOCK_SOLDIER)checkTip('unlock_soldier'); // count by customer, not dirty%
-  log(`DONE #${u.id+1}: ${c.label}(${c.id}) +${c.score}pt +£${fee.toFixed(2)} dirty=${Math.round(u.dirty)}%`,'ok');
+  log(`DONE #${u.id+1}: ${c.label}(${c.id}) +${c.score}pt +£${fee.toFixed(2)}${c.isDispatched?' (x2)':''} dirty=${Math.round(u.dirty)}%`,'ok');
   u.occupied=null;u.peeElapsed=0;
   playSFX('done');
   // 黑尿幫：不付錢，10%贓款，20%壞馬桶，離開後解鎖相鄰
@@ -2359,7 +2386,7 @@ function mkCardEl(c){
     clickSelect(c.id);
   },{passive:false});
   el.innerHTML=
-    `<div class="cc-e">${c.emoji}</div>`+
+    `<div class="cc-e${c.isDispatched?' dispatch-glow':''}">${c.emoji}</div>`+
     `<div class="cc-t queue-label" style="color:${c.cv}">${c.label}</div>`+
     `<div class="cc-t queue-spacer" style="display:none;color:${c.cv}">&nbsp;</div>`+
     `<div class="cc-bw"><div class="cc-b" id="ccb-${c.id}" style="background:var(--success);width:0%"></div></div>`+
@@ -2462,18 +2489,18 @@ function syncUrinalDOM(){
     if(u.broken){checkTip('broken');if(!u.repairing)mcSay('broken');}
 
     if(u.repairing){
-      icon.textContent='🔧';icon.style.opacity='1';
+      icon.textContent='🔧';icon.style.opacity='1';icon.classList.remove('dispatch-glow');
       const rem=Math.ceil(CONFIG.REPAIR_TIME-u.repairElapsed);
       stl.textContent=`修復中 ${rem}s`;stl.style.color='var(--accent)';
       const p=Math.min(100,(u.repairElapsed/CONFIG.REPAIR_TIME)*100);
       pwrap.style.visibility='visible';pbar.style.width=p+'%';pbar.style.background='var(--accent)';
       spd.style.visibility='hidden';
     } else if(u.broken){
-      icon.textContent='💥';icon.style.opacity='1';
+      icon.textContent='💥';icon.style.opacity='1';icon.classList.remove('dispatch-glow');
       stl.textContent='損壞！需修復工';stl.style.color='var(--danger)';
       pwrap.style.visibility='hidden';spd.style.visibility='hidden';
     } else if(u.cleaning){
-      icon.textContent='🚿';icon.style.opacity='1';
+      icon.textContent='🚿';icon.style.opacity='1';icon.classList.remove('dispatch-glow');
       const rem=Math.ceil(u.cleanDuration-u.cleanElapsed);
       stl.textContent=`清潔中 ${rem}s`;stl.style.color='var(--accent2)';
       const p=Math.min(100,(u.cleanElapsed/u.cleanDuration)*100);
@@ -2482,12 +2509,19 @@ function syncUrinalDOM(){
     } else if(u.occupied){
       const c=u.occupied,s=calcSpd(u),pp=Math.min(100,(u.peeElapsed/c.peeBase)*100);
       icon.textContent=c.emoji;icon.style.opacity='1';
+      // 派遣客人發白光
+      if(c.isDispatched){
+        icon.classList.add('dispatch-glow');
+      } else {
+        icon.classList.remove('dispatch-glow');
+      }
       stl.textContent=c.label;stl.style.color=c.cv;
       pwrap.style.visibility='visible';pbar.style.width=pp+'%';pbar.style.background=c.cv;
       spd.textContent=Math.round(s*100)+'% 速';spd.style.visibility='visible';
     } else {
       icon.textContent=u.dirty>=CONFIG.DIRTY_WARN_THRESH?'⚠️':'🚽';
       icon.style.opacity=u.dirty>=CONFIG.DIRTY_WARN_THRESH?'1':'.35';
+      icon.classList.remove('dispatch-glow');
       stl.textContent=u.dirty>=CONFIG.DIRTY_WARN_THRESH?'瀕臨損壞':'空';
       stl.style.color=u.dirty>=CONFIG.DIRTY_WARN_THRESH?'var(--warn)':'var(--muted)';
       pwrap.style.visibility='hidden';spd.style.visibility='hidden';
@@ -2978,23 +3012,36 @@ function dispatchCustomer(){
   state.money-=DISPATCH_COST;
   
   // 決定觸發哪個 Surge
-  // 優先度：soldier > delinquent > peak
-  // 根據解鎖條件和隨機機率決定
   const uc=state.urinals.length;
   let triggered=false;
+  let surgeType='peak'; // 預設
   
   if(uc>=CONFIG.UNLOCK_SOLDIER&&Math.random()*100<CONFIG.SOLDIER_RATE){
+    state.dispatchedWaveTypes.push('soldier');
     triggerSurge('soldier');
     triggered=true;
   } else if(uc>=CONFIG.UNLOCK_DELINQUENT&&Math.random()*100<CONFIG.DELINQUENT_RATE){
+    state.dispatchedWaveTypes.push('delinquent');
     triggerSurge('delinquent');
     triggered=true;
   }
   
   // 若都沒觸發，進普通高峰
   if(!triggered){
-    for(let k=0;k<CONFIG.PEAK_COUNT;k++)spawnCustomer();
+    for(let k=0;k<CONFIG.PEAK_COUNT;k++){
+      const c=spawnCustomer();
+      if(c){
+        c.isDispatched=true;
+        const el=document.getElementById('cc-'+c.id);
+        if(el){
+          const emojiEl=el.querySelector('.cc-e');
+          if(emojiEl)emojiEl.classList.add('dispatch-glow');
+        }
+      }
+    }
     state.peaksFired++;
+  } else {
+    // surge 已在上面的 triggerSurge 之前標記完成
   }
   
   // 播放音效
