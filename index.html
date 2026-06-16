@@ -61,6 +61,9 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .queue-area{width:100%;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:8px 12px}
 .queue-lbl{font-family:'Silkscreen',monospace;font-size:var(--fs-sm);color:var(--muted);letter-spacing:2px;margin-bottom:6px}
 .queue-list{display:flex;gap:6px;flex-wrap:nowrap;min-height:52px;align-items:center;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;padding-bottom:4px;scrollbar-width:none;touch-action:pan-x;}
+.queue-list.queue-over-capacity .cc{width:50px;padding:4px}
+.queue-list.queue-over-capacity .queue-label{display:none!important;}
+.queue-list.queue-over-capacity .queue-spacer{display:block!important;}
 .queue-list::-webkit-scrollbar{display:none;}
 
 /* ── CUSTOMER CARD ── */
@@ -75,11 +78,11 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 /* ── URINAL SLOTS ── */
 .urinals-area{display:flex;gap:6px;justify-content:center;width:100%;flex-wrap:nowrap}
 @media(max-width:480px){
-  .urinals-area.six-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+  .urinals-area.six-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
   @media(max-width:480px){
     /* 5格單排擠壓模式 */
-    .urinals-area.tight-5 .uscrub-hint-text{display:none}
-    .urinals-area.tight-5 .dur-bar{display:none}
+    .urinals-area.tight-5 .uscrub-hint-text,
+    .urinals-area.six-grid .uscrub-hint-text{display:none}
   }
 }
 .us.asgn{cursor:pointer;border-color:#3a3a60}
@@ -112,8 +115,9 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .u-db{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--success),var(--warn) 60%,var(--danger))}
 .u-st{display:flex;gap:3px;flex-wrap:wrap;justify-content:center}
 .stag{font-family:'Silkscreen',monospace;font-size:var(--fs-xs);padding:1px 4px;border-radius:2px;background:rgba(255,184,0,.1);color:var(--warn);border:1px solid rgba(255,184,0,.2)}
-.u-items{display:flex;gap:4px;flex-wrap:nowrap;justify-content:flex-start;width:100%;overflow:hidden}
-.u-item-chip{display:inline-flex;align-items:center;gap:1px;font-size:12px;position:relative;cursor:default;line-height:1;white-space:nowrap}
+.u-items{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-start;width:100%}
+.urinals-area.six-grid .u-items{flex-direction:column;min-height:20px}
+.u-item-chip{display:inline-flex;align-items:center;gap:1px;font-size:12px;position:relative;cursor:default;line-height:1;white-space:nowrap;flex-shrink:0}
 .u-item-chip .dur-bar{display:inline-block;width:16px;height:2px;background:var(--accent3);border-radius:1px;vertical-align:middle;margin-left:1px}
 @media(max-width:480px){
   .us{min-width:60px;max-width:none;padding:4px}
@@ -250,7 +254,7 @@ input[type=range].slim::-moz-range-thumb{width:8px;height:8px;border-radius:50%;
 <div id="screen-title" class="screen active">
   <div class="title-art">尿斗管理大師</div>
   <div class="title-sub">URINAL MANAGER PRO</div>
-  <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);letter-spacing:2px">v5.1.4</div>
+  <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);letter-spacing:2px">v5.1.6</div>
   <div style="font-size:42px;margin:4px 0">🚽</div>
   <div style="font-size:12px;color:var(--muted);max-width:300px;text-align:center;line-height:2">
     安排客人、清潔廁所、購買道具、賺取最高收入<br>
@@ -2346,7 +2350,8 @@ function mkCardEl(c){
   },{passive:false});
   el.innerHTML=
     `<div class="cc-e">${c.emoji}</div>`+
-    `<div class="cc-t" style="color:${c.cv}">${c.label}</div>`+
+    `<div class="cc-t queue-label" style="color:${c.cv}">${c.label}</div>`+
+    `<div class="cc-t queue-spacer" style="display:none;color:${c.cv}">&nbsp;</div>`+
     `<div class="cc-bw"><div class="cc-b" id="ccb-${c.id}" style="background:var(--success);width:0%"></div></div>`+
     `<div class="cc-tm" id="cct-${c.id}">${c.waitMax}s</div>`;
   return el;
@@ -2401,6 +2406,15 @@ function updateShopAfford(){
 function syncQueueDOM(){
   // queue_full: 等待區 ≥4 人，一局一次
   if(state.queue.length>=4)mcSay('queue_full');
+  const qlist=document.getElementById('queue-list');
+  if(qlist){
+    // 動態計算：隊列是否超出容器寬度
+    const containerWidth=qlist.clientWidth;
+    const cardWidth=69; // 63px + 6px gap
+    const cardsWidth=state.queue.length*cardWidth;
+    const shouldNarrow=cardsWidth>containerWidth;
+    qlist.classList.toggle('queue-over-capacity',shouldNarrow);
+  }
   state.queue.forEach(c=>{
     const pct=Math.min(100,(c.waitElapsed/c.waitMax)*100);
     const bc=pct>85?'var(--danger)':pct>60?'var(--warn)':'var(--success)';
@@ -2469,7 +2483,7 @@ function syncUrinalDOM(){
       pwrap.style.visibility='hidden';spd.style.visibility='hidden';
     }
 
-    const dp=Math.round(u.dirty);dl.textContent='髒污 '+dp+'%';db.style.width=Math.min(dp,100)+'%';
+    const dp=Math.round(u.dirty);dl.textContent='髒'+dp+'%';db.style.width=Math.min(dp,100)+'%';
 
     const newTags=slowTags(u).map(t=>`<span class="stag">${t}</span>`).join('');
     if(stags.innerHTML!==newTags)stags.innerHTML=newTags;
