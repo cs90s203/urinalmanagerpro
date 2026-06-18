@@ -51,6 +51,43 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 
 /* ── GAME ── */
 #screen-game{padding-top:8px;gap:8px;align-items:stretch;padding-bottom:24px}
+#screen-game.abyss-mode{background:#0d0d10;transition:background .8s}
+#screen-game.abyss-mode .hud{background:#111114!important;border-color:#252528!important}
+#screen-game.abyss-mode .hud-lbl{color:#555!important}
+#screen-game.abyss-mode .hud-val{color:#777!important}
+#screen-game.abyss-mode .hud-val.money{color:#8a8060!important}
+#screen-game.abyss-mode .hud-val.dn{color:#9a3a3a!important}
+#screen-game.abyss-mode .hud-val.wn{color:#7a5a00!important}
+#screen-game.abyss-mode #mc-panel{background:#111114!important;border-color:#252528!important}
+#screen-game.abyss-mode #mc-name{color:#555!important}
+#screen-game.abyss-mode #mc-content{color:#777!important}
+#screen-game.abyss-mode #mc-cursor{color:#777!important}
+#screen-game.abyss-mode .urinals-area{background:transparent!important}
+#screen-game.abyss-mode .us{background:#111114!important;border-color:#2a2a2e!important}
+#screen-game.abyss-mode .u-sl{color:#555!important}
+#screen-game.abyss-mode .u-dl{color:#555!important}
+#screen-game.abyss-mode .u-pw{background:#1e1e22!important}
+#screen-game.abyss-mode .u-pb{filter:brightness(.45)!important}
+#screen-game.abyss-mode .u-sp{color:#555!important}
+#screen-game.abyss-mode .u-item-chip{color:#555!important}
+#screen-game.abyss-mode .u-ic{color:#666!important}
+#screen-game.abyss-mode .queue-area{background:#111114!important;border-color:#252528!important}
+#screen-game.abyss-mode .queue-lbl{color:#555!important}
+#screen-game.abyss-mode .cc{background:#1a1a1e!important;border-color:#2a2a2e!important}
+#screen-game.abyss-mode .cc-t{color:#555!important}
+#screen-game.abyss-mode .cc-tm{color:#444!important}
+#screen-game.abyss-mode .cc-bw{background:#222!important}
+#screen-game.abyss-mode .cc-e{filter:brightness(.7)!important}
+#screen-game.abyss-mode .shop-area{background:#111114!important;border-color:#252528!important}
+#screen-game.abyss-mode .shop-lbl{color:#555!important}
+#screen-game.abyss-mode .shop-bal{color:#8a8060!important}
+#screen-game.abyss-mode .shop-card{background:#1a1a1e!important;border-color:#2a2a2e!important}
+#screen-game.abyss-mode .shop-card .sc-n{color:#555!important}
+#screen-game.abyss-mode .shop-card .sc-p{color:#8a8060!important}
+#screen-game.abyss-mode .eff-bar{background:#111114!important;border-color:#252528!important;color:#555!important}
+#screen-game.abyss-mode #dispatch-btn,
+#screen-game.abyss-mode #bullet-btn{background:#111114!important;border-color:#252528!important;color:#555!important}
+#screen-game.abyss-mode #dispatch-btn span{color:#8a8060!important}
 .hud{display:grid;grid-template-columns:repeat(3,1fr);gap:3px 6px;width:100%;padding:5px 8px;background:var(--panel);border:1px solid var(--border);border-radius:6px}
 .hud-box{display:flex;align-items:baseline;gap:4px;overflow:hidden;min-width:0}
 .hud-lbl{font-family:'Silkscreen',monospace;font-size:clamp(6px,1.8vw,calc(var(--fs-sm)));color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:1;min-width:0}
@@ -259,7 +296,7 @@ input[type=range].slim::-moz-range-thumb{width:8px;height:8px;border-radius:50%;
 <div id="screen-title" class="screen active">
   <div class="title-art">尿斗管理大師</div>
   <div class="title-sub">URINAL MANAGER PRO</div>
-  <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);letter-spacing:2px">v5.1.7</div>
+  <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);letter-spacing:2px">v5.2.0</div>
   <div style="font-size:42px;margin:4px 0">🚽</div>
   <div style="font-size:12px;color:var(--muted);max-width:300px;text-align:center;line-height:2">
     安排客人、清潔廁所、購買道具、賺取最高收入<br>
@@ -478,6 +515,24 @@ function playSFX(name){
       _beep(440,.2,'sawtooth',t,.3,300);_beep(330,.25,'sawtooth',t+.2,.3,220);
       _beep(220,.3,'sawtooth',t+.4,.3,147);_beep(147,.4,'sawtooth',t+.65,.3,110);
       _noise(.15,t+.8,.25,100);break;
+    case 'abyss_enter':
+      // 版本C：深淵召喚 — 環境音吸入 + 心跳脈衝 + 黑洞共鳴
+      // 環境吸入：多層往下 sweep
+      {const o1=c.createOscillator(),g1=c.createGain();o1.connect(g1);g1.connect(c.destination);o1.type='sine';o1.frequency.setValueAtTime(800,t);o1.frequency.exponentialRampToValueAtTime(30,t+2.5);g1.gain.setValueAtTime(.15,t);g1.gain.exponentialRampToValueAtTime(.001,t+2.5);o1.start(t);o1.stop(t+2.6);}
+      {const o2=c.createOscillator(),g2=c.createGain();o2.connect(g2);g2.connect(c.destination);o2.type='sine';o2.frequency.setValueAtTime(600,t+.1);o2.frequency.exponentialRampToValueAtTime(25,t+2.6);g2.gain.setValueAtTime(.12,t+.1);g2.gain.exponentialRampToValueAtTime(.001,t+2.6);o2.start(t+.1);o2.stop(t+2.7);}
+      {const o3=c.createOscillator(),g3=c.createGain();o3.connect(g3);g3.connect(c.destination);o3.type='sine';o3.frequency.setValueAtTime(400,t+.2);o3.frequency.exponentialRampToValueAtTime(20,t+2.7);g3.gain.setValueAtTime(.1,t+.2);g3.gain.exponentialRampToValueAtTime(.001,t+2.7);o3.start(t+.2);o3.stop(t+2.8);}
+      // 噪音被吸進去（20層漸弱）
+      for(let i=0;i<20;i++){_noise(.1,t+i*.12,.12-i*.004,1000*Math.pow(.88,i),1+i*.1);}
+      // 心跳脈衝（3次）
+      for(let i=0;i<3;i++){
+        const ft=t+.5+i*.6;
+        _beep(55,.12,'sine',ft,.7,20);_beep(40,.2,'sine',ft+.1,.5,15);_noise(.15,ft,.4,80,2);
+      }
+      // 黑洞共鳴
+      _beep(28,1.5,'sine',t+1.2,.5,30);_beep(35,1.2,'sine',t+1.3,.4,32);_noise(1.2,t+1.4,.25,40,3);
+      // 最後深沉一擊
+      _beep(25,.8,'sine',t+2.2,.8,15);_noise(.6,t+2.2,.4,50,2);
+      break;
   }
 }
 
@@ -489,10 +544,10 @@ function playBGM(type,returnAfterMs=0){
   _stopBGM();
   _getCtx().resume();
   _currentBGM=type;
-  ({normal:_loopNormal,peak:_loopPeak,delinquent:_loopDelinquent,soldier:_loopSoldier,boss:_loopBoss})[type]?.();
+  ({normal:_loopNormal,peak:_loopPeak,delinquent:_loopDelinquent,soldier:_loopSoldier,boss:_loopBoss,abyss:_loopAbyss,abyss_peak:_loopAbyssPeak,abyss_surge:_loopAbyssSurge})[type]?.();
   // 自動回 normal
   if(returnAfterMs>0){
-    _bgmReturnTimer=setTimeout(()=>{if(_currentBGM===type)playBGM('normal');},returnAfterMs);
+    _bgmReturnTimer=setTimeout(()=>{if(_currentBGM===type)playBGM(typeof _baseBGM==='function'?_baseBGM():'normal');},returnAfterMs);
   }
 }
 
@@ -563,6 +618,79 @@ function _loopBoss(){
     _beep(_N.D3,.1,'sawtooth',t+i*b*8,.2);_beep(_N.A3,.1,'sawtooth',t+i*b*8+b*4,.18);
   }
   _bgmScheduled.push(setTimeout(()=>_loopBoss(),(total*1000)-80));
+}
+
+function _snare(t,g=0.18){
+  _noise(.06,t,g,200);_noise(.05,t,g*.7,1200);_noise(.04,t,g*.5,4000);
+  _beep(180,.04,'sine',t,g*.6);
+}
+
+function _loopAbyss(){
+  if(_currentBGM!=='abyss')return;
+  const c=_getCtx(),t=c.currentTime,b=0.10;
+  const mel=[[_N.D4,4],[_N.R,2],[_N.C4,3],[_N.R,1],[_N.Bb3,4],[_N.R,2],[_N.A3,3],[_N.R,1],[_N.G3,4],[_N.R,2],[_N.F3s,4],[_N.R,2],[_N.A3,4],[_N.R,2],[_N.D3,8]];
+  const bass=[[_N.D3,8],[_N.A3,8],[_N.Bb3,8],[_N.F3,8],[_N.G3,8],[_N.F3,8],[_N.A3,8],[_N.D3,8]];
+  let mt=t;mel.forEach(([f,d])=>{_sched(f,d*b,mt,'sawtooth',.12);mt+=d*b;});
+  let bt=t;bass.forEach(([f,d])=>{_sched(f,d*b,bt,'sine',.18);bt+=d*b;});
+  const total=mel.reduce((s,[,d])=>s+d,0)*b;
+  const bars=Math.floor(total/(b*8));
+  for(let i=0;i<bars;i++){
+    _noise(.12,t+i*b*8,.5,40);_beep(40,.15,'sine',t+i*b*8,.35,20);
+    _noise(.06,t+i*b*8+b*4,.3,50);
+    _noise(.04,t+i*b*8+b*2,.15,3000);_noise(.04,t+i*b*8+b*6,.12,3000);
+    _noise(.02,t+i*b*8+b*3,.08,8000);_noise(.02,t+i*b*8+b*7,.08,8000);
+  }
+  _bgmScheduled.push(setTimeout(()=>_loopAbyss(),(total*1000)-80));
+}
+
+function _loopAbyssPeak(){
+  if(_currentBGM!=='abyss_peak')return;
+  const c=_getCtx(),t=c.currentTime,b=0.058;
+  const mel=[[_N.D4,4],[_N.R,1],[_N.Bb3,3],[_N.R,1],[_N.A3,3],[_N.R,1],[_N.G3,4],[_N.R,1],[_N.F3s,3],[_N.R,1],[_N.A3,4],[_N.R,1],[_N.D3,6]];
+  let mt=t;
+  mel.forEach(([f,d])=>{
+    if(f>0){_beep(f,d*b*.88,'sawtooth',mt,.22);_beep(f*0.5,d*b*.88,'sine',mt,.12);}
+    mt+=d*b;
+  });
+  const bass=[[_N.D3-73,8],[_N.A3-110,8],[_N.Bb3,8],[_N.G3,8],[_N.F3s,8],[_N.A3-110,8],[_N.D3-73,8]];
+  const bassFreqs=[[73,8],[110,8],[_N.Bb3,8],[_N.G3,8],[_N.F3s,8],[110,8],[73,8]];
+  let bt=t;
+  bassFreqs.forEach(([f,d])=>{
+    _beep(f,d*b*.85,'sine',bt,.20);_beep(f*0.5,d*b*.85,'sine',bt,.10);
+    bt+=d*b;
+  });
+  const elec=[[_N.D4,2],[_N.R,2],[_N.Eb4,2],[_N.R,2],[_N.D4,2],[_N.R,2],[_N.Eb4,4]];
+  let et=t;elec.forEach(([f,d])=>{if(f>0)_beep(f*2,d*b*.4,'square',et,.04);et+=d*b;});
+  const total=mel.reduce((s,[,d])=>s+d,0)*b;
+  const bars=Math.floor(total/(b*8));
+  for(let i=0;i<bars;i++){
+    _noise(.07,t+i*b*8,.38,35);_beep(35,.1,'sine',t+i*b*8,.28,20);
+    _noise(.04,t+i*b*8+b*4,.22,45);
+    _noise(.025,t+i*b*8+b*2,.04,4000);_noise(.025,t+i*b*8+b*6,.04,4000);
+    for(let j=0;j<8;j+=2)_noise(.02,t+i*b*8+j*b,.06,80);
+  }
+  _bgmScheduled.push(setTimeout(()=>_loopAbyssPeak(),(total*1000)-80));
+}
+
+function _loopAbyssSurge(){
+  if(_currentBGM!=='abyss_surge')return;
+  const c=_getCtx(),t=c.currentTime,b=0.065;
+  const mel=[[_N.D4,3],[_N.Eb4,1],[_N.R,1],[_N.C4,3],[_N.R,1],[_N.Bb3,3],[_N.Ab4,1],[_N.R,1],[_N.A3,3],[_N.R,1],[_N.G3,2],[_N.F3,2],[_N.R,1],[_N.A3,3],[_N.R,1],[_N.D3,6]];
+  let mt=t;mel.forEach(([f,d])=>{if(f>0)_beep(f,d*b*.85,'sawtooth',mt,.22);mt+=d*b;});
+  const bassFreqs=[[_N.D3,6],[_N.R,2],[_N.A3,4],[_N.R,2],[_N.Bb3,4],[_N.G3,2],[_N.R,2],[_N.F3,4],[_N.R,2],[_N.A3,4],[_N.R,2],[_N.D3,4]];
+  let bt=t;bassFreqs.forEach(([f,d])=>{if(f>0)_beep(f,d*b*.85,'sine',bt,.14);bt+=d*b;});
+  const jazz=[[_N.D4,1],[_N.R,1],[_N.F3s,2],[_N.R,2],[_N.A3,1],[_N.R,1],[_N.C4,2],[_N.R,2]];
+  let jt=t;[...jazz,...jazz,...jazz,...jazz].forEach(([f,d])=>{if(f>0)_beep(f,d*b*.45,'triangle',jt,.04);jt+=d*b;});
+  const total=mel.reduce((s,[,d])=>s+d,0)*b;
+  const bars=Math.floor(total/(b*8));
+  for(let i=0;i<bars;i++){
+    _noise(.08,t+i*b*8,.38,40);_beep(40,.10,'sine',t+i*b*8,.22,20);
+    _noise(.06,t+i*b*8+b*4,.30,40);_beep(40,.08,'sine',t+i*b*8+b*4,.18,20);
+    _snare(t+i*b*8+b*2,.16);_snare(t+i*b*8+b*6,.16);
+    for(let j=0;j<8;j++)_noise(.018,t+i*b*8+j*b,.035,6000);
+    _snare(t+i*b*8+b*3,.08);_snare(t+i*b*8+b*7,.08);
+  }
+  _bgmScheduled.push(setTimeout(()=>_loopAbyssSurge(),(total*1000)-80));
 }
 </script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -640,9 +768,9 @@ const CONFIG={
 
   // ── 分數階段變色加速 ──
   PHASE_START_SCORE:1000,      // 開始變化的分數
-  PHASE_INTERVAL:1000,          // 每幾分變一次
-  PHASE_SPEED_MULT:0.91,        // 每階段生成間隔乘以此值(縮短20%)
-  PHASE_MAX_STAGES:7,          // 最多7個階段
+  PHASE_INTERVAL:1000,          // 1-7階段每幾分變一次
+  PHASE_SPEED_MULT:0.91,        // 每階段生成間隔乘以此值(縮短)
+  PHASE_MAX_STAGES:14,          // 最多14個階段
   SCRUB_DISTANCE:40,             // 摩擦清潔最小移動距離(px)
   SCRUB_AMOUNT:15,               // 每次摩擦清潔量%
 
@@ -927,24 +1055,55 @@ let state={};
 let gameLoop=null;
 let cidCounter=0;
 let lastTick=Date.now();
+let _abyssInterval=null;
 const drag={active:false,cid:null};
 const scrub={uid:-1,active:false,lastY:0,accum:0};
 const itemDrag={active:false,itemId:null};
 
-// 頁面背景暫停，回來顯示繼續畫面
+// 頁面背景暫停機制
+// 設計：visibilitychange 與 pagehide/pageshow 互為備援，
+// 兩者都呼叫同一組冪等函數，不論哪個事件觸發或重複觸發都不會出錯。
+let _bgHiddenAt=0; // 記錄進入背景的真實時間戳，用於事後診斷
+
+function _pauseGame(){
+  if(gameLoop){clearInterval(gameLoop);gameLoop=null;}
+  if(_actx&&_actx.state==='running')_actx.suspend();
+  _stopBGM();
+  _bgHiddenAt=Date.now();
+  log('Game paused (background)','info');
+}
+
+function _handleForeground(){
+  // 保險：不論之前的暫停事件是否確實處理乾淨，這裡都強制再清一次，
+  // 避免殘留的 setInterval 造成遊戲速度異常（雙重 tick）。
+  if(gameLoop){clearInterval(gameLoop);gameLoop=null;}
+
+  // 診斷：比對實際經過時間，若背景停留很久卻沒有正確記錄，記錄供除錯
+  if(_bgHiddenAt>0){
+    const elapsedMs=Date.now()-_bgHiddenAt;
+    if(elapsedMs>1000){
+      log(`Returned from background after ${(elapsedMs/1000).toFixed(1)}s`,'info');
+    }
+    _bgHiddenAt=0;
+  }
+
+  if(typeof state!=='undefined'&&state&&state.running){
+    _showPauseScreen();
+  }
+}
+
 document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='hidden'){
-    // 背景：暫停 game loop
-    if(gameLoop){clearInterval(gameLoop);gameLoop=null;}
-    if(_actx&&_actx.state==='running')_actx.suspend();
-    _stopBGM();
+    _pauseGame();
   } else {
-    // 前台：如果遊戲進行中，顯示暫停畫面
-    if(typeof state!=='undefined'&&state&&state.running){
-      _showPauseScreen();
-    }
+    _handleForeground();
   }
 });
+
+// 備援機制：部分瀏覽器（尤其 iOS Safari 快速手勢切換）
+// 不一定可靠觸發 visibilitychange，pagehide/pageshow 作為第二道防線。
+window.addEventListener('pagehide',_pauseGame);
+window.addEventListener('pageshow',_handleForeground);
 
 function _showPauseScreen(){
   let overlay=document.getElementById('pause-overlay');
@@ -969,8 +1128,9 @@ function _resumeGame(){
   // 用戶手勢：resume AudioContext 並重啟 BGM
   if(_actx)_actx.resume();
   if(_currentBGM)playBGM(_currentBGM);
-  // 重啟 game loop
-  if(typeof state!=='undefined'&&state&&state.running&&!gameLoop){
+  // 保險：重啟前先確保沒有殘留的 interval，再啟動新的
+  if(gameLoop){clearInterval(gameLoop);gameLoop=null;}
+  if(typeof state!=='undefined'&&state&&state.running){
     lastTick=Date.now();
     gameLoop=setInterval(gameTick,80);
   }
@@ -1047,6 +1207,8 @@ function mkCustomer(){
 function calcEntryFee(){
   return CONFIG.ENTRY_FEE_BASE+Math.max(0,state.urinals.length-2)*CONFIG.ENTRY_FEE_PER_URINAL;
 }
+function _baseBGM(){return state.phaseStage>=ABYSS_STAGE?'abyss':'normal';}
+function _surgeBGM(type){return state.phaseStage>=ABYSS_STAGE?(type==='peak'?'abyss_peak':'abyss_surge'):type;}
 
 // ════════════════════════════════════
 //  ITEM HELPERS
@@ -1082,7 +1244,7 @@ function installItem(uid,itemId){
     const addSec=def.effects.waitBoost,dur=def.effects.boostDuration;
     state.waitBoostEnd=Math.max(state.waitBoostEnd,state.elapsed)+dur;
     state.waitBoostEmoji=def.emoji;state.activeWaitBoostAmt=addSec;
-    state.queue.forEach(c=>{c.waitMax+=addSec;});
+    state.queue.forEach(c=>{if(!c.isInspector)c.waitMax+=addSec;});
     notify(`${def.emoji} 全場客人等待 +${addSec}秒！`,'var(--money)');
     log(`ITEM wait_boost +${addSec}s`,'item');
     updateQueueGlow();buildShop();
@@ -1242,7 +1404,8 @@ const CHAR_ORDER=['small','elder','med','large','drunk','delinquent','soldier','
 //  成就系統
 // ════════════════════════════════════
 const ACHIEVEMENTS={
-  rainbow:   {id:'rainbow',  emoji:'🌈', name:'彩虹',       desc:'積分達7000分集齊全部顏色', check:()=>state.phaseStage>=CONFIG.PHASE_MAX_STAGES},
+  rainbow:   {id:'rainbow',  emoji:'🌈', name:'彩虹',       desc:'積分達7000分集齊全部顏色', check:()=>state.phaseStage>=7},
+  abyss:     {id:'abyss',    emoji:'🌑', name:'深淵',       desc:'積分達24500分墜入深淵',    check:()=>state.phaseStage>=ABYSS_STAGE},
   wealth:    {id:'wealth',   emoji:'🌎', name:'財富自由',   desc:'單局收入達£5000',   check:()=>state.totalEarned>=5000},
   all_items: {id:'all_items',emoji:'🚨', name:'全副武裝',   desc:'單局買過所有道具',   check:()=>checkAllItems()},
   all_chars: {id:'all_chars',emoji:'🚀', name:'全角色圖鑑', desc:'見過所有角色',        check:()=>checkAllChars()},
@@ -1315,8 +1478,25 @@ function renderCharCodex(){
   }
 }
 
-const PHASE_COLORS=['','#a5f3fc','#bbf7d0','#fef08a','#fed7aa','#fecaca','#ede9fe','#ffd700'];
-const PHASE_GLOW  =['','','','','','','','rgba(255,215,0,.5)'];
+// 階段分數門檻查表（index = 階段數，值 = 所需分數）
+const PHASE_THRESHOLDS=[0,1000,2000,3000,4000,5000,6000,7000,9500,12000,14500,17000,19500,22000,24500];
+
+// 1-7：彩虹色，8-14：七種金色漸層，14：深淵（暗金）
+const PHASE_COLORS=[
+  '',
+  '#a5f3fc','#bbf7d0','#fef08a','#fed7aa','#fecaca','#ede9fe','#ffd700', // 1-7
+  '#ffe066','#ffd700','#f5c518','#e6a817','#c8860a','#a86500','#6b4e00'  // 8-14（漸深金）
+];
+const PHASE_GLOW=[
+  '',
+  '','','','','','','rgba(255,215,0,.5)',                                  // 1-7
+  'rgba(255,224,102,.4)','rgba(255,215,0,.45)','rgba(245,197,24,.5)',
+  'rgba(230,168,23,.55)','rgba(200,134,10,.5)','rgba(168,101,0,.5)',
+  'rgba(80,50,0,.6)'                                                        // 14 深淵
+];
+// 深淵模式的全 UI 變暗色板
+const ABYSS_STAGE=14;
+
 function applyPhaseStyle(stage){
   const color=PHASE_COLORS[stage]||'';
   const glow=PHASE_GLOW[stage]||'';
@@ -1324,15 +1504,46 @@ function applyPhaseStyle(stage){
     el.style.borderColor=color||'';
     el.style.boxShadow=glow?`0 0 10px ${glow}`:'';
   });
+
+  // 深淵模式：全畫面暗化
+  const gameScreen=document.getElementById('screen-game');
+  if(gameScreen){
+    if(stage>=ABYSS_STAGE){
+      gameScreen.classList.add('abyss-mode');
+    } else {
+      gameScreen.classList.remove('abyss-mode');
+    }
+  }
+
   if(stage>0){
     const mult=Math.pow(CONFIG.PHASE_SPEED_MULT,stage);
-    notify(`🔥 第${stage}階段！生成速度 ×${(1/mult).toFixed(1)}`,'var(--warn)');
+    const label=stage>=ABYSS_STAGE?'🌑 深淵！':'🔥 第'+stage+'階段！';
+    notify(`${label} 生成速度 ×${(1/mult).toFixed(1)}`,'var(--warn)');
+    if(stage>=ABYSS_STAGE){
+      const abyssLines=['abyss_1','abyss_2','abyss_3'];
+      const pick=abyssLines[Math.floor(Math.random()*abyssLines.length)];
+      // 音效先，BGM 和台詞延遲，讓音效有空間
+      playSFX('abyss_enter');
+      setTimeout(()=>{
+        playBGM('abyss');
+        mcSayForced(pick);
+      },2500);
+      // 啟動深淵台詞輪換（每30秒）
+      if(!_abyssInterval){
+        _abyssInterval=setInterval(()=>{
+          if(typeof state==='undefined'||!state||!state.running)return;
+          const lines=['abyss_1','abyss_2','abyss_3'];
+          mcSayForced(lines[Math.floor(Math.random()*lines.length)]);
+        },30000);
+      }
+    }
   }
   log(`PHASE ${stage}`,'ev');
 }
 
 function startGame(){
   cidCounter=0;
+  if(_abyssInterval){clearInterval(_abyssInterval);_abyssInterval=null;}
   state={
     score:0,money:0,totalEarned:0,scrubEarned:0,itemSpend:0,
     leftCount:0,servedCount:0,elapsed:0,
@@ -1413,8 +1624,7 @@ function gameTick(){
     state.nextPeak+=CONFIG.PEAK_INTERVAL;
     state.peaksFired++;
     log(`PEAK #${state.peaksFired}`,'ev');showPeakBanner();
-    playBGM('peak',12000);
-    state.peakBGMEnd=state.elapsed+30; // peak BGM 持續30秒後回 normal
+    playBGM(_surgeBGM('peak'),12000);
     state.peakBGMEnd=state.elapsed+30;
     checkTip('first_peak');mcSay('first_peak');
     if(state.peaksFired===2)mcSay('peak_second');
@@ -1476,15 +1686,32 @@ function gameTick(){
   if(state.inspectionCid&&!state.inspectionActive){
     const mc=state.queue.find(c=>c.id===state.inspectionCid);
     if(mc&&mc.waitElapsed>=mc.waitMax){
-      const freeU=state.urinals.find(u=>!u.occupied&&!u.broken&&!u.repairing);
-      if(freeU){tryAssign(state.inspectionCid,freeU.id);}
-      else{
-        // 無可用便斗，直接開始掃描
-        state.queue=state.queue.filter(c=>c.id!==state.inspectionCid);
-        const el=document.getElementById('cc-'+state.inspectionCid);if(el)el.remove();
-        startInspection(0);
+      // 節流：每秒最多嘗試一次，避免每幀重複嘗試
+      const lastTry=mc._lastAssignTry||0;
+      if(mc.waitElapsed-lastTry>=1){
+        mc._lastAssignTry=mc.waitElapsed;
+        // 馬蓋仙可繞過黑尿幫鎖定，只需排除壞掉/佔用/修復中的便斗
+        const freeU=state.urinals.find(u=>!u.occupied&&!u.broken&&!u.repairing&&!u.cleaning);
+        let success=false;
+        if(freeU){
+          success=tryAssign(state.inspectionCid,freeU.id);
+        }
+        if(!success){
+          const overtime=mc.waitElapsed-mc.waitMax;
+          const noFreeAtAll=state.urinals.every(u=>u.broken||u.repairing||u.occupied||u.cleaning);
+          if(noFreeAtAll||overtime>=20){
+            // 完全無便斗可用，或超時20秒仍無法分配 → 強制開始掃描，避免永久卡住
+            state.queue=state.queue.filter(c=>c.id!==state.inspectionCid);
+            const el=document.getElementById('cc-'+state.inspectionCid);if(el)el.remove();
+            startInspection(0);
+            state.inspectionCid=null;
+          } else {
+            log(`Inspector assign retry failed, will retry next second (wait=${Math.round(mc.waitElapsed)}s)`,'warn');
+          }
+        } else {
+          state.inspectionCid=null;
+        }
       }
-      state.inspectionCid=null;
     }
   }
 
@@ -1542,13 +1769,13 @@ function gameTick(){
   updateSoftStartBanner();
   updateQueueGlow();
   // BGM 自動回 normal：surge/waves 結束且不在巡查中
-  if(_currentBGM&&_currentBGM!=='normal'&&_currentBGM!=='boss'){
+  if(_currentBGM&&_currentBGM!==_baseBGM()&&_currentBGM!=='boss'){
     const notInspection=!state.inspectionActive&&!state.inspectionCid;
     const wavesDone=state.pendingWaves.length===0&&state.gangsterSurgeEnd<=state.elapsed;
-    const peakDone=_currentBGM==='peak'?state.peakBGMEnd>0&&state.elapsed>=state.peakBGMEnd:true;
+    const peakDone=(_currentBGM==='peak'||_currentBGM==='abyss_peak')?state.peakBGMEnd>0&&state.elapsed>=state.peakBGMEnd:true;
     if(notInspection&&wavesDone&&peakDone){
       state.peakBGMEnd=0;
-      playBGM('normal');
+      playBGM(_baseBGM());
     }
   }
   // 巡查進行中
@@ -1559,10 +1786,12 @@ function gameTick(){
 
   // 分數階段變色加速
   if(state.score>=CONFIG.PHASE_START_SCORE){
-    const newStage=Math.min(
-      Math.floor((state.score-CONFIG.PHASE_START_SCORE)/CONFIG.PHASE_INTERVAL)+1,
-      CONFIG.PHASE_MAX_STAGES
-    );
+    // 查表計算當前階段
+    let newStage=0;
+    for(let i=1;i<PHASE_THRESHOLDS.length;i++){
+      if(state.score>=PHASE_THRESHOLDS[i])newStage=i;
+    }
+    newStage=Math.min(newStage,CONFIG.PHASE_MAX_STAGES);
     if(newStage!==state.phaseStage){
       state.phaseStage=newStage;
       applyPhaseStyle(newStage);
@@ -1633,7 +1862,7 @@ function triggerSurge(type){
 
   showSurgeBanner(bannerMsg);
   mcSayForced(isDelinquent?'delinquent':'soldier');
-  playBGM(isDelinquent?'delinquent':'soldier',10000);
+  playBGM(_surgeBGM(isDelinquent?'delinquent':'soldier'),10000);
   state.peakBGMEnd=state.elapsed+CONFIG.SURGE_PEAK_DELAY;
 
   const isDispatched=state.dispatchedWaveTypes.includes(type);
@@ -1793,7 +2022,7 @@ function endInspection(){
   state.inspectionScanIdx=0;
   state.inspectionScanElapsed=0;
   if(state.nextPeak<=state.elapsed)state.nextPeak=state.elapsed+CONFIG.PEAK_INTERVAL;
-  playBGM('normal');
+  playBGM(_baseBGM());
 }
 
 function triggerGangsterOnly(){
@@ -2268,6 +2497,10 @@ function buildUrinalDOM(){
   area.classList.toggle('six-grid', state.urinals.length===6);
   area.classList.toggle('tight-5', state.urinals.length===5);
   state.urinals.forEach(u=>area.appendChild(mkUrinalEl(u)));
+  // 重建後補套用當前階段顏色，避免新馬桶顯示預設框色
+  if(typeof state!=='undefined'&&state&&state.phaseStage>0){
+    applyPhaseStyle(state.phaseStage);
+  }
 }
 function mkUrinalEl(u){
   const el=document.createElement('div');
@@ -2539,7 +2772,7 @@ function syncUrinalDOM(){
         const rem=it.def.durLimit?(it.def.durLimit-(it.durAccum||0))+'人':
                   it.def.effects&&it.def.effects.autoClean?(it.def.cleanLimit-it.cleanCount)+'次':'';
         const bar=pct!==null?`<span class="dur-bar" style="width:${Math.max(2,Math.round(pct*0.16))}px"></span>`:'';
-        return `<div class="u-item-chip" title="${it.def.name}${rem?' 剩'+rem:''}">${it.def.emoji}${rem?`<span style="font-size:7px;font-family:'Silkscreen',monospace;color:var(--muted)">${rem}</span>`:''}${bar}</div>`;
+        return `<div class="u-item-chip" title="${it.def.name}${rem?' 剩'+rem:''}">${it.def.emoji}${rem?`<span class="item-rem" style="font-size:7px;font-family:'Silkscreen',monospace;color:var(--muted)">${rem}</span>`:''}${bar}</div>`;
       }).join('');
       uitems.innerHTML=chips;
     }
@@ -2583,6 +2816,7 @@ function updateEffects(){
 // ════════════════════════════════════
 function endGame(){
   state.running=false;clearInterval(gameLoop);endDrag();endScrub();endItemDrag();
+  if(_abyssInterval){clearInterval(_abyssInterval);_abyssInterval=null;}
   _stopBGM();
   playSFX('inspect_fail');
   playSFX('inspect_fail');
@@ -2633,7 +2867,9 @@ function endGame(){
     else if(totalSec<180)
       lines.push(pick(['💨 撐了'+timeStr+'，差那麼一點。','💨 客人寧可尿褲子也不想等你，你知道嗎。']));
     else
-      lines.push(pick(['💨 已經很厲害了，可惜功虧一簣。','💨 老夫行走江湖這麼多年，沒見過管理這麼混亂的廁所。']));
+      lines.push(pick(s>=3000
+        ?['💨 已經很厲害了，可惜功虧一簣。','💨 就差一點點，下次必成。']
+        :['💨 已經很厲害了，可惜功虧一簣。','💨 老夫行走江湖這麼多年，沒見過管理這麼混亂的廁所。']));
   } else if(moneyVal>=2000){
     lines.push('💰 哇！財富自由了，管理之神！！');
   } else if(totalSec>=300){
@@ -2645,7 +2881,7 @@ function endGame(){
   // 第2條：候選池，符合條件的全部加入，隨機選一條
   const pool2=[];
   if(scrubRatio>0.35)           pool2.push('🧹 越髒越賺，你懂的。');
-  if(state.scrubEarned===0)     pool2.push('🧹 完全沒摩擦清潔？馬桶快哭了。');
+  if(state.scrubEarned===0)     pool2.push(s>=3000?'🧹 讓清掃助理代勞，有眼光。':'🧹 完全沒摩擦清潔？馬桶快哭了。');
   if(state.itemSpend>=50)       pool2.push('🛒 花了£'+state.itemSpend.toFixed(0)+'在道具上，懂得投資。');
   if(!itemsUsed)                pool2.push('🛒 全程沒買道具，純靠技術。');
   if(state.leftCount===0)       pool2.push('😤 零氣走！每個客人都心滿意足離開了。');
@@ -2656,6 +2892,15 @@ function endGame(){
   if(hadSpecial)                pool2.push('🧑‍🎤 麻煩人物也擋不住你，有點東西。');
   if(pool2.length===0)          pool2.push('💰 收入£'+m+'，'+(moneyVal>30?'夠交房租了。':'還不夠買馬桶刷。'));
   lines.push(pick(pool2));
+
+  // 深淵模式：加第三條專屬 feedback
+  if(state.phaseStage>=ABYSS_STAGE){
+    lines.push(pick([
+      '🌑 深淵已經望不見你了。你比深淵還深。',
+      '🌑 在無盡深淵長河中穿梭自如，你是什麼樣的存在？',
+      '🌑 馬桶被你刷穿如宇宙長河的深淵。',
+    ]));
+  }
 
   // 判斷是否新紀錄（存檔後比較）
   const histAfter=loadHistory();
@@ -2703,20 +2948,23 @@ function endGame(){
   const achEl=document.getElementById('rs-ach-list');
   if(achEl){
     const achList=Object.values(ACHIEVEMENTS);
-    const rainbow=achList[0]; // 彩虹永遠第一個
-    const rest=achList.slice(1);
+    const rainbow=achList.find(a=>a.id==='rainbow');
+    const abyss=achList.find(a=>a.id==='abyss');
+    const middle=achList.filter(a=>a.id!=='rainbow'&&a.id!=='abyss');
     const renderAch=(a)=>{
       const done=unlocked[a.id];
       const rainbowStyle=done&&a.id==='rainbow'?'animation:rainbow-glow 2s linear infinite':'';
       const nameStyle=done&&a.id==='rainbow'?'animation:rainbow-text 2s linear infinite;':'';
+      const abyssStyle=done&&a.id==='abyss'?'filter:drop-shadow(0 0 6px #6b4e00)':'';
       return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:50px" title="${done?a.name+'：'+a.desc:a.name}">
-        <span style="font-size:26px;${done?rainbowStyle:'opacity:0.4'}">${done?a.emoji:'❓'}</span>
+        <span style="font-size:26px;${done?(rainbowStyle||abyssStyle||''):'opacity:0.4'}">${done?a.emoji:'❓'}</span>
         <span style="font-family:'Silkscreen',monospace;font-size:11px;${done?'color:var(--accent3);'+nameStyle:'color:var(--border)'}">${a.name}</span>
       </div>`;
     };
     achEl.innerHTML=`
       <div style="display:flex;justify-content:center;margin-bottom:8px">${renderAch(rainbow)}</div>
-      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">${rest.map(renderAch).join('')}</div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:8px">${middle.map(renderAch).join('')}</div>
+      <div style="display:flex;justify-content:center;margin-top:4px">${renderAch(abyss)}</div>
     `;
   }
 
@@ -2724,7 +2972,10 @@ function endGame(){
   renderCharCodex();
 
   // 馬蓋仙結尾
-  const endKey=isNewRecord?'end_record':s>=60?'end_good':s>=20?'end_mid':'end_bad';
+  const abyssKeys=['end_abyss_1','end_abyss_2','end_abyss_3'];
+  const endKey=state.phaseStage>=ABYSS_STAGE
+    ?abyssKeys[Math.floor(Math.random()*abyssKeys.length)]
+    :isNewRecord?'end_record':s>=60?'end_good':s>=20?'end_mid':'end_bad';
   setTimeout(()=>mcSayForced(endKey),600);
   // 全球排行榜：判斷是否進前10
   const submitArea=document.getElementById('rs-submit-area');
@@ -2788,6 +3039,10 @@ const MC_LINES={
   new_char_soldier:    '阿兵哥！五個人一起衝進來，等不了多久，動作要快，這是最大考驗！',
   // 派遣客人
   dispatch:            'oh!! 游刃有餘啊，不錯不錯，照顧客人的膀胱是我們的天職',
+  // 深淵台詞（隨機穿插）
+  abyss_1: '老夫活了兩百年，沒見過這種場面。你究竟是何方神聖？',
+  abyss_2: '廁所管理到這個境界，連老夫都要叫你一聲師傅。',
+  abyss_3: '這裡已經不是廁所了，這是修羅場。老夫建議你去看個醫生。',
   // 長按區域說明
   explain_urinal_empty:  '這是便斗。把客人拖過來安排，或手指上下摩擦清潔。',
   explain_urinal_dirty:  '髒污超過35%，清潔費就有加成。越髒越值錢——但別讓它超過100%！',
@@ -2799,6 +3054,9 @@ const MC_LINES={
   end_mid:     '還有進步空間。記住——髒了要刷，缺了要買，快了才能撐。',
   end_bad:     '唉…連老夫都看不下去了。下次，先學會帶位再說。',
   end_record:  '老夫活了這麼久，沒見過這麼厲害的廁所管理員。新紀錄！',
+  end_abyss_1: '深淵已經望不見你了。你比深淵還深。',
+  end_abyss_2: '在無盡深淵長河中穿梭自如，你是什麼樣的存在？',
+  end_abyss_3: '馬桶被你刷穿如宇宙長河的深淵。',
 };
 
 let mcTyping=null; // current typing timeout
@@ -2807,8 +3065,15 @@ let mcBusy=false;
 // track which one-time lines already said
 const mcSaid=new Set();
 
+// 新手提示 key 清單：3000 分以上不再自動觸發
+const NOVICE_TIPS=new Set(['first_spawn','first_peak','peak_second','first_item','aroma_hint',
+  'add_urinal','first_money_10','money_10','money_20','dirty_35','dirty_60','warn_dirty',
+  'queue_full','urgent_wait','neighbor_slow','unlock_large','unlock_delinquent','start','soft_end']);
+
 function mcSay(key,force=false){
   if(!force&&mcSaid.has(key))return;
+  // 3000 分以上不再自動觸發新手提示
+  if(!force&&NOVICE_TIPS.has(key)&&typeof state!=='undefined'&&state&&state.score>=3000)return;
   if(!force)mcSaid.add(key);
   const text=MC_LINES[key];if(!text)return;
   mcQueue.push(text);
