@@ -296,7 +296,7 @@ input[type=range].slim::-moz-range-thumb{width:8px;height:8px;border-radius:50%;
 <div id="screen-title" class="screen active">
   <div class="title-art">尿斗管理大師</div>
   <div class="title-sub">URINAL MANAGER PRO</div>
-  <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);letter-spacing:2px">v5.2.0</div>
+  <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);letter-spacing:2px">v5.2.1</div>
   <div style="font-size:42px;margin:4px 0">🚽</div>
   <div style="font-size:12px;color:var(--muted);max-width:300px;text-align:center;line-height:2">
     安排客人、清潔廁所、購買道具、賺取最高收入<br>
@@ -759,9 +759,9 @@ const CONFIG={
   INSPECTION_WAIT:10,          // 等待區倒數(s)
   INSPECTION_SCAN_TIME:2,      // 每格掃描時間(s)
   INSPECTION_DIRTY_THRESH:30,  // 髒污判定閾值%
-  INSPECTION_SCORE:250,        // 巡查成功得分
+  INSPECTION_SCORE:800,        // 巡查成功得分
   INSPECTION_MONEY:250,        // 巡查成功金錢£
-  INSPECTION_PENALTY:100,      // 巡查失敗扣分
+  INSPECTION_PENALTY:1000,      // 巡查失敗扣分
   INSPECTION_TRIGGER_COUNT:3,  // 每N次特殊角色觸發巡查
   INSPECTION_RATE:50,          // 巡查觸發機率%
   INSPECTION_SOLDIER_WAVES:2,  // 解鎖所需阿兵哥波數
@@ -2437,8 +2437,8 @@ function finishPee(u){
   const efb=getEffect(u,'entryFeeBonus');if(efb!==undefined)fee*=efb;
   // 派遣客人 x2
   if(c.isDispatched)fee*=2;
-
-  state.score+=c.score;state.money+=fee;state.totalEarned+=fee;state.servedCount++;
+  const scoreAdd=c.isDispatched?c.score*2:c.score;
+  state.score+=scoreAdd;state.money+=fee;state.totalEarned+=fee;state.servedCount++;
   u.dirty=Math.min(120,u.dirty+dirtyAdd);
   // 髒污超過100%立即損壞
   if(!u.broken&&u.dirty>=CONFIG.DIRTY_BREAK_THRESH){
@@ -2817,6 +2817,9 @@ function updateEffects(){
 function endGame(){
   state.running=false;clearInterval(gameLoop);endDrag();endScrub();endItemDrag();
   if(_abyssInterval){clearInterval(_abyssInterval);_abyssInterval=null;}
+  // 失敗扣 1000 分
+  state.score=Math.max(0,state.score-1000);
+  showScorePop('-1000','var(--danger)');
   _stopBGM();
   playSFX('inspect_fail');
   playSFX('inspect_fail');
