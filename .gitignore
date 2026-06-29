@@ -1,0 +1,9 @@
+# 只 deploy 最新版本，舊版保留在本機不上傳
+Loole_v3_*.html
+Loole_v4_*.html
+Loole_v5_0_*.html
+Loole_v5_1_*.html
+Loole_v5_2_0*.html
+
+# 系統檔
+.DS_Store
