@@ -2058,7 +2058,7 @@ function gameTick(){
   // 巡查進行中
   if(state.inspectionActive){
     tickInspection(dt);
-    if(state.elapsed>=state.nextPeak)state.nextPeak=state.elapsed+CONFIG.PEAK_INTERVAL;
+    if(state.elapsed>=state.nextPeak)state.nextPeak=safeNextPeak(state.elapsed+CONFIG.PEAK_INTERVAL);
   }
 
   // 分數階段變色加速
@@ -2133,6 +2133,13 @@ function slowTags(u){
 //  SPAWN / ASSIGN
 // ════════════════════════════════════
 // 觸發特殊事件 wave 排程
+// 任何「追趕重置」nextPeak 的地方都要走這裡，確保不早於現有 pendingWaves 跑完的時間，
+// 否則新高峰觸發的新一輪波次會跟舊波次重疊，導致等待區瞬間湧入大量客人被氣走。
+function safeNextPeak(fallback){
+  const maxWaveAt=state.pendingWaves.length?Math.max(...state.pendingWaves.map(w=>w.at)):0;
+  return Math.max(fallback,maxWaveAt+1);
+}
+
 function triggerSurge(type){
   const isDelinquent=type==='delinquent';
   const group=isDelinquent?CONFIG.DELINQUENT_GROUP:CONFIG.SOLDIER_GROUP;
@@ -2191,7 +2198,9 @@ function triggerSurge(type){
     },3000);
   }
 
-  state.nextPeak=Math.max(state.nextPeak,state.elapsed+CONFIG.SURGE_PEAK_DELAY);
+  // 高峰鎖定需涵蓋本次波次總長度，避免下次高峰觸發新一輪波次時與尚未跑完的舊波次重疊
+  const waveSpan=(waves-1)*delay;
+  state.nextPeak=Math.max(state.nextPeak,state.elapsed+Math.max(CONFIG.SURGE_PEAK_DELAY,waveSpan+1));
   log(`SURGE ${type} waves=${waves} delay=${delay}s`,'ev');
 }
 
@@ -2274,8 +2283,16 @@ function endInspection(){
   // 清除所有巡查閃光
   state.urinals.forEach(u=>{const s=document.getElementById('us-'+u.id);if(s)s.classList.remove('inspecting');});
   // pendingWaves 重排：從現在起依序執行，避免瞬間爆發
+  // 依原本的批次間隔（阿兵哥8s / 中二生10s）分別重新排列，不可用統一固定值，
+  // 否則等於壓縮波次密度，反而造成客人瞬間湧入（實測會被氣走一大片）
   if(state.pendingWaves.length>0){
-    state.pendingWaves.forEach((w,i)=>{w.at=state.elapsed+(i+1)*3;});
+    const counters={};
+    state.pendingWaves.forEach(w=>{
+      const delay=w.type==='delinquent'?CONFIG.DELINQUENT_WAVE_DELAY:
+                  w.type==='soldier'?CONFIG.SOLDIER_WAVE_DELAY:3;
+      counters[w.type]=(counters[w.type]||0)+1;
+      w.at=state.elapsed+counters[w.type]*delay;
+    });
     log(`pendingWaves reordered count=${state.pendingWaves.length}`,'ev');
   }
   if(state.inspectionPassed){
@@ -2301,7 +2318,7 @@ function endInspection(){
   state.inspectionCid=null;
   state.inspectionScanIdx=0;
   state.inspectionScanElapsed=0;
-  if(state.nextPeak<=state.elapsed)state.nextPeak=state.elapsed+CONFIG.PEAK_INTERVAL;
+  if(state.nextPeak<=state.elapsed)state.nextPeak=safeNextPeak(state.elapsed+CONFIG.PEAK_INTERVAL);
   playBGM(_baseBGM());
 }
 
