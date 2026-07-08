@@ -2514,7 +2514,7 @@ function endItemDrag(){
 function startLongPress(itemId,cx,cy){
   if(drag.active||itemDrag.active||lp.active||lp.itemId)return;
   const def=ITEM_DEFS[itemId];if(!def)return;
-  const canAfford=state.money>=def.price;
+  const canAfford=state.money>=effectivePrice(def);
   lp.startX=cx;lp.startY=cy;lp.moved=false;lp.active=false;
   // 按下立即慢速
   state.itemPreview=true;
@@ -3423,7 +3423,7 @@ function mcSayNewChar(type){
 }
 
 function mcSayCantAfford(def){
-  const diff=(def.price-state.money).toFixed(2);
+  const diff=(effectivePrice(def)-state.money).toFixed(2);
   const preview=MC_PREVIEW[def.id]||'好道具。';
   const line=`${preview} 不過現在還差£${diff}，有錢馬上就能用。`;
   mcQueue.unshift({text:line,explain:true});if(!mcBusy)_mcNext();
