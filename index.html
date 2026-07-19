@@ -1321,14 +1321,15 @@ function getEffect(u,key){
 }
 function hasEffect(u,key){return getEffect(u,key)!==undefined;}
 
-// 階段動態定價：7000分起 ×2.5，之後每階 ×1.5
+// 階段動態定價：7000分起 ×2.5，之後每階再線性 +0.75（滿階 stage14 約 ×7.75，避免指數爆炸）
 // 第一個馬桶享 50% 折扣（state.firstUrinalDiscount）
 const PRICE_SCALE_STAGE=7;
+const PRICE_SCALE_STEP=0.75;
 function effectivePrice(def){
   const stage=typeof state!=='undefined'?state.phaseStage:0;
   let mult=1;
   if(stage>=PRICE_SCALE_STAGE){
-    mult=2.5*Math.pow(1.5,stage-PRICE_SCALE_STAGE);
+    mult=2.5+PRICE_SCALE_STEP*(stage-PRICE_SCALE_STAGE);
   }
   let p=Math.round(def.price*mult);
   if(def.id==='extra_urinal'&&typeof state!=='undefined'&&state.firstUrinalDiscount){
@@ -2947,7 +2948,7 @@ function buildShop(){
     const showDiscount=def.id==='extra_urinal'&&state.firstUrinalDiscount;
     const priceHtml=showDiscount
       ? `<div style="display:flex;flex-direction:column;align-items:center;gap:0">`+
-        `<div style="font-family:'Silkscreen',monospace;font-size:8px;color:var(--danger);text-decoration:line-through;line-height:1">£${Math.round(def.price*(state.phaseStage>=PRICE_SCALE_STAGE?2.5*Math.pow(1.5,state.phaseStage-PRICE_SCALE_STAGE):1))}</div>`+
+        `<div style="font-family:'Silkscreen',monospace;font-size:8px;color:var(--danger);text-decoration:line-through;line-height:1">£${Math.round(def.price*(state.phaseStage>=PRICE_SCALE_STAGE?2.5+PRICE_SCALE_STEP*(state.phaseStage-PRICE_SCALE_STAGE):1))}</div>`+
         `<div class="sc-p">£${cost}</div>`+
         `<div style="font-family:'Silkscreen',monospace;font-size:8px;background:var(--danger);color:#fff;border-radius:2px;padding:1px 3px;line-height:1.3;letter-spacing:.5px">SALE</div>`+
         `</div>`
