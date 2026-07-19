@@ -7,3 +7,7 @@ Loole_v5_2_0*.html
 
 # 系統檔
 .DS_Store
+
+# 內部開發筆記，不進公開 repo
+CLAUDE.md
+TECH.md

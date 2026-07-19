@@ -6,7 +6,6 @@
 
 ## 設計原則
 
-參考 `jp_learning_mvp.html` 的存儲模式（`vocabBook_v1`, `study_log_v1` 等）：
 - 單一 JSON 物件存入 localStorage
 - Key 帶版本號，格式變動時直接棄舊
 - try/catch 包裹，iOS Safari private mode 不 crash
