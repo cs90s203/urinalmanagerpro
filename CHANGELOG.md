@@ -1,6 +1,20 @@
 # CHANGELOG — 尿斗管理大師
 
-## v5.2.1（目前穩定版）
+## v5.3.1（目前穩定版）
+- **Bug fix**：加馬桶等道具在「折扣後價格 < 原價」情境下（例如加馬桶首購五折）無法拖曳安裝——`startItemDrag()` 誤用未打折的 `def.price` 判斷能不能拖，跟按下當下用的 `effectivePrice(def)` 不一致，改成統一用 `effectivePrice(def)`
+- **Bug fix**：手機瀏覽器拖曳道具/客人到便斗時，偶發被系統原生滾動手勢搶走，導致拖曳失敗——`.shop-card`、`.cc` 加上 `touch-action:none`，從 CSS 層面阻止瀏覽器把觸控當滾動處理
+- 移除已停用的 GA4 追蹤碼（含文件內殘留說明）
+- 加入 LICENSE（CC BY-NC-ND 4.0）與程式碼版權宣告註解，準備公開分享用
+
+## v5.3.0
+- 道具動態定價：分數達 7000 起 ×2.5，之後每階線性 +0.75（原本規劃 ×1.5 疊乘會在滿階衝到 ×42.7，太誇張，改成線性避免指數爆炸）
+- 加馬桶首購 50% 折扣，含專屬 SALE 標示 UI
+- 高峰間隔隨階段加速（`PHASE_SPEED_MULT` 套用到 `PEAK_INTERVAL`），呼應「後期沒難度」的回饋
+- **Bug fix**：手動暫停後遊戲偶爾仍在背景運行——`gameTick` 補上 `_manualPaused` 守門
+- **Bug fix**：高峰觸發的波次（阿兵哥/中二生）密集時會互相重疊，導致客人瞬間湧入被氣走——高峰鎖定時間改為涵蓋波次總長度，並統一巡查結束後的波次重排間隔
+- README 改寫為英文，準備公開分享
+
+## v5.2.1
 - 深淵模式（Stage 14，24500分）：全 UI 暗化、專屬 BGM `abyss`/`abyss_peak`/`abyss_surge`
 - 深淵 BGM 新增三首：`_loopAbyss`、`_loopAbyssPeak`、`_loopAbyssSurge`
 - 深淵台詞系統：進入後每 30 秒輪播 `abyss_1/2/3`
