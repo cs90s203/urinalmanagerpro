@@ -102,7 +102,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .queue-list::-webkit-scrollbar{display:none;}
 
 /* ── CUSTOMER CARD ── */
-.cc{width:63px;background:var(--tile);border:2px solid var(--border);border-radius:6px;padding:5px;cursor:grab;display:flex;flex-direction:column;align-items:center;gap:2px;user-select:none;transition:border-color .12s,box-shadow .12s;flex-shrink:0;position:relative}
+.cc{width:63px;background:var(--tile);border:2px solid var(--border);border-radius:6px;padding:5px;cursor:grab;display:flex;flex-direction:column;align-items:center;gap:2px;user-select:none;transition:border-color .12s,box-shadow .12s;flex-shrink:0;position:relative;touch-action:none}
 .cc:hover{border-color:var(--accent)}.cc.sel{border-color:var(--accent3)!important;box-shadow:0 0 10px rgba(184,255,0,.35)!important}
 .cc.urgent{border-color:var(--warn);box-shadow:0 0 8px rgba(255,184,0,.3)}.cc.urgent.sel{border-color:var(--accent3)!important;box-shadow:0 0 10px rgba(184,255,0,.35)!important}
 .cc.dragging{opacity:.45;cursor:grabbing;border-color:var(--accent3)!important}
@@ -174,7 +174,8 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .shop-card{
   background:var(--tile);border:2px solid var(--border);border-radius:6px;
   padding:5px 3px;display:flex;flex-direction:column;align-items:center;gap:2px;
-  cursor:grab;user-select:none;transition:border-color .12s,opacity .12s,transform .15s;position:relative
+  cursor:grab;user-select:none;transition:border-color .12s,opacity .12s,transform .15s;position:relative;
+  touch-action:none
 }
 .shop-card:hover:not(.broke){border-color:#c084fc}
 .shop-card.activatable:hover:not(.broke){border-color:var(--money);box-shadow:0 0 10px rgba(255,215,0,.3)}
