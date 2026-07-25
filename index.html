@@ -2508,7 +2508,7 @@ function startItemDrag(itemId,cx,cy){
   if(drag.active)return;
   if(isBulletLocked())return; // 觀察模式不能拖道具
   const def=ITEM_DEFS[itemId];if(!def)return;
-  if(state.money<def.price)return; // can't drag if can't afford
+  if(state.money<effectivePrice(def))return; // can't drag if can't afford
   itemDrag.active=true;itemDrag.itemId=itemId;
   igh.innerHTML=`<span>${def.emoji}</span>`;
   igh.style.display='flex';moveItemGhost(cx,cy);
@@ -2533,8 +2533,6 @@ function startLongPress(itemId,cx,cy){
   const def=ITEM_DEFS[itemId];if(!def)return;
   const canAfford=state.money>=effectivePrice(def);
   lp.startX=cx;lp.startY=cy;lp.moved=false;lp.active=false;
-  lp._diagLogged=false;lp._maxDx=0;lp._maxDy=0;
-  log(`DIAG touchstart armed itemId=${itemId} at (${cx.toFixed(0)},${cy.toFixed(0)})`,'warn');
   // 按下立即慢速
   state.itemPreview=true;
   if(canAfford){
@@ -2651,9 +2649,7 @@ document.addEventListener('touchmove',e=>{
   }
   if(lp.itemId&&!itemDrag.active){
     const t=e.touches[0],dx=Math.abs(t.clientX-lp.startX),dy=Math.abs(t.clientY-lp.startY);
-    if(!lp._diagLogged){lp._diagLogged=true;log(`DIAG touchmove seen dx=${dx.toFixed(0)} dy=${dy.toFixed(0)}`,'warn');}
-    lp._maxDx=Math.max(lp._maxDx||0,dx);lp._maxDy=Math.max(lp._maxDy||0,dy);
-    if(dx>10||dy>10){e.preventDefault();const id=lp.itemId;lp.itemId=null;log(`DIAG threshold crossed, starting drag`,'warn');startItemDrag(id,t.clientX,t.clientY);}
+    if(dx>10||dy>10){e.preventDefault();const id=lp.itemId;lp.itemId=null;startItemDrag(id,t.clientX,t.clientY);}
   }
   if(scrub.active&&!drag.active&&!itemDrag.active){e.preventDefault();}
   // scrub move 已由各便斗的 touchmove 自行處理
@@ -2675,11 +2671,7 @@ document.addEventListener('touchend',e=>{
     exitPreview(uid,iid,onQueue);
     return;
   }
-  if(lp.itemId){
-    const t=e.changedTouches[0];
-    log(`DIAG touchend, drag never started. maxDx=${(lp._maxDx||0).toFixed(0)} maxDy=${(lp._maxDy||0).toFixed(0)} touchmoveEverFired=${!!lp._diagLogged}`,'warn');
-    const under=document.elementFromPoint(t.clientX,t.clientY);const slot=under&&under.closest('.us');const onQueue=!slot&&!!(under&&under.closest('#queue-area'));exitPreview(slot?parseInt(slot.dataset.uid):null,null,onQueue);
-  } else {state.itemPreview=false;}
+  if(lp.itemId){const t=e.changedTouches[0];const under=document.elementFromPoint(t.clientX,t.clientY);const slot=under&&under.closest('.us');const onQueue=!slot&&!!(under&&under.closest('#queue-area'));exitPreview(slot?parseInt(slot.dataset.uid):null,null,onQueue);} else {state.itemPreview=false;}
 });
 
 // ════════════════════════════════════
