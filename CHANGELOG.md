@@ -14,6 +14,24 @@
 - **Bug fix**：高峰觸發的波次（阿兵哥/中二生）密集時會互相重疊，導致客人瞬間湧入被氣走——高峰鎖定時間改為涵蓋波次總長度，並統一巡查結束後的波次重排間隔
 - README 改寫為英文，準備公開分享
 
+## v5.2.5
+- **Bug fix**：背景切換時若正在拖曳道具/客人，`itemDrag.active`/`drag.active` 會卡住鎖死操作——`_pauseGame()` 補上 `endDrag()`/`endScrub()`/`endItemDrag()`
+- **Bug fix**：暫停 overlay 的 pointerdown/pointerup 監聽器每次呼叫 `_showManualPauseScreen()` 都重新綁定一次，多次暫停後疊加成 N 次觸發——改成只在 overlay 第一次建立時綁定一次
+
+## v5.2.4
+- 暫停畫面 UI 改版：拿掉「▶ 繼續」按鈕，改成點擊畫面任意位置解除暫停（拖曳/長按不算點擊，不會誤觸發）
+- 「點擊任意位置繼續」文字與框線間距調整為 12px
+
+## v5.2.3
+- 背景切換的自動暫停與手動暫停（⏸ 按鈕）統一使用同一個暫停畫面
+- 暫停畫面新增「囉唆馬蓋仙」道具說明卡片、「📲 加到主畫面，確保存檔」提示卡片
+- **Bug fix**：`restoreGame()` 還原存檔後等待區客人卡片不會顯示（`buildQueueDOM()` 清空 DOM 後沒有重建卡片元素）
+
+## v5.2.2
+- **Bug fix**：暫停按鈕解除暫停後顏色變黑——`pauseBtn.style.color=''` 清空 inline style 後沒有正確落回 `var(--muted)`，改成明確賦值
+- **Bug fix**：子彈時間中等待區倒數沒有變慢——`timeScale` 判斷條件誤用 `state.itemPreview`，漏了 `state.bulletTime`，改成 `(state.bulletTime||state.itemPreview)`
+- **Bug fix**：手動暫停後解除暫停 BGM 不會恢復——`_stopBGM()` 會清空 `_currentBGM`，新增 `_pausedBGM` 在暫停當下記住原本播放的 BGM，恢復時優先用它
+
 ## v5.2.1
 - 深淵模式（Stage 14，24500分）：全 UI 暗化、專屬 BGM `abyss`/`abyss_peak`/`abyss_surge`
 - 深淵 BGM 新增三首：`_loopAbyss`、`_loopAbyssPeak`、`_loopAbyssSurge`
