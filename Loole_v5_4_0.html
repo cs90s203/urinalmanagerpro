@@ -1,0 +1,3837 @@
+<!--
+  Urinal Manager Pro — https://github.com/cs90s203/urinalmanagerpro
+  Copyright (c) 2026 cs90s203
+  Licensed under CC BY-NC-ND 4.0. Non-commercial, no derivatives, attribution required.
+  Full license: https://creativecommons.org/licenses/by-nc-nd/4.0/
+-->
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>尿斗管理大師</title>
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#141420;--panel:#1e1e2e;--panel2:#262638;--border:#3a3a58;
+  --accent:#00e5ff;--accent2:#ff6b35;--accent3:#b8ff00;
+  --warn:#ffb800;--danger:#ff3355;--success:#00e5a0;--money:#ffd700;
+  --text:#f0f0ff;--muted:#7070a8;--tile:#1a1a28;
+  --sc:#64b5f6;--mc:#ffb74d;--lc:#ef5350;--dc:#ce93d8;
+  --ui-scale:1.6;
+  /* base sizes — at ui-scale:1.6 these render as the "normal" size */
+  --fs-xs:  calc(6px  * var(--ui-scale));
+  --fs-sm:  calc(8px  * var(--ui-scale));
+  --fs-md:  calc(10px * var(--ui-scale));
+  --fs-lg:  calc(12px * var(--ui-scale));
+  --fs-xl:  calc(16px * var(--ui-scale));
+  --fs-hud: calc(13px * var(--ui-scale));
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;user-select:none;-webkit-user-select:none;}
+input,textarea{user-select:text;-webkit-user-select:text;}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;overflow-x:hidden;overflow-y:auto}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.04) 2px,rgba(0,0,0,0.04) 4px);pointer-events:none;z-index:9000}
+.screen{display:none;width:100%;max-width:900px;padding:12px}
+.screen.active{display:flex;flex-direction:column;align-items:center}
+
+/* ── TITLE ── */
+#screen-title{min-height:100vh;justify-content:center;gap:18px;text-align:center}
+.title-art{font-family:'Silkscreen',monospace;font-size:clamp(var(--fs-xl),5vw,calc(var(--fs-xl) * 1.8));color:var(--accent);text-shadow:0 0 18px var(--accent),0 0 50px rgba(0,229,255,.25);line-height:1.2;letter-spacing:2px}
+.title-sub{font-family:'Silkscreen',monospace;font-size:var(--fs-sm);color:var(--muted);letter-spacing:4px}
+.btn-p{font-family:'Silkscreen',monospace;font-size:var(--fs-lg);background:var(--accent);color:#000;border:none;padding:12px 32px;cursor:pointer;clip-path:polygon(6px 0,100% 0,calc(100% - 6px) 100%,0 100%);transition:all .15s;letter-spacing:1px}
+.btn-p:hover{background:#fff;transform:scale(1.04)}
+.btn-s{font-family:'Silkscreen',monospace;font-size:var(--fs-sm);background:transparent;color:var(--muted);border:1px solid var(--border);padding:8px 22px;cursor:pointer;transition:all .15s;letter-spacing:1px;border-radius:3px}
+.btn-s:hover{border-color:var(--accent);color:var(--accent)}
+.hist-table{width:100%;max-width:480px;border-collapse:collapse;font-family:'Silkscreen',monospace;font-size:var(--fs-sm)}
+.hist-table th{color:var(--muted);padding:4px 8px;border-bottom:1px solid var(--border);text-align:left}
+.hist-table td{padding:4px 8px;border-bottom:1px solid #1a1a30;color:var(--text)}
+.hist-table tr:first-child td{color:var(--money)}
+
+/* ── GAME ── */
+#screen-game{padding-top:8px;gap:8px;align-items:stretch;padding-bottom:24px}
+#screen-game.abyss-mode{background:#0d0d10;transition:background .8s}
+#screen-game.abyss-mode .hud{background:#111114!important;border-color:#252528!important}
+#screen-game.abyss-mode .hud-lbl{color:#555!important}
+#screen-game.abyss-mode .hud-val{color:#777!important}
+#screen-game.abyss-mode .hud-val.money{color:#8a8060!important}
+#screen-game.abyss-mode .hud-val.dn{color:#9a3a3a!important}
+#screen-game.abyss-mode .hud-val.wn{color:#7a5a00!important}
+#screen-game.abyss-mode #mc-panel{background:#111114!important;border-color:#252528!important}
+#screen-game.abyss-mode #mc-name{color:#555!important}
+#screen-game.abyss-mode #mc-content{color:#777!important}
+#screen-game.abyss-mode #mc-cursor{color:#777!important}
+#screen-game.abyss-mode .urinals-area{background:transparent!important}
+#screen-game.abyss-mode .us{background:#111114!important;border-color:#2a2a2e!important}
+#screen-game.abyss-mode .u-sl{color:#555!important}
+#screen-game.abyss-mode .u-dl{color:#555!important}
+#screen-game.abyss-mode .u-pw{background:#1e1e22!important}
+#screen-game.abyss-mode .u-pb{filter:brightness(.45)!important}
+#screen-game.abyss-mode .u-sp{color:#555!important}
+#screen-game.abyss-mode .u-item-chip{color:#555!important}
+#screen-game.abyss-mode .u-ic{color:#666!important}
+#screen-game.abyss-mode .queue-area{background:#111114!important;border-color:#252528!important}
+#screen-game.abyss-mode .queue-lbl{color:#555!important}
+#screen-game.abyss-mode .cc{background:#1a1a1e!important;border-color:#2a2a2e!important}
+#screen-game.abyss-mode .cc-t{color:#555!important}
+#screen-game.abyss-mode .cc-tm{color:#444!important}
+#screen-game.abyss-mode .cc-bw{background:#222!important}
+#screen-game.abyss-mode .cc-e{filter:brightness(.7)!important}
+#screen-game.abyss-mode .shop-area{background:#111114!important;border-color:#252528!important}
+#screen-game.abyss-mode .shop-lbl{color:#555!important}
+#screen-game.abyss-mode .shop-bal{color:#8a8060!important}
+#screen-game.abyss-mode .shop-card{background:#1a1a1e!important;border-color:#2a2a2e!important}
+#screen-game.abyss-mode .shop-card .sc-n{color:#555!important}
+#screen-game.abyss-mode .shop-card .sc-p{color:#8a8060!important}
+#screen-game.abyss-mode .eff-bar{background:#111114!important;border-color:#252528!important;color:#555!important}
+#screen-game.abyss-mode #dispatch-btn,
+#screen-game.abyss-mode #bullet-btn{background:#111114!important;border-color:#252528!important;color:#555!important}
+#screen-game.abyss-mode #dispatch-btn span{color:#8a8060!important}
+.hud{display:grid;grid-template-columns:repeat(3,1fr);gap:3px 6px;width:100%;padding:5px 8px;background:var(--panel);border:1px solid var(--border);border-radius:6px}
+.hud-box{display:flex;align-items:baseline;gap:4px;overflow:hidden;min-width:0}
+.hud-lbl{font-family:'Silkscreen',monospace;font-size:clamp(6px,1.8vw,calc(var(--fs-sm)));color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:1;min-width:0}
+.hud-val{font-family:'Silkscreen',monospace;font-size:clamp(8px,2.2vw,calc(var(--fs-hud)));color:var(--accent);line-height:1;white-space:nowrap;flex-shrink:0}
+.hud-val.dn{color:var(--danger)}.hud-val.wn{color:var(--warn)}.hud-val.money{color:var(--money)}
+
+/* ── QUEUE ── */
+.queue-area{width:100%;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:8px 12px}
+.queue-lbl{font-family:'Silkscreen',monospace;font-size:var(--fs-sm);color:var(--muted);letter-spacing:2px;margin-bottom:6px}
+.queue-list{display:flex;gap:6px;flex-wrap:nowrap;min-height:52px;align-items:center;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;padding-bottom:4px;scrollbar-width:none;touch-action:pan-x;}
+.queue-list.queue-over-capacity .cc{width:50px;padding:4px}
+.queue-list.queue-over-capacity .queue-label{display:none!important;}
+.queue-list.queue-over-capacity .queue-spacer{display:block!important;}
+.queue-list::-webkit-scrollbar{display:none;}
+
+/* ── CUSTOMER CARD ── */
+.cc{width:63px;background:var(--tile);border:2px solid var(--border);border-radius:6px;padding:5px;cursor:grab;display:flex;flex-direction:column;align-items:center;gap:2px;user-select:none;transition:border-color .12s,box-shadow .12s;flex-shrink:0;position:relative}
+.cc:hover{border-color:var(--accent)}.cc.sel{border-color:var(--accent3)!important;box-shadow:0 0 10px rgba(184,255,0,.35)!important}
+.cc.urgent{border-color:var(--warn);box-shadow:0 0 8px rgba(255,184,0,.3)}.cc.urgent.sel{border-color:var(--accent3)!important;box-shadow:0 0 10px rgba(184,255,0,.35)!important}
+.cc.dragging{opacity:.45;cursor:grabbing;border-color:var(--accent3)!important}
+.cc-e{font-size:18px;line-height:1;pointer-events:none}
+.cc-e.dispatch-glow,.u-ic.dispatch-glow{animation:dispatch-glow 1.2s ease-in-out infinite;}
+@keyframes dispatch-glow{0%,100%{opacity:1;filter:drop-shadow(0 0 4px rgba(255,255,255,0.6));}50%{opacity:0.8;filter:drop-shadow(0 0 12px rgba(255,255,255,0.9));}}
+.cc-t{font-family:'Silkscreen',monospace;font-size:calc(var(--fs-sm)*0.9);pointer-events:none}
+.cc-bw{width:100%;height:3px;background:var(--border);border-radius:2px;overflow:hidden;pointer-events:none}.cc-b{height:100%;border-radius:2px}
+.cc-tm{font-family:'Silkscreen',monospace;font-size:calc(var(--fs-sm)*0.9);color:var(--muted);pointer-events:none}
+
+/* ── URINAL SLOTS ── */
+.urinals-area{display:flex;gap:6px;justify-content:center;width:100%;flex-wrap:nowrap}
+@media(max-width:480px){
+  .urinals-area.six-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+  @media(max-width:480px){
+    /* 5格單排擠壓模式 */
+    .urinals-area.tight-5 .uscrub-hint-text,
+    .urinals-area.six-grid .uscrub-hint-text{display:none}
+  }
+}
+.us.asgn{cursor:pointer;border-color:#3a3a60}
+.us.asgn:hover{border-color:var(--accent3)!important;background:rgba(184,255,0,.04);box-shadow:0 0 14px rgba(184,255,0,.15)}
+.us.drag-over{border-color:var(--accent3)!important;background:rgba(184,255,0,.07)!important;box-shadow:0 0 18px rgba(184,255,0,.25)!important}
+/* item drag-over (purple) */
+.us.item-drag-over{border-color:#c084fc!important;background:rgba(192,132,252,.07)!important;box-shadow:0 0 18px rgba(192,132,252,.3)!important}
+.us.occupied{cursor:default}
+.us.cleaning{border-color:var(--success)!important;cursor:default}
+@keyframes cpulse{0%,100%{background:var(--panel)}50%{background:rgba(0,229,160,.1)}}.us.cleaning{animation:cpulse 1.2s ease-in-out infinite}
+.us.warn-dirty{border-color:var(--warn)!important}
+@keyframes wpulse{0%,100%{box-shadow:0 0 0 rgba(255,184,0,0)}50%{box-shadow:0 0 12px rgba(255,184,0,.5)}}.us.warn-dirty{animation:wpulse 1s ease-in-out infinite}
+.us{flex:1;min-width:80px;max-width:140px;background:var(--panel);border:2px solid var(--border);border-radius:8px;padding:6px;display:flex;flex-direction:column;align-items:center;gap:3px}
+@keyframes inspector-card-glow{0%,100%{box-shadow:0 0 6px rgba(255,215,0,.3);border-color:rgba(255,215,0,.5)}50%{box-shadow:0 0 18px rgba(255,215,0,.9);border-color:#ffd700}}
+.cc.inspector-glow{animation:inspector-card-glow .6s ease-in-out infinite!important}
+@keyframes inspect-glow{0%,100%{box-shadow:0 0 8px rgba(255,255,255,.3),inset 0 0 4px rgba(255,255,255,.1)}50%{box-shadow:0 0 24px rgba(255,215,0,.9),inset 0 0 8px rgba(255,215,0,.2)}}
+.us.inspecting{animation:inspect-glow .5s ease-in-out infinite;border-color:#ffd700!important}
+@keyframes rainbow-glow{0%{text-shadow:0 0 8px #a5f3fc}15%{text-shadow:0 0 8px #bbf7d0}30%{text-shadow:0 0 8px #fef08a}50%{text-shadow:0 0 8px #fed7aa}65%{text-shadow:0 0 8px #fecaca}80%{text-shadow:0 0 8px #ede9fe}100%{text-shadow:0 0 12px #ffd700}}
+@keyframes rainbow-text{0%{color:#a5f3fc}15%{color:#bbf7d0}30%{color:#fef08a}50%{color:#fed7aa}65%{color:#fecaca}80%{color:#ede9fe}100%{color:#ffd700}}
+.us.gangster-locked{border-color:#fb923c!important;background:rgba(251,146,60,.06)!important;}
+.us.gangster-locked::after{content:'🕴️';position:absolute;top:2px;right:4px;font-size:10px;opacity:.7}
+@keyframes bpulse{0%,100%{box-shadow:0 0 0 rgba(255,51,85,0)}50%{box-shadow:0 0 16px rgba(255,51,85,.5)}}.us.broken{animation:bpulse .8s ease-in-out infinite}
+.u-n{font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);align-self:flex-start}
+.u-ic{font-size:22px;line-height:1}.u-sl{font-family:'Silkscreen',monospace;font-size:var(--fs-sm)}
+.u-sp{font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted)}
+.u-pw{width:100%;height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.u-pb{height:100%;border-radius:3px;transition:width .1s linear}
+.u-dl{font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);align-self:flex-start}
+.u-dw{width:100%;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.u-db{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--success),var(--warn) 60%,var(--danger))}
+.u-st{display:flex;gap:3px;flex-wrap:wrap;justify-content:center}
+.stag{font-family:'Silkscreen',monospace;font-size:var(--fs-xs);padding:1px 4px;border-radius:2px;background:rgba(255,184,0,.1);color:var(--warn);border:1px solid rgba(255,184,0,.2)}
+.u-items{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-start;width:100%}
+.urinals-area.six-grid .u-items{flex-direction:column;min-height:20px}
+.u-item-chip{display:inline-flex;align-items:center;gap:1px;font-size:12px;position:relative;cursor:default;line-height:1;white-space:nowrap;flex-shrink:0}
+.u-item-chip .dur-bar{display:inline-block;width:16px;height:2px;background:var(--accent3);border-radius:1px;vertical-align:middle;margin-left:1px}
+@media(max-width:480px){
+  .us{min-width:60px;max-width:none;padding:4px}
+  .u-st{display:none}
+  .dash-slider-grid{grid-template-columns:1fr!important}
+}
+.us.scrubbing{cursor:ns-resize!important;border-color:var(--accent)!important;background:rgba(0,229,255,.05)!important}
+@keyframes scrub-flash{0%{background:rgba(0,229,255,.22)}100%{background:var(--panel)}}.us.scrub-hit{animation:scrub-flash .25s ease-out forwards}
+
+/* 道具預覽模式 — 商店專屬慢速，不影響子彈時間按鈕 */
+.shop-area.shop-preview-mode{border-color:var(--accent)!important;box-shadow:0 0 14px rgba(0,229,255,.2)}
+.shop-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.shop-lbl{font-family:'Silkscreen',monospace;font-size:var(--fs-sm);color:var(--muted);letter-spacing:2px}
+.shop-bal{font-family:'Silkscreen',monospace;font-size:var(--fs-md);color:var(--money)}
+.shop-items{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;width:100%}
+.shop-card{
+  background:var(--tile);border:2px solid var(--border);border-radius:6px;
+  padding:5px 3px;display:flex;flex-direction:column;align-items:center;gap:2px;
+  cursor:grab;user-select:none;transition:border-color .12s,opacity .12s,transform .15s;position:relative
+}
+.shop-card:hover:not(.broke){border-color:#c084fc}
+.shop-card.activatable:hover:not(.broke){border-color:var(--money);box-shadow:0 0 10px rgba(255,215,0,.3)}
+.shop-card.activatable{border-style:dashed;border-color:rgba(255,215,0,.4)}
+/* 長按預覽模式 */
+.shop-card.broke{opacity:.35;cursor:not-allowed;filter:grayscale(.7)}
+.shop-card.s-dragging{opacity:.4;cursor:grabbing}
+.shop-card .sc-e{font-size:18px;line-height:1;pointer-events:none}
+.shop-card .sc-n{font-family:'Silkscreen',monospace;font-size:var(--fs-xs);text-align:center;pointer-events:none;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.shop-card .sc-p{font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--money);pointer-events:none}
+@media(max-width:480px){
+  .shop-items{grid-template-columns:repeat(5,1fr)}
+}
+
+/* ── DRAG GHOST ── */
+#drag-ghost{position:fixed;pointer-events:none;z-index:9500;width:70px;background:var(--tile);border:2px solid var(--accent3);border-radius:6px;padding:6px;display:none;flex-direction:column;align-items:center;gap:3px;box-shadow:0 0 18px rgba(184,255,0,.4);opacity:.9;font-family:'Silkscreen',monospace;font-size:20px}
+#item-drag-ghost{position:fixed;pointer-events:none;z-index:9501;background:var(--tile);border:2px solid #c084fc;border-radius:6px;padding:6px 8px;display:none;flex-direction:column;align-items:center;gap:3px;box-shadow:0 0 18px rgba(192,132,252,.5);opacity:.92;font-family:'Silkscreen',monospace;font-size:22px}
+
+/* ── EFFECTS BAR ── */
+input[type=range].slim{-webkit-appearance:none;appearance:none;background:transparent;cursor:pointer;flex:1;min-width:0}
+input[type=range].slim::-webkit-slider-runnable-track{height:1px;background:rgba(0,229,255,.2);border-radius:1px}
+input[type=range].slim::-webkit-slider-thumb{-webkit-appearance:none;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-top:-3.5px;opacity:0.8}
+input[type=range].slim::-moz-range-track{height:1px;background:rgba(0,229,255,.2);border-radius:1px}
+input[type=range].slim::-moz-range-thumb{width:8px;height:8px;border-radius:50%;background:var(--accent);border:none;opacity:0.8}
+.eff-bar{width:100%;background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:5px 10px;font-family:'Silkscreen',monospace;font-size:var(--fs-sm);color:var(--muted);min-height:24px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.eff-item{color:var(--warn)}.eff-drag-hint{color:var(--accent3);font-size:var(--fs-sm);letter-spacing:1px}
+
+/* ── DEBUG ── */
+.tog-btn{font-family:'Silkscreen',monospace;font-size:9px;background:var(--panel);border:1px solid var(--border);color:var(--muted);padding:5px 14px;cursor:pointer;border-radius:4px;width:100%;display:flex;align-items:center;justify-content:space-between;transition:border-color .12s,color .12s}
+.tog-btn:hover{border-color:var(--accent3);color:var(--accent3)}
+.debug-panel{display:none;width:100%;background:#08080f;border:1px solid #141428;border-radius:6px;padding:8px 10px;font-family:'Silkscreen',monospace;font-size:9px;max-height:220px;overflow-y:auto;flex-direction:column;gap:1px}
+.debug-panel.open{display:flex}
+.ll{line-height:1.6;padding:1px 0;border-bottom:1px solid #0c0c1c}
+.ll.info{color:#3a8aaa}.ll.ok{color:#3a9a5a}.ll.warn{color:#9a8a3a}.ll.err{color:#aa3a3a}.ll.ev{color:#8a5aaa}.ll.drag{color:#3a7a6a}.ll.money{color:#c8a820}.ll.item{color:#9060cc}
+
+/* ── DASH ── */
+.dash-tog{font-family:'Silkscreen',monospace;font-size:9px;background:var(--panel);border:1px solid var(--border);color:var(--muted);padding:5px 14px;cursor:pointer;border-radius:4px;width:100%;display:flex;align-items:center;justify-content:space-between;transition:border-color .12s,color .12s}
+.dash-tog:hover{border-color:var(--accent2);color:var(--accent2)}
+.dash-panel{display:none;width:100%;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:12px;gap:10px;flex-direction:column}
+.dash-panel.open{display:flex}
+.dash-sec{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:6px}
+.dash-ttl{font-family:'Silkscreen',monospace;font-size:var(--fs-sm);color:var(--accent2);letter-spacing:2px;margin-bottom:4px}
+.df{display:flex;flex-direction:column;gap:2px}
+.df label{font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted)}
+.df input{background:var(--tile);border:1px solid var(--border);color:var(--text);font-family:'Silkscreen',monospace;font-size:var(--fs-sm);padding:4px 7px;border-radius:3px;width:100%}
+.df input:focus{outline:none;border-color:var(--accent2)}
+.dash-apply{font-family:'Silkscreen',monospace;font-size:var(--fs-sm);background:var(--accent2);color:#000;border:none;padding:7px 16px;cursor:pointer;clip-path:polygon(4px 0,100% 0,calc(100% - 4px) 100%,0 100%);align-self:flex-start;transition:all .12s}
+.dash-apply:hover{background:var(--accent)}
+
+/* ── RESULT ── */
+#screen-result{min-height:100vh;justify-content:center;gap:16px;text-align:center}
+.rs-title{font-family:'Silkscreen',monospace;font-size:var(--fs-xl);letter-spacing:3px}
+.rs-score{font-family:'Silkscreen',monospace;font-size:calc(var(--fs-xl) * 2);color:var(--accent3);text-shadow:0 0 20px rgba(184,255,0,.35)}
+.rs-money{font-family:'Silkscreen',monospace;font-size:calc(var(--fs-xl) * 1.2);color:var(--money)}
+.rs-stats{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:12px 18px;display:flex;gap:20px;justify-content:center;font-family:'Silkscreen',monospace;font-size:var(--fs-sm);flex-wrap:wrap}
+.rstat{display:flex;flex-direction:column;gap:4px;align-items:center}
+.rstat-v{font-size:var(--fs-xl);color:var(--accent)}.rstat-l{color:var(--muted);font-size:var(--fs-xs)}
+
+/* ── FX ── */
+.score-pop{position:fixed;font-family:'Silkscreen',monospace;font-size:16px;font-weight:700;pointer-events:none;z-index:9200;animation:fup .9s ease-out forwards}
+@keyframes fup{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-55px) scale(1.3)}}
+.peak-banner{position:fixed;top:28%;left:50%;transform:translate(-50%,-50%);font-family:'Silkscreen',monospace;font-size:clamp(16px,4vw,28px);color:var(--danger);text-shadow:0 0 20px var(--danger);letter-spacing:4px;z-index:9300;pointer-events:none;text-align:center;animation:pflash .5s ease-in-out 6}
+.surge-banner{position:fixed;top:33%;left:50%;transform:translate(-50%,-50%);font-family:'Silkscreen',monospace;font-size:clamp(13px,3vw,22px);color:var(--accent3);text-shadow:0 0 16px var(--accent3);letter-spacing:3px;z-index:9300;pointer-events:none;text-align:center;animation:pflash .5s ease-in-out 3}
+@keyframes pflash{0%{opacity:0;transform:translate(-50%,-50%) scale(.8)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}80%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-50%) scale(.95)}}
+.notify-banner{position:fixed;top:80px;left:50%;transform:translateX(-50%);font-family:'Silkscreen',monospace;font-size:11px;padding:8px 18px;border-radius:4px;z-index:9400;animation:nslide .8s ease-out 1.5s forwards;opacity:1;white-space:nowrap}
+@keyframes nslide{0%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-10px)}}
+
+/* bullet time */
+@keyframes hud-flash{0%,100%{color:var(--accent3)}50%{color:#fff;text-shadow:0 0 12px var(--accent3)}}
+.hud-val.flash{animation:hud-flash .4s ease-in-out}
+@keyframes bullet-border{
+  0%,100%{box-shadow:0 0 0 6px rgba(0,229,255,0),inset 0 0 0 6px rgba(0,229,255,0)}
+  50%{box-shadow:0 0 24px 6px rgba(0,229,255,.35),inset 0 0 0 6px rgba(0,229,255,.12)}
+}
+#screen-game.bullet{outline:6px solid var(--accent);outline-offset:-6px;animation:bullet-border 1s ease-in-out infinite}
+#bullet-btn.active{background:rgba(0,229,255,.18)!important;border-color:var(--accent)!important;color:var(--accent)!important;box-shadow:0 0 18px rgba(0,229,255,.45);font-size:var(--fs-md)!important}
+#dispatch-btn:hover:not(.low-money){background:rgba(255,215,0,.1)!important;border-color:var(--money)!important;color:var(--money)!important}
+#dispatch-btn.low-money{opacity:0.5;cursor:not-allowed}
+
+/* wait boost glow */
+@keyframes qglow{0%,100%{box-shadow:0 0 0 rgba(255,215,0,0)}50%{box-shadow:0 0 16px rgba(255,215,0,.45)}}
+.queue-area.boosted{border-color:var(--money)!important;animation:qglow 1.2s ease-in-out infinite}
+/* item drag over queue — gold highlight (separate from urinal purple) */
+.queue-area.queue-item-over{border-color:var(--money)!important;background:rgba(255,215,0,.06)!important;box-shadow:0 0 16px rgba(255,215,0,.3)!important}
+
+/* 馬蓋仙 MC panel */
+#mc-panel{
+  width:100%;background:var(--panel);
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:6px;padding:10px 14px;
+  display:flex;align-items:flex-start;gap:10px;
+  min-height:52px;
+  transition:border-color .3s,box-shadow .3s;
+}
+#mc-panel.speaking{
+  border-color:var(--accent);
+  box-shadow:0 0 14px rgba(0,229,255,.35);
+}
+#mc-avatar{font-size:26px;line-height:1;flex-shrink:0;margin-top:2px}
+#mc-body{display:flex;flex-direction:column;gap:3px;flex:1}
+#mc-name{font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:rgba(255,255,255,.5);letter-spacing:2px}
+#mc-text{font-family:'Silkscreen',monospace;font-size:calc(var(--fs-sm)*0.8);color:#f0f0ff;line-height:1.6;min-height:1.6em}
+#mc-cursor{display:inline-block;width:8px;height:1em;background:#f0f0ff;vertical-align:middle;animation:blink .7s step-end infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+#softstart-banner{
+  width:100%;font-family:'Silkscreen',monospace;font-size:var(--fs-xs);
+  text-align:center;padding:4px;border-radius:3px;letter-spacing:2px;
+  background:rgba(184,255,0,.1);color:var(--accent3);border:1px solid rgba(184,255,0,.2);
+}
+</style>
+</head>
+<body>
+<div id="drag-ghost"></div>
+<div id="item-drag-ghost"></div>
+
+<!-- ══ TITLE ══ -->
+<div id="screen-title" class="screen active">
+  <div class="title-art">尿斗管理大師</div>
+  <div class="title-sub">URINAL MANAGER PRO</div>
+  <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);letter-spacing:2px">v5.4.0</div>
+  <div style="font-size:42px;margin:4px 0">🚽</div>
+  <div style="font-size:12px;color:var(--muted);max-width:300px;text-align:center;line-height:2">
+    安排客人、清潔廁所、購買道具、賺取最高收入<br>
+    <span style="color:var(--accent3);font-family:'Silkscreen',monospace;font-size:9px">拖曳客人至便斗 | 拖曳道具裝備</span>
+  </div>
+  <button class="btn-p" onclick="startGame()">開始遊戲</button>
+  <div style="display:flex;gap:8px;justify-content:center" id="title-ach-list"></div>
+  <div style="width:100%;max-width:480px">
+    <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);text-align:center;letter-spacing:2px;margin-bottom:4px">🌐 全球排行榜 TOP 5</div>
+    <div id="global-lb-title"></div>
+  </div>
+  <button id="title-dash-btn" class="btn-s" onclick="toggleTitleDash()">⚙ 調整數值</button>
+  <div id="title-dash-wrap" style="display:none;width:100%;max-width:720px;margin-top:8px">
+    <div id="title-dash-inner" class="dash-panel open"></div>
+  </div>
+</div>
+
+<!-- ══ GAME ══ -->
+<div id="screen-game" class="screen">
+  <div class="hud">
+    <div class="hud-box"><span class="hud-lbl">分數</span><span class="hud-val" id="hud-score">0</span></div>
+    <div class="hud-box"><span class="hud-lbl">收入</span><span class="hud-val money" id="hud-money">£0.00</span></div>
+    <div class="hud-box"><span class="hud-lbl">時間</span><span class="hud-val" id="hud-time">0:00</span></div>
+    <div class="hud-box"><span class="hud-lbl">氣走</span><span class="hud-val" id="hud-left">0</span></div>
+    <div class="hud-box"><span class="hud-lbl">服務</span><span class="hud-val" id="hud-served">0</span></div>
+    <div class="hud-box"><span class="hud-lbl">入廁費</span><span class="hud-val money" id="hud-fee">£1.00</span></div>
+  </div>
+
+  <div id="softstart-banner">🟢 慢速開局中 — 熟悉操作再出發</div>
+  <div id="mc-panel">
+    <div id="mc-avatar">🧙</div>
+    <div id="mc-body">
+      <div id="mc-name">囉唆馬蓋仙</div>
+      <div id="mc-text"><span id="mc-content"></span><span id="mc-cursor"></span></div>
+    </div>
+  </div>
+
+  <div class="urinals-area" id="urinals-area"></div>
+
+  <div class="queue-area" id="queue-area">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <div class="queue-lbl">▶ 等待區 — 拖曳至便斗 或 點選後點便斗</div>
+      <div id="wait-boost-badge" style="display:none;font-family:'Silkscreen',monospace;font-size:var(--fs-sm);color:var(--money);background:rgba(255,215,0,.12);border:1px solid rgba(255,215,0,.3);padding:2px 8px;border-radius:12px"></div>
+    </div>
+    <div class="queue-list" id="queue-list"></div>
+  </div>
+
+  <div style="display:flex;gap:6px;width:100%">
+    <button id="dispatch-btn" onclick="dispatchCustomer()" style="
+      flex:1;font-family:'Silkscreen',monospace;font-size:11px;
+      background:var(--panel);border:1px solid var(--border);color:var(--muted);
+      padding:7px;cursor:pointer;border-radius:4px;letter-spacing:2px;
+      transition:all .15s;
+    ">🚨 來人啊！ [<span id="dispatch-cost-label" style="color:var(--money)">£5</span>]</button>
+    <button id="pause-btn" onclick="toggleManualPause()" style="
+      width:42px;flex-shrink:0;font-size:18px;
+      background:var(--panel);border:1px solid var(--border);color:var(--muted);
+      padding:0;cursor:pointer;border-radius:4px;
+      transition:all .15s;display:flex;align-items:center;justify-content:center;
+    ">⏸</button>
+    <button id="bullet-btn" onclick="toggleBulletTime()" style="
+      flex:1;font-family:'Silkscreen',monospace;font-size:11px;
+      background:var(--panel);border:1px solid var(--border);color:var(--muted);
+      padding:7px;cursor:pointer;border-radius:4px;letter-spacing:2px;
+      transition:all .15s;
+    ">🐌 子彈時間 [需購買 ⚡]</button>
+  </div>
+
+  <!-- SHOP -->
+  <div class="shop-area" id="shop-area-el">
+    <div class="shop-hdr">
+      <div class="shop-lbl">🛒 道具商店 — 拖曳道具至目標位置</div>
+      <div class="shop-bal" id="shop-bal">£0.00</div>
+    </div>
+    <div class="shop-items" id="shop-items"></div>
+  </div>
+
+  <div class="eff-bar" style="flex-wrap:wrap;row-gap:6px">
+    <span>控尿狀態：</span><span id="eff-text" style="color:var(--muted)">暫無</span>
+    <span id="drag-hint" class="eff-drag-hint" style="display:none">← 拖放至便斗</span>
+    <span id="item-hint" style="display:none;font-family:'Silkscreen',monospace;font-size:8px;color:#c084fc">← 拖放道具至目標</span>
+    <span style="margin-left:auto">
+      <button onclick="toggleTips()" style="font-family:'Silkscreen',monospace;font-size:9px;background:transparent;border:1px solid var(--border);color:var(--muted);padding:2px 8px;cursor:pointer;border-radius:3px">💡 Tips</button>
+    </span>
+    <!-- 第二行：字體 & 亮度 slider -->
+    <div style="width:100%;display:flex;align-items:center;gap:8px">
+      <span style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);flex-shrink:0">字</span>
+      <input type="range" id="ui-scale-slider" class="slim" min="0.7" max="2.5" step="0.05"
+        oninput="applyUIScale(this.value);localStorage.setItem('loole_ui_scale',this.value)">
+      <span style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);flex-shrink:0">亮</span>
+      <input type="range" id="brightness-slider" class="slim" min="0.3" max="1.0" step="0.05"
+        oninput="document.body.style.filter='brightness('+this.value+')';localStorage.setItem('loole_brightness',this.value)">
+    </div>
+  </div>
+  <!-- TIPS PANEL -->
+  <div id="tips-panel" style="display:none;width:100%;background:var(--panel);border:1px solid rgba(255,184,0,.3);border-radius:6px;padding:10px 14px">
+    <div style="font-family:'Silkscreen',monospace;font-size:9px;color:var(--warn);letter-spacing:2px;margin-bottom:8px">💡 TIPS</div>
+    <div id="tips-list" style="display:flex;flex-direction:column;gap:6px;font-size:11px;line-height:1.7;color:var(--text)"></div>
+  </div>
+
+  <button id="dbg-btn" class="tog-btn" onclick="toggleDebug()"><span>🖥 DEBUG LOG</span><span id="dbg-arrow">▼</span></button>
+  <div class="debug-panel" id="debug-panel"></div>
+  <button id="cfg-btn" class="dash-tog" onclick="toggleGameDash()"><span>⚙ CONFIG DASHBOARD</span><span id="dash-arrow">▼</span></button>
+  <div class="dash-panel" id="game-dashboard"></div>
+</div>
+
+<!-- ══ RESULT ══ -->
+<div id="screen-result" class="screen">
+  <div style="font-size:48px" id="rs-emoji">🚽</div>
+  <div class="rs-title" id="rs-title">GAME OVER</div>
+  <div id="rs-rank" style="font-family:'Silkscreen',monospace;font-size:13px;letter-spacing:2px;padding:6px 18px;border-radius:20px;border:1px solid var(--border);color:var(--accent3)"></div>
+  <div style="display:flex;gap:24px;justify-content:center;align-items:baseline;flex-wrap:wrap">
+    <div><div style="font-family:'Silkscreen',monospace;font-size:9px;color:var(--muted);margin-bottom:4px">SCORE</div><div class="rs-score" id="rs-score">0</div></div>
+    <div><div style="font-family:'Silkscreen',monospace;font-size:9px;color:var(--muted);margin-bottom:4px">REVENUE</div><div class="rs-money" id="rs-money">£0.00</div></div>
+  </div>
+  <div id="rs-feedback" style="max-width:340px;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:10px 14px;font-size:12px;line-height:1.9;color:var(--text);text-align:left"></div>
+  <!-- 成就 -->
+  <div id="rs-achievements" style="width:100%;max-width:380px;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:10px 14px">
+    <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);text-align:center;letter-spacing:2px;margin-bottom:8px">— 成就 —</div>
+    <div id="rs-ach-list" style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"></div>
+  </div>
+  <!-- 角色圖鑑 -->
+  <div id="rs-codex" style="width:100%;max-width:380px;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:10px 14px">
+    <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);text-align:center;letter-spacing:2px;margin-bottom:8px">— 角色圖鑑 —</div>
+    <div id="rs-codex-chars" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"></div>
+    <div id="rs-codex-msg" style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--accent3);text-align:center;margin-top:8px"></div>
+  </div>
+  <!-- 本局紀錄（合併統計）-->
+  <div id="rs-leaderboard" style="width:100%;max-width:380px"></div>
+  <!-- 全球排行榜提交 -->
+  <div id="rs-submit-area" style="display:none;width:100%;max-width:380px;background:var(--panel);border:1px solid var(--accent);border-radius:6px;padding:12px 16px">
+    <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--accent);letter-spacing:2px;margin-bottom:8px">🌐 進入全球排行榜！輸入你的名字</div>
+    <div style="display:flex;gap:8px">
+      <input id="rs-name-input" type="text" maxlength="12" placeholder="最多12字"
+        style="flex:1;background:var(--tile);border:1px solid var(--border);color:var(--text);font-family:'Silkscreen',monospace;font-size:var(--fs-sm);padding:6px 10px;border-radius:4px;min-width:0">
+      <button onclick="submitScore()" class="btn-s" style="white-space:nowrap">提交 🏆</button>
+    </div>
+    <div id="rs-submit-msg" style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);margin-top:6px;min-height:14px"></div>
+  </div>
+  <!-- 全球排行榜 -->
+  <div style="width:100%;max-width:380px">
+    <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);text-align:center;letter-spacing:2px;margin-bottom:4px">🌐 全球排行榜</div>
+    <div id="global-lb-result"></div>
+  </div>
+  <div id="rs-msg" style="font-family:'Silkscreen',monospace;font-size:10px;color:var(--muted);letter-spacing:2px"></div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
+    <button class="btn-p" onclick="startGame()">再玩一局</button>
+    <button class="btn-s" onclick="showScreen('screen-title')">主選單</button>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════
+//  AUDIO ENGINE
+// ════════════════════════════════════
+let _actx=null,_bgmScheduled=[],_bgmNodes=[],_currentBGM=null,_audioVol=0.4,_bgmReturnTimer=null;
+
+function _getCtx(){
+  if(!_actx)_actx=new(window.AudioContext||window.webkitAudioContext)();
+  return _actx;
+}
+function _beep(freq,dur,type='square',t,g=0.3,slide=0){
+  const c=_getCtx();if(!t)t=c.currentTime;
+  const o=c.createOscillator(),gn=c.createGain();
+  o.connect(gn);gn.connect(c.destination);
+  o.type=type;o.frequency.setValueAtTime(freq,t);
+  if(slide)o.frequency.linearRampToValueAtTime(slide,t+dur);
+  gn.gain.setValueAtTime(g*_audioVol,t);gn.gain.exponentialRampToValueAtTime(0.001,t+dur);
+  o.start(t);o.stop(t+dur+0.05);_bgmNodes.push(o);
+}
+function _noise(dur,t,g=0.2,freq=800){
+  const c=_getCtx();if(!t)t=c.currentTime;
+  const buf=c.createBuffer(1,c.sampleRate*dur,c.sampleRate);
+  const d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+  const src=c.createBufferSource(),gn=c.createGain(),f=c.createBiquadFilter();
+  src.buffer=buf;f.type='bandpass';f.frequency.value=freq;
+  src.connect(f);f.connect(gn);gn.connect(c.destination);
+  gn.gain.setValueAtTime(g*_audioVol,t);gn.gain.exponentialRampToValueAtTime(0.001,t+dur);
+  src.start(t);src.stop(t+dur+0.05);_bgmNodes.push(src);
+}
+function _stopBGM(){
+  _currentBGM=null;
+  _bgmScheduled.forEach(clearTimeout);_bgmScheduled=[];
+  _bgmNodes.forEach(n=>{try{n.stop();}catch(e){}});_bgmNodes=[];
+  if(_bgmReturnTimer){clearTimeout(_bgmReturnTimer);_bgmReturnTimer=null;}
+}
+function playSFX(name){
+  const c=_getCtx();c.resume();const t=c.currentTime;
+  switch(name){
+    case 'assign': _beep(440,.05,'square',t,.2);_beep(660,.08,'square',t+.05,.2);break;
+    case 'done': _beep(523,.07,'square',t,.2);_beep(659,.07,'square',t+.07,.2);_beep(784,.12,'square',t+.14,.25);break;
+    case 'leave': _beep(400,.08,'square',t,.2,200);_beep(200,.15,'square',t+.08,.2,100);break;
+    case 'break':
+      _beep(55,.03,'square',t,1.0,40);
+      _noise(.03,t,1.0,60);_noise(.06,t,.8,120);_noise(.15,t,.6,250);
+      _noise(.02,t,.8,4000);_noise(.04,t+.02,.7,2000);_noise(.06,t+.04,.6,800);
+      _beep(300,.06,'sawtooth',t,.4,100);_beep(200,.08,'sawtooth',t+.02,.3,60);
+      _noise(.3,t+.06,.4,400);_noise(.3,t+.08,.35,200);_noise(.3,t+.1,.3,100);
+      _beep(40,.5,'sine',t+.02,.7,20);_beep(50,.4,'sine',t+.04,.6,25);_beep(35,.6,'sine',t+.06,.5,18);
+      _noise(.04,t+.18,.5,80);_noise(.08,t+.19,.4,150);_beep(45,.3,'sine',t+.18,.4,22);
+      _noise(.06,t+.25,.5,4000);_beep(400,.05,'sawtooth',t+.25,.3,200);
+      _noise(.08,t+.32,.4,2000);_beep(250,.06,'sawtooth',t+.32,.25,150);
+      _noise(.1,t+.4,.35,800);_beep(150,.07,'sawtooth',t+.4,.2,100);
+      _noise(.25,t+.5,.25,200);_noise(.3,t+.55,.18,100);_noise(.2,t+.6,.12,80);
+      break;
+    case 'extra_urinal':
+      _beep(262,.1,'square',t,.15);_beep(330,.1,'square',t+.1,.18);
+      _beep(392,.1,'square',t+.2,.2);_beep(523,.12,'square',t+.3,.22);
+      _beep(659,.12,'square',t+.42,.24);_beep(784,.15,'square',t+.54,.27);
+      _beep(1047,.35,'square',t+.69,.3);
+      _noise(.08,t+.69,.15,3000);_noise(.12,t+.75,.1,5000);
+      break;
+    case 'peak': [0,.15,.3].forEach(d=>{_beep(880,.08,'square',t+d,.25);_beep(440,.08,'square',t+d+.04,.15);});break;
+    case 'inspector': _beep(392,.15,'square',t,.2);_beep(523,.15,'square',t+.15,.2);_beep(659,.15,'square',t+.3,.2);_beep(784,.3,'square',t+.45,.3);break;
+    case 'achievement': [523,659,784,1047].forEach((f,i)=>_beep(f,.12,'square',t+i*.1,.2+(i*.03)));_beep(1047,.3,'square',t+.4,.3);break;
+    case 'bullet': _beep(880,.5,'sine',t,.2,220);_beep(440,.5,'sine',t,.1,110);break;
+    case 'buy': _beep(1047,.04,'square',t,.2);_beep(1319,.08,'square',t+.05,.25);break;
+    case 'scrub': [0,.04,.08,.12,.16].forEach(d=>{_noise(.04,t+d,.15);_noise(.03,t+d,.1,6000);});break;
+    case 'gangster': _beep(220,.1,'sawtooth',t,.3);_beep(185,.1,'sawtooth',t+.1,.3);_beep(165,.2,'sawtooth',t+.2,.35);break;
+    case 'inspect_pass': [523,659,784,1047,1319].forEach((f,i)=>_beep(f,.1,'square',t+i*.08,.2));break;
+    case 'inspect_fail':
+      _beep(440,.2,'sawtooth',t,.3,300);_beep(330,.25,'sawtooth',t+.2,.3,220);
+      _beep(220,.3,'sawtooth',t+.4,.3,147);_beep(147,.4,'sawtooth',t+.65,.3,110);
+      _noise(.15,t+.8,.25,100);break;
+    case 'abyss_enter':
+      // 版本C：深淵召喚 — 環境音吸入 + 心跳脈衝 + 黑洞共鳴
+      // 環境吸入：多層往下 sweep
+      {const o1=c.createOscillator(),g1=c.createGain();o1.connect(g1);g1.connect(c.destination);o1.type='sine';o1.frequency.setValueAtTime(800,t);o1.frequency.exponentialRampToValueAtTime(30,t+2.5);g1.gain.setValueAtTime(.15,t);g1.gain.exponentialRampToValueAtTime(.001,t+2.5);o1.start(t);o1.stop(t+2.6);}
+      {const o2=c.createOscillator(),g2=c.createGain();o2.connect(g2);g2.connect(c.destination);o2.type='sine';o2.frequency.setValueAtTime(600,t+.1);o2.frequency.exponentialRampToValueAtTime(25,t+2.6);g2.gain.setValueAtTime(.12,t+.1);g2.gain.exponentialRampToValueAtTime(.001,t+2.6);o2.start(t+.1);o2.stop(t+2.7);}
+      {const o3=c.createOscillator(),g3=c.createGain();o3.connect(g3);g3.connect(c.destination);o3.type='sine';o3.frequency.setValueAtTime(400,t+.2);o3.frequency.exponentialRampToValueAtTime(20,t+2.7);g3.gain.setValueAtTime(.1,t+.2);g3.gain.exponentialRampToValueAtTime(.001,t+2.7);o3.start(t+.2);o3.stop(t+2.8);}
+      // 噪音被吸進去（20層漸弱）
+      for(let i=0;i<20;i++){_noise(.1,t+i*.12,.12-i*.004,1000*Math.pow(.88,i),1+i*.1);}
+      // 心跳脈衝（3次）
+      for(let i=0;i<3;i++){
+        const ft=t+.5+i*.6;
+        _beep(55,.12,'sine',ft,.7,20);_beep(40,.2,'sine',ft+.1,.5,15);_noise(.15,ft,.4,80,2);
+      }
+      // 黑洞共鳴
+      _beep(28,1.5,'sine',t+1.2,.5,30);_beep(35,1.2,'sine',t+1.3,.4,32);_noise(1.2,t+1.4,.25,40,3);
+      // 最後深沉一擊
+      _beep(25,.8,'sine',t+2.2,.8,15);_noise(.6,t+2.2,.4,50,2);
+      break;
+  }
+}
+
+const _N={C3:131,D3:147,E3:165,F3:175,G3:196,A3:220,Bb3:233,B3:247,F3s:185,C4:262,D4:294,E4:330,F4:349,G4:392,A4:440,Bb4:466,B4:494,C5:523,D5:587,E5:659,F5:698,G5:784,A5:880,B5:988,C6:1047,R:0};
+function _sched(f,d,t,type='square',g=0.15){if(f>0)_beep(f,d*.88,type,t,g);}
+
+function playBGM(type,returnAfterMs=0){
+  if(_currentBGM===type)return;
+  _stopBGM();
+  _getCtx().resume();
+  _currentBGM=type;
+  ({normal:_loopNormal,peak:_loopPeak,delinquent:_loopDelinquent,soldier:_loopSoldier,boss:_loopBoss,abyss:_loopAbyss,abyss_peak:_loopAbyssPeak,abyss_surge:_loopAbyssSurge})[type]?.();
+  // 自動回 normal
+  if(returnAfterMs>0){
+    _bgmReturnTimer=setTimeout(()=>{if(_currentBGM===type)playBGM(typeof _baseBGM==='function'?_baseBGM():'normal');},returnAfterMs);
+  }
+}
+
+function _loopNormal(){
+  if(_currentBGM!=='normal')return;
+  const c=_getCtx(),t=c.currentTime,b=0.15;
+  const mel=[[_N.E5,2],[_N.G5,2],[_N.A5,4],[_N.G5,2],[_N.E5,2],[_N.C5,4],[_N.D5,2],[_N.F5,2],[_N.G5,4],[_N.F5,2],[_N.D5,2],[_N.C5,4],[_N.E5,2],[_N.G5,2],[_N.A5,2],[_N.C6,2],[_N.B5,4],[_N.R,4],[_N.G5,2],[_N.F5,2],[_N.E5,2],[_N.D5,2],[_N.C5,8]];
+  const bass=[[_N.C4,4],[_N.C4,4],[_N.F4,4],[_N.F4,4],[_N.G4,4],[_N.G4,4],[_N.F4,4],[_N.F4,4],[_N.C4,4],[_N.E4,4],[_N.F4,4],[_N.G4,4],[_N.C4,8]];
+  let mt=t;mel.forEach(([f,d])=>{_sched(f,d*b,mt,'square',.15);mt+=d*b;});
+  let bt=t;bass.forEach(([f,d])=>{_sched(f,d*b,bt,'square',.08);bt+=d*b;});
+  for(let i=0;i<16;i++){_noise(.05,t+i*b*4,.18,60);if(i%2===1)_noise(.04,t+i*b*4+b*2,.1,2000);}
+  const total=mel.reduce((s,[,d])=>s+d,0)*b;
+  _bgmScheduled.push(setTimeout(()=>_loopNormal(),(total*1000)-80));
+}
+
+function _loopPeak(){
+  if(_currentBGM!=='peak')return;
+  const c=_getCtx(),t=c.currentTime,b=0.1;
+  const mel=[[_N.E5,2],[_N.G5,2],[_N.A5,4],[_N.G5,2],[_N.E5,2],[_N.C5,4],[_N.D5,2],[_N.F5,2],[_N.G5,4],[_N.F5,2],[_N.D5,2],[_N.C5,4],[_N.E5,2],[_N.G5,2],[_N.A5,2],[_N.C6,2],[_N.B5,4],[_N.R,4],[_N.G5,2],[_N.F5,2],[_N.E5,2],[_N.D5,2],[_N.C5,8]];
+  const bass=[[_N.C4,4],[_N.C4,4],[_N.F4,4],[_N.F4,4],[_N.G4,4],[_N.G4,4],[_N.F4,4],[_N.F4,4],[_N.C4,4],[_N.E4,4],[_N.F4,4],[_N.G4,4],[_N.C4,8]];
+  let mt=t;mel.forEach(([f,d])=>{_sched(f,d*b,mt,'sawtooth',.15);mt+=d*b;});
+  let bt=t;bass.forEach(([f,d])=>{_sched(f,d*b,bt,'sawtooth',.1);bt+=d*b;});
+  const total=mel.reduce((s,[,d])=>s+d,0)*b;
+  const bars=Math.floor(total/(b*8));
+  for(let i=0;i<bars*2;i++){_noise(.05,t+i*b*4,.25,60);_noise(.04,t+i*b*4+b*2,.2,3000);for(let j=0;j<8;j++)_noise(.015,t+i*b*4+j*b,.06,8000);_beep(110,.08,'sawtooth',t+i*b*4,.12);_beep(110,.08,'sawtooth',t+i*b*4+b*2,.1);}
+  _bgmScheduled.push(setTimeout(()=>_loopPeak(),(total*1000)-80));
+}
+
+function _loopDelinquent(){
+  if(_currentBGM!=='delinquent')return;
+  const c=_getCtx(),t=c.currentTime,b=0.1;
+  const mel=[[_N.A4,1],[_N.R,1],[_N.A4,1],[_N.R,1],[_N.C5,2],[_N.B4,1],[_N.A4,1],[_N.G4,1],[_N.R,1],[_N.G4,1],[_N.R,1],[_N.Bb4,2],[_N.A4,2],[_N.F4,1],[_N.R,1],[_N.F4,1],[_N.G4,1],[_N.A4,2],[_N.R,2],[_N.E4,1],[_N.F4,1],[_N.G4,1],[_N.A4,1],[_N.B4,2],[_N.A4,2]];
+  const bass=[[_N.A3,2],[_N.A3,2],[_N.C4,2],[_N.C4,2],[_N.G3,2],[_N.G3,2],[_N.F3,2],[_N.F3,2],[_N.A3,2],[_N.A3,2],[_N.E4,2],[_N.E4,2],[_N.A3,4],[_N.G3,4]];
+  let mt=t;mel.forEach(([f,d])=>{_sched(f,d*b,mt,'sawtooth',.15);mt+=d*b;});
+  let bt=t;bass.forEach(([f,d])=>{_sched(f,d*b,bt,'square',.1);bt+=d*b;});
+  for(let i=0;i<16;i++){_noise(.04,t+i*b*2,.2,60);if(i%2===1)_noise(.03,t+i*b*2,.12,3000);_noise(.02,t+i*b,.08,8000);}
+  const total=mel.reduce((s,[,d])=>s+d,0)*b;
+  _bgmScheduled.push(setTimeout(()=>_loopDelinquent(),(total*1000)-80));
+}
+
+function _loopSoldier(){
+  if(_currentBGM!=='soldier')return;
+  const c=_getCtx(),t=c.currentTime,b=0.1;
+  const mel=[[_N.C5,1],[_N.C5,1],[_N.G5,2],[_N.G5,1],[_N.F5,1],[_N.E5,1],[_N.D5,1],[_N.C5,4],[_N.R,2],[_N.G4,1],[_N.G4,1],[_N.C5,1],[_N.E5,1],[_N.G5,2],[_N.F5,1],[_N.E5,1],[_N.D5,1],[_N.C5,1],[_N.G4,4],[_N.R,4],[_N.C5,1],[_N.D5,1],[_N.E5,1],[_N.F5,1],[_N.G5,2],[_N.G5,2],[_N.A5,1],[_N.G5,1],[_N.F5,1],[_N.E5,1],[_N.D5,2],[_N.R,2],[_N.G4,1],[_N.C5,1],[_N.E5,1],[_N.G5,1],[_N.F5,2],[_N.E5,2],[_N.D5,1],[_N.G4,1],[_N.B4,1],[_N.D5,1],[_N.C5,4]];
+  const bass=[[_N.C4,2],[_N.G3,2],[_N.C4,2],[_N.G3,2],[_N.C4,2],[_N.G3,2],[_N.C4,2],[_N.G3,2],[_N.F3,2],[_N.C4,2],[_N.G3,2],[_N.C4,2],[_N.F3,2],[_N.G3,2],[_N.C4,2],[_N.G3,2]];
+  let mt=t;mel.forEach(([f,d])=>{_sched(f,d*b,mt,'square',.2);mt+=d*b;});
+  let bt=t;bass.forEach(([f,d])=>{_sched(f,d*b,bt,'square',.12);bt+=d*b;});
+  const total=mel.reduce((s,[,d])=>s+d,0)*b;
+  const beats=Math.floor(total/(b*4));
+  for(let i=0;i<beats;i++){_noise(.06,t+i*b*4,.3,120);_noise(.05,t+i*b*4+b*2,.25,3000);for(let j=0;j<4;j++)_noise(.02,t+i*b*4+j*b,.08,8000);}
+  _bgmScheduled.push(setTimeout(()=>_loopSoldier(),(total*1000)-80));
+}
+
+function _loopBoss(){
+  if(_currentBGM!=='boss')return;
+  const c=_getCtx(),t=c.currentTime,b=0.13;
+  const mel=[[_N.D5,2],[_N.R,2],[_N.C5,2],[_N.Bb4,2],[_N.A4,4],[_N.R,2],[_N.A4,2],[_N.G4,2],[_N.R,2],[_N.F4,2],[_N.G4,2],[_N.A4,6],[_N.R,2],[_N.Bb4,2],[_N.R,2],[_N.A4,2],[_N.G4,2],[_N.F4,4],[_N.R,2],[_N.E4,2],[_N.F4,2],[_N.G4,2],[_N.A4,2],[_N.R,2],[_N.D4,8]];
+  const bass=[[_N.D3,4],[_N.D3,4],[_N.A3,4],[_N.A3,4],[_N.G3,4],[_N.G3,4],[_N.D3,4],[_N.D3,4],[_N.Bb3,4],[_N.Bb3,4],[_N.F3,4],[_N.G3,4],[_N.A3,4],[_N.A3,4],[_N.D3,8]];
+  let mt=t;mel.forEach(([f,d])=>{_sched(f,d*b,mt,'sawtooth',.18);_sched(f*2,d*b,mt,'square',.06);mt+=d*b;});
+  let bt=t;bass.forEach(([f,d])=>{_sched(f,d*b,bt,'sawtooth',.15);bt+=d*b;});
+  const total=mel.reduce((s,[,d])=>s+d,0)*b;
+  const bars=Math.floor(total/(b*8));
+  for(let i=0;i<bars;i++){
+    _noise(.08,t+i*b*8,.4,60);_beep(60,.1,'sine',t+i*b*8,.3,20);
+    _noise(.08,t+i*b*8+b*4,.35,60);
+    _noise(.06,t+i*b*8+b*2,.25,2000);_noise(.06,t+i*b*8+b*6,.25,2000);
+    for(let j=0;j<8;j++)_noise(.02,t+i*b*8+j*b,.08,10000);
+    _beep(_N.D3,.1,'sawtooth',t+i*b*8,.2);_beep(_N.A3,.1,'sawtooth',t+i*b*8+b*4,.18);
+  }
+  _bgmScheduled.push(setTimeout(()=>_loopBoss(),(total*1000)-80));
+}
+
+function _snare(t,g=0.18){
+  _noise(.06,t,g,200);_noise(.05,t,g*.7,1200);_noise(.04,t,g*.5,4000);
+  _beep(180,.04,'sine',t,g*.6);
+}
+
+function _loopAbyss(){
+  if(_currentBGM!=='abyss')return;
+  const c=_getCtx(),t=c.currentTime,b=0.10;
+  const mel=[[_N.D4,4],[_N.R,2],[_N.C4,3],[_N.R,1],[_N.Bb3,4],[_N.R,2],[_N.A3,3],[_N.R,1],[_N.G3,4],[_N.R,2],[_N.F3s,4],[_N.R,2],[_N.A3,4],[_N.R,2],[_N.D3,8]];
+  const bass=[[_N.D3,8],[_N.A3,8],[_N.Bb3,8],[_N.F3,8],[_N.G3,8],[_N.F3,8],[_N.A3,8],[_N.D3,8]];
+  let mt=t;mel.forEach(([f,d])=>{_sched(f,d*b,mt,'sawtooth',.12);mt+=d*b;});
+  let bt=t;bass.forEach(([f,d])=>{_sched(f,d*b,bt,'sine',.18);bt+=d*b;});
+  const total=mel.reduce((s,[,d])=>s+d,0)*b;
+  const bars=Math.floor(total/(b*8));
+  for(let i=0;i<bars;i++){
+    _noise(.12,t+i*b*8,.5,40);_beep(40,.15,'sine',t+i*b*8,.35,20);
+    _noise(.06,t+i*b*8+b*4,.3,50);
+    _noise(.04,t+i*b*8+b*2,.15,3000);_noise(.04,t+i*b*8+b*6,.12,3000);
+    _noise(.02,t+i*b*8+b*3,.08,8000);_noise(.02,t+i*b*8+b*7,.08,8000);
+  }
+  _bgmScheduled.push(setTimeout(()=>_loopAbyss(),(total*1000)-80));
+}
+
+function _loopAbyssPeak(){
+  if(_currentBGM!=='abyss_peak')return;
+  const c=_getCtx(),t=c.currentTime,b=0.058;
+  const mel=[[_N.D4,4],[_N.R,1],[_N.Bb3,3],[_N.R,1],[_N.A3,3],[_N.R,1],[_N.G3,4],[_N.R,1],[_N.F3s,3],[_N.R,1],[_N.A3,4],[_N.R,1],[_N.D3,6]];
+  let mt=t;
+  mel.forEach(([f,d])=>{
+    if(f>0){_beep(f,d*b*.88,'sawtooth',mt,.22);_beep(f*0.5,d*b*.88,'sine',mt,.12);}
+    mt+=d*b;
+  });
+  const bass=[[_N.D3-73,8],[_N.A3-110,8],[_N.Bb3,8],[_N.G3,8],[_N.F3s,8],[_N.A3-110,8],[_N.D3-73,8]];
+  const bassFreqs=[[73,8],[110,8],[_N.Bb3,8],[_N.G3,8],[_N.F3s,8],[110,8],[73,8]];
+  let bt=t;
+  bassFreqs.forEach(([f,d])=>{
+    _beep(f,d*b*.85,'sine',bt,.20);_beep(f*0.5,d*b*.85,'sine',bt,.10);
+    bt+=d*b;
+  });
+  const elec=[[_N.D4,2],[_N.R,2],[_N.Eb4,2],[_N.R,2],[_N.D4,2],[_N.R,2],[_N.Eb4,4]];
+  let et=t;elec.forEach(([f,d])=>{if(f>0)_beep(f*2,d*b*.4,'square',et,.04);et+=d*b;});
+  const total=mel.reduce((s,[,d])=>s+d,0)*b;
+  const bars=Math.floor(total/(b*8));
+  for(let i=0;i<bars;i++){
+    _noise(.07,t+i*b*8,.38,35);_beep(35,.1,'sine',t+i*b*8,.28,20);
+    _noise(.04,t+i*b*8+b*4,.22,45);
+    _noise(.025,t+i*b*8+b*2,.04,4000);_noise(.025,t+i*b*8+b*6,.04,4000);
+    for(let j=0;j<8;j+=2)_noise(.02,t+i*b*8+j*b,.06,80);
+  }
+  _bgmScheduled.push(setTimeout(()=>_loopAbyssPeak(),(total*1000)-80));
+}
+
+function _loopAbyssSurge(){
+  if(_currentBGM!=='abyss_surge')return;
+  const c=_getCtx(),t=c.currentTime,b=0.065;
+  const mel=[[_N.D4,3],[_N.Eb4,1],[_N.R,1],[_N.C4,3],[_N.R,1],[_N.Bb3,3],[_N.Ab4,1],[_N.R,1],[_N.A3,3],[_N.R,1],[_N.G3,2],[_N.F3,2],[_N.R,1],[_N.A3,3],[_N.R,1],[_N.D3,6]];
+  let mt=t;mel.forEach(([f,d])=>{if(f>0)_beep(f,d*b*.85,'sawtooth',mt,.22);mt+=d*b;});
+  const bassFreqs=[[_N.D3,6],[_N.R,2],[_N.A3,4],[_N.R,2],[_N.Bb3,4],[_N.G3,2],[_N.R,2],[_N.F3,4],[_N.R,2],[_N.A3,4],[_N.R,2],[_N.D3,4]];
+  let bt=t;bassFreqs.forEach(([f,d])=>{if(f>0)_beep(f,d*b*.85,'sine',bt,.14);bt+=d*b;});
+  const jazz=[[_N.D4,1],[_N.R,1],[_N.F3s,2],[_N.R,2],[_N.A3,1],[_N.R,1],[_N.C4,2],[_N.R,2]];
+  let jt=t;[...jazz,...jazz,...jazz,...jazz].forEach(([f,d])=>{if(f>0)_beep(f,d*b*.45,'triangle',jt,.04);jt+=d*b;});
+  const total=mel.reduce((s,[,d])=>s+d,0)*b;
+  const bars=Math.floor(total/(b*8));
+  for(let i=0;i<bars;i++){
+    _noise(.08,t+i*b*8,.38,40);_beep(40,.10,'sine',t+i*b*8,.22,20);
+    _noise(.06,t+i*b*8+b*4,.30,40);_beep(40,.08,'sine',t+i*b*8+b*4,.18,20);
+    _snare(t+i*b*8+b*2,.16);_snare(t+i*b*8+b*6,.16);
+    for(let j=0;j<8;j++)_noise(.018,t+i*b*8+j*b,.035,6000);
+    _snare(t+i*b*8+b*3,.08);_snare(t+i*b*8+b*7,.08);
+  }
+  _bgmScheduled.push(setTimeout(()=>_loopAbyssSurge(),(total*1000)-80));
+}
+</script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyDQeFDMzAdpGe95umJdRlAsNa-9Nn_eJVU",
+  authDomain:"loole-game.firebaseapp.com",
+  databaseURL:"https://loole-game-default-rtdb.firebaseio.com",
+  projectId:"loole-game",
+  storageBucket:"loole-game.firebasestorage.app",
+  messagingSenderId:"200911767223",
+  appId:"1:200911767223:web:a8e7668c1db8d885f22f32"
+});
+const _fbDb=firebase.database();
+
+window.submitGlobalScore=async function(name,score,money,served,date,playTime){
+  try{
+    await _fbDb.ref('leaderboard').push({name,score,money:parseFloat(money),served,date,playTime,ts:firebase.database.ServerValue.TIMESTAMP});
+    return true;
+  }catch(e){console.error('FB write:',e);alert('Firebase寫入失敗：'+e.message);return false;}
+};
+
+window.loadGlobalLeaderboard=async function(){
+  try{
+    const snap=await _fbDb.ref('leaderboard').orderByChild('score').limitToLast(10).get();
+    if(!snap.exists())return[];
+    const rows=[];
+    snap.forEach(c=>{rows.push(c.val());});
+    return rows.sort((a,b)=>b.score!==a.score?b.score-a.score:b.money-a.money);
+  }catch(e){console.error('FB read:',e);alert('Firebase讀取失敗：'+e.message);return[];}
+};
+</script>
+<script>
+// ════════════════════════════════════
+//  CONFIG
+// ════════════════════════════════════
+const CONFIG={
+  // ── 遊戲規則 ──
+  FAIL_LEAVE_COUNT:3,            // 氣走幾人後遊戲結束
+
+  // ── 客人等待時間上限(s) ──
+  WAIT_MAX_SMALL:15,             // 來都來了 等待上限
+  WAIT_MAX_MED:10,               // 頻尿人 等待上限
+  WAIT_MAX_LARGE:7,              // 爆尿人 等待上限
+
+  // ── 如廁時長(s) ──
+  PEE_TIME_SMALL:2,              // 來都來了 如廁時間
+  PEE_TIME_MED:4,                // 頻尿人 如廁時間
+  PEE_TIME_LARGE:5.5,            // 爆尿人 如廁時間
+  PEE_TIME_DRUNK:6,              // 醉漢 如廁時間
+
+  // ── 髒污量(%) ──
+  DIRTY_SMALL:10,                // 來都來了 每次髒污量
+  DIRTY_MED:15,                  // 頻尿人 每次髒污量
+  DIRTY_LARGE:18,                // 爆尿人 每次髒污量
+  DRUNK_DIRTY_BONUS:24,          // 醉漢額外髒污加成
+
+  // ── 速度與清潔 ──
+  NEIGHBOR_SLOW:10,              // 相鄰便斗速度減慢%
+  DIRTY_MAX_SLOW:85,             // 髒污100%時最大減速%
+  CLEANER_AUTO_THRESH:40,        // 清掃助理自動觸發髒污閾值%
+  REPAIR_TIME:10,                // 修復工修復時間(s)
+
+  // ── 馬蓋仙巡查 ──
+  INSPECTION_WAIT:10,          // 等待區倒數(s)
+  INSPECTION_SCAN_TIME:2,      // 每格掃描時間(s)
+  INSPECTION_DIRTY_THRESH:30,  // 髒污判定閾值%
+  INSPECTION_SCORE:800,        // 巡查成功得分
+  INSPECTION_MONEY:250,        // 巡查成功金錢£
+  INSPECTION_PENALTY:1000,      // 巡查失敗扣分
+  INSPECTION_TRIGGER_COUNT:3,  // 每N次特殊角色觸發巡查
+  INSPECTION_RATE:50,          // 巡查觸發機率%
+  INSPECTION_SOLDIER_WAVES:2,  // 解鎖所需阿兵哥波數
+
+  // ── 分數階段變色加速 ──
+  PHASE_START_SCORE:1000,      // 開始變化的分數
+  PHASE_INTERVAL:1000,          // 1-7階段每幾分變一次
+  PHASE_SPEED_MULT:0.91,        // 每階段生成間隔乘以此值(縮短)
+  PHASE_MAX_STAGES:14,          // 最多14個階段
+  SCRUB_DISTANCE:40,             // 摩擦清潔最小移動距離(px)
+  SCRUB_AMOUNT:15,               // 每次摩擦清潔量%
+
+  // ── 生成與解鎖 ──
+  SPAWN_INTERVAL:4,              // 普通客人生成間隔(s)
+  DRUNK_RATE:15,                 // 醉漢出現機率%（4格+池內固定25%，此值保留備用）
+  UNLOCK_LARGE:3,                // 爆尿人解鎖格數
+  UNLOCK_DRUNK:4,                // 醉漢解鎖格數（進入機率池）
+
+  // ── 分數與懲罰 ──
+  SCORE_SMALL:1,                 // 來都來了 得分
+  SCORE_MED:2,                   // 頻尿人 得分
+  SCORE_LARGE:4,                 // 爆尿人 得分
+  SCORE_DRUNK:5,                 // 醉漢 得分
+  LEAVE_PENALTY:5,               // 客人氣走扣分
+
+  // ── 入廁費 ──
+  ENTRY_FEE_BASE:1.00,           // 2格時基礎入廁費£
+  ENTRY_FEE_PER_URINAL:0.40,     // 每多一格加收£
+
+  // ── 摩擦清潔小費 ──
+  SCRUB_BASE_FEE:0.50,           // 摩擦基礎清潔費£
+  SCRUB_TIP_MED_THRESH:35,       // 髒污達此%觸發中小費
+  SCRUB_TIP_MED_MULT:1.4,        // 中小費倍率
+  SCRUB_TIP_HIGH_THRESH:60,      // 髒污達此%觸發高小費
+  SCRUB_TIP_HIGH_MULT:1.8,       // 高小費倍率
+
+  // ── 髒污警告與損壞 ──
+  DIRTY_WARN_THRESH:80,          // 髒污達此%顯示警告
+  DIRTY_BREAK_THRESH:100,        // 髒污達此%便斗損壞
+
+  // ── 高峰期 ──
+  PEAK_INTERVAL:25,              // 高峰間隔(s)
+  PEAK_COUNT:3,                  // 每次高峰生成普通客人數
+
+  // ── 滴鞋老設定 ──
+  ELDER_WAIT:12,                 // 等待上限(s)
+  ELDER_PEE:4.5,                 // 如廁時間(s)
+  ELDER_DIRTY:25,                // 髒污量%
+  ELDER_SCORE:4,                 // 得分
+  ELDER_NEIGHBOR_SLOW:10,        // 相鄰便斗額外減速%（疊加鄰近減速）
+
+  // ── 滑機男設定 ──
+  PHONE_UNLOCK_SCORE:1500,       // 解鎖所需分數
+  PHONE_WAIT:20,                 // 等待上限(s)
+  PHONE_PEE:30,                  // 如廁時間(s)
+  PHONE_DIRTY:10,                // 髒污量%
+  PHONE_SCORE:100,               // 得分
+  PHONE_SPAWN_RATE:10,           // 解鎖後每次生成機率%（暫定值，待實測調整）
+
+  // ── 彩虹膀胱解放（六件套成就獎勵）──
+  RAINBOW_RELEASE_COOLDOWN:300,  // 冷卻時間(s)
+
+  // ── 黑尿幫設定 ──
+  GANGSTER_WAIT:6,               // 等待上限(s)
+  GANGSTER_PEE:8,                // 如廁時間(s)
+  GANGSTER_DIRTY:40,             // 髒污量%
+  GANGSTER_SCORE:25,             // 得分
+  GANGSTER_RATE:40,              // 混入高峰機率%
+  GANGSTER_SURGE_DUR:10,         // 黑尿幫 surge 持續秒數
+  GANGSTER_SURGE_RATE:80,        // surge 期間每次 spawn 機率%
+  GANGSTER_BREAK_RATE:20,        // 用壞馬桶機率%
+  GANGSTER_LOOT:300,             // 遺落贓款金額£
+  GANGSTER_LOOT_RATE:10,         // 遺落贓款機率%
+  GANGSTER_UNLOCK_COUNT:2,       // 解鎖所需累計中二生 surge 次數
+
+  // ── 中二生設定 ──
+  UNLOCK_DELINQUENT:5,           // 解鎖格數
+  DELINQUENT_RATE:40,            // 高峰觸發機率%
+  DELINQUENT_GROUP:2,            // 每批進場人數
+  DELINQUENT_WAIT:12,            // 等待上限(s)
+  DELINQUENT_PEE:8,              // 如廁時間(s)
+  DELINQUENT_DIRTY:35,           // 髒污量%
+  DELINQUENT_SCORE:8,            // 得分
+  DELINQUENT_SURGE:30,           // 事件持續秒（舊值，已由 WAVES 取代）
+  DELINQUENT_WAVE_DELAY:10,      // 批次間隔(s)
+  DELINQUENT_WAVES:3,            // 總批次數
+  DELINQUENT_BREAK_RATE:9,      // 用壞馬桶機率%
+
+  // ── 阿兵哥設定 ──
+  UNLOCK_SOLDIER:6,              // 解鎖格數
+  SOLDIER_RATE:40,               // 高峰觸發機率%
+  SOLDIER_GROUP:5,               // 每批進場人數
+  SOLDIER_WAIT:6,                // 等待上限(s)
+  SOLDIER_PEE:2.5,               // 如廁時間(s)
+  SOLDIER_DIRTY:50,              // 髒污量%
+  SOLDIER_SCORE:10,              // 得分
+  SOLDIER_SURGE:30,              // 事件持續秒（舊值，已由 WAVES 取代）
+  SOLDIER_WAVES:5,               // 總批次數
+  SOLDIER_WAVE_DELAY:8,          // 批次間隔(s)
+  SURGE_PEAK_DELAY:25,           // 特殊事件觸發後高峰延遲(s)
+
+  // ── 新手輔助 ──
+  SOFT_START_DURATION:30,        // 慢速開局持續時間(s)
+  SOFT_START_SPAWN_MULT:2,       // 慢速開局生成間隔倍率
+
+  // ── 子彈時間 ──
+  BULLET_TIME_SCALE:0.1,         // 子彈時間流速倍率
+  BULLET_OP_PRICE:30,            // 子彈操作道具費用£
+  BULLET_OP_DURATION:30,         // 子彈操作持續秒數
+
+  // ── 等待時間道具 ──
+  WAIT_ITEM_NEWSPAPER:5,         // 報紙加秒
+  WAIT_ITEM_MANGA:10,            // 漫畫加秒
+  WAIT_ITEM_BARBER:15,           // 理髮加秒
+
+  // ── 派遣 ──
+  DISPATCH_COST:5,               // 來人啊！費用£
+
+  // ── 介面 ──
+  UI_SCALE:1.6,                  // 字體大小倍率（0.7~2.5）
+};
+
+// ════════════════════════════════════
+//  ITEM DEFINITIONS
+// ════════════════════════════════════
+// durLimit = 服務客人次數上限（0 = 無限）
+// group: 同組互斥（新的覆蓋舊的），不同組可疊加
+const ITEM_DEFS={
+  target:{
+    id:'target',emoji:'🎯',name:'標靶貼',group:'sticker',
+    price:5,desc:'髒污-15% / 壽命20人',
+    durLimit:20,effects:{dirtyMult:0.85}
+  },
+  fly_tape:{
+    id:'fly_tape',emoji:'🪰',name:'蒼蠅貼',group:'sticker',
+    price:10,desc:'髒污-20% / 壽命35人',
+    durLimit:50,effects:{dirtyMult:0.80}
+  },
+  aroma:{
+    id:'aroma',emoji:'🌸',name:'芳香劑',group:'scent',
+    price:20,desc:'髒-5% 費×1.5 忽略減速 耐心+20% / 30人',
+    durLimit:30,effects:{dirtyMult:0.95,entryFeeBonus:1.5,waitBonus:1.2,ignoreDirtySlow:true}
+  },
+  cleaner:{
+    id:'cleaner',emoji:'🧹',name:'清掃助理',group:'assistant',
+    price:100,desc:'髒污>40%自動清潔全場\n60%清潔費 / 30次',
+    durLimit:null,cleanLimit:30,effects:{autoClean:true}
+  },
+  repair:{
+    id:'repair',emoji:'🔧',name:'修復工',group:'repair',
+    price:35,desc:'修復損壞馬桶 / 單次',
+    durLimit:null,singleUse:true,effects:{repairBroken:true}
+  },
+  extra_urinal:{
+    id:'extra_urinal',emoji:'🚽',name:'加馬桶',group:'expansion',
+    price:80,desc:'新增一格馬桶 / 上限6格',
+    durLimit:null,singleUse:true,isExpansion:true,effects:{addUrinal:true}
+  },
+  bullet_op:{
+    id:'bullet_op',emoji:'⚡',name:'子彈操作',group:'bullet_op',
+    price:120,desc:'子彈時間可操作 / 30秒',
+    durLimit:null,dropTarget:'any',  // 便斗或等待區均可
+    effects:{bulletOp:true}
+  },
+  newspaper:{
+    id:'newspaper',emoji:'📰',name:'報紙',group:'wait_boost',
+    price:10,desc:'全場等待+5秒 / 效果5秒',
+    durLimit:null,dropTarget:'queue',
+    effects:{waitBoost:5,boostDuration:5}
+  },
+  manga:{
+    id:'manga',emoji:'📖',name:'漫畫書',group:'wait_boost',
+    price:20,desc:'全場等待+10秒 / 效果10秒',
+    durLimit:null,dropTarget:'queue',
+    effects:{waitBoost:10,boostDuration:10}
+  },
+  barber:{
+    id:'barber',emoji:'💈',name:'理髮',group:'wait_boost',
+    price:30,desc:'全場等待+15秒 / 效果15秒',
+    durLimit:null,dropTarget:'queue',
+    effects:{waitBoost:15,boostDuration:15}
+  },
+};
+
+// ════════════════════════════════════
+//  DEBUG
+// ════════════════════════════════════
+const logBuf=[];
+function log(msg,type='info'){
+  const n=new Date();
+  const ts=`${String(n.getMinutes()).padStart(2,'0')}:${String(n.getSeconds()).padStart(2,'0')}.${String(Math.floor(n.getMilliseconds()/10)).padStart(2,'0')}`;
+  logBuf.push({ts,msg,type});if(logBuf.length>300)logBuf.shift();
+  const p=document.getElementById('debug-panel');
+  if(p&&p.classList.contains('open'))flushLog();
+}
+function flushLog(){
+  const p=document.getElementById('debug-panel');if(!p)return;
+  p.innerHTML=logBuf.slice().reverse().map(l=>`<div class="ll ${l.type}">[${l.ts}] ${l.msg}</div>`).join('');
+}
+function toggleDebug(){const p=document.getElementById('debug-panel'),a=document.getElementById('dbg-arrow');const o=p.classList.toggle('open');a.textContent=o?'▲':'▼';if(o)flushLog();}
+// ── Dev mode：網址加 ?dev=true 才顯示調整工具 ──
+const isDev=new URLSearchParams(location.search).has('dev');
+// 載入儲存的字體大小和亮度
+(function loadSavedPrefs(){
+  const scale=localStorage.getItem('loole_ui_scale');
+  const bright=localStorage.getItem('loole_brightness');
+  if(scale)CONFIG.UI_SCALE=parseFloat(scale);
+  if(bright)document.body.style.filter='brightness('+bright+')';
+  window.addEventListener('load',()=>{
+    const ss=document.getElementById('ui-scale-slider');
+    const bs=document.getElementById('brightness-slider');
+    if(ss)ss.value=CONFIG.UI_SCALE;
+    if(bs)bs.value=bright||'1.0';
+    applyUIScale(CONFIG.UI_SCALE);
+    renderGlobalLeaderboard('global-lb-title',undefined,5);
+  });
+})();
+function initDevTools(){
+  const dashBtn=document.getElementById('title-dash-btn');
+  const dbgBtn=document.getElementById('dbg-btn');
+  const cfgBtn=document.getElementById('cfg-btn');
+  if(dashBtn)dashBtn.style.display=isDev?'':'none';
+  if(dbgBtn)dbgBtn.style.display=isDev?'':'none';
+  if(cfgBtn)cfgBtn.style.display=isDev?'':'none';
+  if(isDev){
+    const btn=document.createElement('button');
+    btn.textContent='🔍 localStorage';
+    btn.style.cssText='font-family:monospace;font-size:10px;background:#1a1a2e;border:1px solid #2a2a4a;color:#94a3b8;padding:6px 12px;border-radius:4px;cursor:pointer;margin-top:8px';
+    btn.onclick=()=>{
+      const ach=localStorage.getItem('loole_achievements');
+      const chars=localStorage.getItem('loole_seen_chars');
+      const scale=localStorage.getItem('loole_ui_scale');
+      alert(`成就: ${ach||'null'}\n角色: ${chars||'null'}\n字體: ${scale||'null'}`);
+    };
+    document.getElementById('screen-title')?.appendChild(btn);
+  }
+}
+window.addEventListener('load',initDevTools);
+
+// ════════════════════════════════════
+//  LOCAL STORAGE — HISTORY
+// ════════════════════════════════════
+const HIST_KEY='urinal_history_v1';
+function loadHistory(){try{return JSON.parse(localStorage.getItem(HIST_KEY))||[];}catch{return[];}}
+function saveHistory(entry){
+  const h=loadHistory();
+  h.push(entry);
+  // 依分數高到低排，同分依收入高到低
+  h.sort((a,b)=>b.score!==a.score?b.score-a.score:parseFloat(b.money)-parseFloat(a.money));
+  if(h.length>10)h.length=10;
+  try{localStorage.setItem(HIST_KEY,JSON.stringify(h));}catch(e){log('localStorage fail:'+e,'warn');}
+}
+function renderHistory(highlightEntry){
+  const h=loadHistory(),el=document.getElementById('hist-wrap');if(!el)return;
+  if(!h.length){el.innerHTML='<div style="font-family:\'Silkscreen\',monospace;font-size:var(--fs-xs);color:var(--muted);text-align:center;padding:8px">尚無紀錄</div>';return;}
+
+  // 顯示前5筆
+  const top5=h.slice(0,5);
+  // 判斷本局是否在前5（比對 score+money+date）
+  let curRank=-1;
+  if(highlightEntry){
+    curRank=h.findIndex(r=>r.score===highlightEntry.score&&r.money===highlightEntry.money&&r.date===highlightEntry.date);
+  }
+  const isNewRecord=highlightEntry&&h[0]===h.find(r=>r.score===highlightEntry.score&&r.money===highlightEntry.money&&r.date===highlightEntry.date)&&curRank===0&&h.filter(r=>r.score>highlightEntry.score).length===0;
+
+  const rankRow=(r,i,isCur)=>{
+    const medals=['🥇','🥈','🥉','4','5','6','7','8','9','10'];
+    const medal=i<3?medals[i]:`${i+1}`;
+    const hl=isCur?`style="background:rgba(255,215,0,.12);border:1px solid rgba(255,215,0,.5);border-radius:4px"`:'';
+    return `<tr ${hl}>
+      <td style="color:var(--muted);padding:4px 6px;font-size:var(--fs-xs)">${medal}</td>
+      <td style="padding:4px 6px;color:${isCur?'var(--money)':'var(--text)'}${isCur?';font-weight:700':''}">${r.score}</td>
+      <td style="padding:4px 6px;color:${isCur?'var(--money)':'var(--text)'}">${'£'+r.money}</td>
+      <td style="padding:4px 6px;color:var(--muted)">${r.served}</td>
+      <td style="padding:4px 6px;color:var(--muted)">${r.date}</td>
+    </tr>`;
+  };
+
+  const newRecBadge=isNewRecord?`<div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--money);text-align:center;margin-bottom:4px">🏆 新紀錄！</div>`:'';
+
+  let html=`${newRecBadge}
+  <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);margin-bottom:4px;text-align:center;letter-spacing:2px">— 排行榜 TOP 5 —</div>
+  <table class="hist-table" style="width:100%">
+    <tr><th></th><th>分數</th><th>收入</th><th>服務</th><th>時間</th></tr>
+    ${top5.map((r,i)=>rankRow(r,i,highlightEntry&&curRank===i)).join('')}
+  </table>`;
+
+  // 本局不在前5 → 底部單獨顯示
+  if(highlightEntry&&curRank>=5){
+    html+=`<div style="border-top:1px dashed var(--border);margin-top:6px;padding-top:6px">
+      <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);margin-bottom:3px">— 本局成績 (#${curRank+1}) —</div>
+      <table class="hist-table" style="width:100%">
+        <tr><th></th><th>分數</th><th>收入</th><th>服務</th><th>時間</th></tr>
+        ${rankRow(highlightEntry,curRank,true)}
+      </table>
+    </div>`;
+  }
+  el.innerHTML=html;
+}
+
+// ════════════════════════════════════
+//  STATE
+// ════════════════════════════════════
+let state={};
+let gameLoop=null;
+let cidCounter=0;
+let lastTick=Date.now();
+let _abyssInterval=null;
+const drag={active:false,cid:null};
+const scrub={uid:-1,active:false,lastY:0,accum:0};
+const itemDrag={active:false,itemId:null};
+
+// 頁面背景暫停機制
+// 設計：visibilitychange 與 pagehide/pageshow 互為備援，
+// 兩者都呼叫同一組冪等函數，不論哪個事件觸發或重複觸發都不會出錯。
+let _bgHiddenAt=0; // 記錄進入背景的真實時間戳，用於事後診斷
+
+function _pauseGame(){
+  if(gameLoop){clearInterval(gameLoop);gameLoop=null;}
+  if(_actx&&_actx.state==='running')_actx.suspend();
+  if(typeof _pausedBGM!=='undefined')_pausedBGM=_currentBGM;
+  _stopBGM();
+  _bgHiddenAt=Date.now();
+  log('Game paused','info');
+  // 清除所有拖曳狀態，避免暫停後 drag.active 卡住鎖死操作
+  if(typeof endDrag==='function'){endDrag();endScrub();endItemDrag();}
+  if(typeof saveGame==='function')saveGame();
+}
+
+function _handleForeground(){
+  // 保險：不論之前的暫停事件是否確實處理乾淨，這裡都強制再清一次，
+  // 避免殘留的 setInterval 造成遊戲速度異常（雙重 tick）。
+  if(gameLoop){clearInterval(gameLoop);gameLoop=null;}
+
+  // 診斷：比對實際經過時間，若背景停留很久卻沒有正確記錄，記錄供除錯
+  if(_bgHiddenAt>0){
+    const elapsedMs=Date.now()-_bgHiddenAt;
+    if(elapsedMs>1000){
+      log(`Returned from background after ${(elapsedMs/1000).toFixed(1)}s`,'info');
+    }
+    _bgHiddenAt=0;
+  }
+
+  if(typeof state!=='undefined'&&state&&state.running){
+    _showPauseScreen();
+  }
+}
+
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='hidden'){
+    _pauseGame();
+  } else {
+    _handleForeground();
+  }
+});
+
+// 備援機制：部分瀏覽器（尤其 iOS Safari 快速手勢切換）
+// 不一定可靠觸發 visibilitychange，pagehide/pageshow 作為第二道防線。
+window.addEventListener('pagehide',_pauseGame);
+window.addEventListener('pageshow',_handleForeground);
+
+function _showPauseScreen(){
+  // 背景切換與手動暫停統一使用同一個畫面
+  if(typeof _manualPaused!=='undefined')_manualPaused=true;
+  const pauseBtn=document.getElementById('pause-btn');
+  if(pauseBtn){pauseBtn.textContent='▶';pauseBtn.style.color='var(--accent)';}
+  if(typeof _showManualPauseScreen==='function')_showManualPauseScreen();
+}
+
+function _resumeGame(){
+  const overlay=document.getElementById('pause-overlay');
+  if(overlay)overlay.style.display='none';
+  if(typeof _manualPaused!=='undefined')_manualPaused=false;
+  const pauseBtn=document.getElementById('pause-btn');
+  if(pauseBtn){pauseBtn.textContent='⏸';pauseBtn.style.color='var(--muted)';}
+  if(_actx)_actx.resume();
+  // _pausedBGM 記住了 _stopBGM 清空前的 BGM，優先用它
+  if(typeof _pausedBGM!=='undefined'&&_pausedBGM){
+    const bgm=_pausedBGM;_pausedBGM=null;playBGM(bgm);
+  } else if(_currentBGM){playBGM(_currentBGM);}
+  // 保險：重啟前先確保沒有殘留的 interval，再啟動新的
+  if(gameLoop){clearInterval(gameLoop);gameLoop=null;}
+  if(typeof state!=='undefined'&&state&&state.running){
+    lastTick=Date.now();
+    gameLoop=setInterval(gameTick,80);
+  }
+}
+
+// ── 手動暫停（⏸ 按鈕）──
+let _manualPaused=false;
+let _pausedBGM=null;
+function toggleManualPause(){
+  if(!state||!state.running)return;
+  if(_manualPaused){
+    _resumeGame(); // 內部重置 _manualPaused、按鈕顏色、BGM
+  } else {
+    _manualPaused=true;
+    const btn=document.getElementById('pause-btn');
+    if(btn){btn.textContent='▶';btn.style.color='var(--accent)';}
+    _pauseGame(); // 內部存 _pausedBGM + saveGame
+    _showManualPauseScreen();
+  }
+}
+
+function _showManualPauseScreen(){
+  let overlay=document.getElementById('pause-overlay');
+  if(!overlay){
+    overlay=document.createElement('div');
+    overlay.id='pause-overlay';
+    document.body.appendChild(overlay);
+
+    // 事件監聽器只建立一次，避免多次暫停後重複累積
+    let _pd=null;
+    overlay.addEventListener('pointerdown',e=>{
+      _pd={x:e.clientX,y:e.clientY,t:Date.now()};
+    },{passive:true});
+    overlay.addEventListener('pointerup',e=>{
+      if(!_pd)return;
+      const dx=Math.abs(e.clientX-_pd.x),dy=Math.abs(e.clientY-_pd.y);
+      const dt=Date.now()-_pd.t;
+      _pd=null;
+      if(dx<10&&dy<10&&dt<250)toggleManualPause();
+    },{passive:true});
+  }
+
+  // 道具說明列表
+  const itemRows=Object.values(ITEM_DEFS).map(def=>{
+    const preview=MC_PREVIEW[def.id]||def.desc||'';
+    const cost=effectivePrice(def);
+    const isDiscounted=def.id==='extra_urinal'&&state.firstUrinalDiscount;
+    const origCost=isDiscounted?cost*2:null;
+    const priceHtml=isDiscounted
+      ? `<span style="text-decoration:line-through;color:var(--muted)">£${origCost}</span> <span style="color:var(--danger)">£${cost}</span> <span style="background:var(--danger);color:#fff;font-size:8px;border-radius:2px;padding:1px 4px;vertical-align:middle">SALE</span>`
+      : `£${cost}`;
+    return `<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.07);align-items:flex-start">
+      <span style="font-size:22px;min-width:28px">${def.emoji}</span>
+      <div>
+        <div style="font-family:'Silkscreen',monospace;font-size:10px;color:var(--accent);letter-spacing:1px">${def.name} — ${priceHtml}</div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:3px;line-height:1.6">${preview}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  overlay.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;overflow-y:auto;padding:16px 0 32px;box-sizing:border-box;user-select:none;-webkit-user-select:none';
+  overlay.innerHTML=`
+    <div style="width:100%;max-width:420px;padding:0 16px;box-sizing:border-box">
+      <div style="text-align:center;margin-bottom:12px;padding:8px 0 0">
+        <div style="font-family:'Silkscreen',monospace;font-size:14px;color:var(--accent);letter-spacing:3px">⏸ 暫停中</div>
+        <div style="font-family:'Silkscreen',monospace;font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:6px">點擊任意位置繼續</div>
+      </div>
+
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:12px 14px;margin-bottom:14px">
+        <div style="font-family:'Silkscreen',monospace;font-size:9px;color:var(--muted);letter-spacing:2px;margin-bottom:8px">🧙 囉唆馬蓋仙</div>
+        <div style="font-size:11px;color:#94a3b8;line-height:1.8">
+          老夫會全力協助你，成為獨當一面的大師。
+        </div>
+      </div>
+
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:12px 14px;margin-bottom:14px">
+        <div style="font-family:'Silkscreen',monospace;font-size:9px;color:var(--muted);letter-spacing:2px;margin-bottom:4px">📦 道具說明</div>
+        ${itemRows}
+      </div>
+
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:12px 14px">
+        <div style="display:flex;gap:10px;align-items:center">
+          <span style="font-size:22px;min-width:28px">📲</span>
+          <div>
+            <div style="font-family:'Silkscreen',monospace;font-size:10px;color:var(--accent);letter-spacing:1px">把本頁加到主畫面，確保存檔</div>
+            <div style="font-size:11px;color:#94a3b8;margin-top:3px;line-height:1.6">
+              點選瀏覽器底部分享 → 【加到主畫面】<br>
+              <span style="color:var(--muted);font-size:10px">反覆遊戲沒問題</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  overlay.style.display='flex';
+}
+
+const MC_PREVIEW={
+  target:      '便宜入門，減少15%髒污，先從這個開始。',
+  fly_tape:    '比標靶貼更耐用，減10%髒污，撐35人。',
+  aroma:       '入廁費漲一半，裝越多芳香劑客人越有耐心，還能無視髒污減速！',
+  cleaner:     '清潔助理幫忙把控全場，清掃25次馬桶，高峰時必用的。',
+  repair:      '馬桶壞了才用，拖到損壞的便斗上。',
+  extra_urinal:'多一格便斗，入廁費提高£0.4，長期投資。',
+  bullet_op:   '花£120，子彈時間內可以操作30秒。最強道具。',
+  newspaper:   '塞給等待的客人，全場多5秒。便宜好用。',
+  manga:       '比報紙強，全場+10秒，高峰時最划算。',
+  barber:      '15秒！最強等待延長，關鍵時刻才用。',
+};
+
+// long press state
+const lp={active:false,itemId:null,timer:null,startX:0,startY:0,moved:false};
+
+const TDEFS={
+  small:      {label:'來都來了',emoji:'🧍',cv:'var(--sc)', wk:'WAIT_MAX_SMALL', pk:'PEE_TIME_SMALL', dk:'DIRTY_SMALL', sk:'SCORE_SMALL'},
+  elder:      {label:'滴鞋老',  emoji:'👴',cv:'#a78bfa',   wk:'ELDER_WAIT',     pk:'ELDER_PEE',      dk:'ELDER_DIRTY',  sk:'ELDER_SCORE'},
+  med:        {label:'頻尿人',  emoji:'🧔',cv:'var(--mc)', wk:'WAIT_MAX_MED',   pk:'PEE_TIME_MED',   dk:'DIRTY_MED',    sk:'SCORE_MED'},
+  large:      {label:'爆尿人',  emoji:'🏃',cv:'var(--lc)', wk:'WAIT_MAX_LARGE', pk:'PEE_TIME_LARGE', dk:'DIRTY_LARGE',  sk:'SCORE_LARGE'},
+  drunk:      {label:'醉漢',    emoji:'🥴',cv:'var(--dc)', wk:'WAIT_MAX_MED',   pk:'PEE_TIME_DRUNK', dk:'DIRTY_MED',    sk:'SCORE_DRUNK', isDrunk:true},
+  phone:      {label:'滑機男',  emoji:'👨‍💻',cv:'#38bdf8',  wk:'PHONE_WAIT',     pk:'PHONE_PEE',      dk:'PHONE_DIRTY',  sk:'PHONE_SCORE'},
+  delinquent: {label:'中二生',  emoji:'🧑‍🎤',cv:'#f472b6',  wk:'DELINQUENT_WAIT',pk:'DELINQUENT_PEE', dk:'DELINQUENT_DIRTY',sk:'DELINQUENT_SCORE'},
+  soldier:    {label:'阿兵哥',  emoji:'💂', cv:'#86efac',  wk:'SOLDIER_WAIT',   pk:'SOLDIER_PEE',    dk:'SOLDIER_DIRTY',   sk:'SOLDIER_SCORE'},
+  gangster:   {label:'黑尿幫',  emoji:'🕴️', cv:'#fb923c',  wk:'GANGSTER_WAIT',  pk:'GANGSTER_PEE',   dk:'GANGSTER_DIRTY',  sk:'GANGSTER_SCORE'},
+  inspector:  {label:'馬蓋仙', emoji:'🧙', cv:'var(--accent)', wk:'INSPECTION_WAIT', pk:'INSPECTION_WAIT', dk:'DIRTY_SMALL', sk:'INSPECTION_SCORE'},
+};
+
+function rndType(){
+  // 黑尿幫 surge 期間
+  if(state.gangsterSurgeEnd>state.elapsed&&Math.random()*100<CONFIG.GANGSTER_SURGE_RATE)return'gangster';
+
+  // 滑機男：分數達門檻後，獨立機率判定，不影響其餘角色機率池比例
+  if(state.score>=CONFIG.PHONE_UNLOCK_SCORE&&Math.random()*100<CONFIG.PHONE_SPAWN_RATE)return'phone';
+
+  const uc=state.urinals.length;
+  const inSoft=state.elapsed<CONFIG.SOFT_START_DURATION;
+  const r=Math.random()*100;
+
+  if(inSoft){
+    // 慢速開局：只有來都來了50% + 頻尿人50%
+    return r<50?'small':'med';
+  }
+  if(uc<=2){
+    // 2格：來都來了40% 滴鞋老20% 頻尿人40%
+    if(r<40)return'small';
+    if(r<60)return'elder';
+    return'med';
+  }
+  if(uc===3){
+    // 3格：來都來了22% 滴鞋老22% 頻尿人22% 爆尿人34%
+    if(r<22)return'small';
+    if(r<44)return'elder';
+    if(r<66)return'med';
+    return'large';
+  }
+  // 4格+：來都來了16% 滴鞋老18% 頻尿人16% 爆尿人25% 醉漢25%
+  if(r<16)return'small';
+  if(r<34)return'elder';
+  if(r<50)return'med';
+  if(r<75)return'large';
+  return'drunk';
+}
+function mkCustomer(){
+  const t=rndType(),d=TDEFS[t];
+  const dirtyAmt=d.isDrunk?CONFIG[d.dk]+CONFIG.DRUNK_DIRTY_BONUS:CONFIG[d.dk];
+  return{id:++cidCounter,type:t,label:d.label,emoji:d.emoji,cv:d.cv,
+    waitMax:CONFIG[d.wk],peeBase:CONFIG[d.pk],
+    dirtyAmt,score:CONFIG[d.sk],waitElapsed:0};
+}
+// 入廁費 = 基礎費 + (便斗數-2) × 每格加成
+function calcEntryFee(){
+  return CONFIG.ENTRY_FEE_BASE+Math.max(0,state.urinals.length-2)*CONFIG.ENTRY_FEE_PER_URINAL;
+}
+function _baseBGM(){return state.phaseStage>=ABYSS_STAGE?'abyss':'normal';}
+function _surgeBGM(type){return state.phaseStage>=ABYSS_STAGE?(type==='peak'?'abyss_peak':'abyss_surge'):type;}
+
+// ════════════════════════════════════
+//  ITEM HELPERS
+// ════════════════════════════════════
+// Get all active items on a urinal as array of {def, inst}
+function getItems(u){return u.items||[];}
+function getEffect(u,key){
+  for(const it of getItems(u)){if(it.def.effects[key]!==undefined)return it.def.effects[key];}
+  return undefined;
+}
+function hasEffect(u,key){return getEffect(u,key)!==undefined;}
+
+// 階段動態定價：7000分起 ×2.5，之後每階再線性 +0.75（滿階 stage14 約 ×7.75，避免指數爆炸）
+// 第一個馬桶享 50% 折扣（state.firstUrinalDiscount）
+const PRICE_SCALE_STAGE=7;
+const PRICE_SCALE_STEP=0.75;
+function effectivePrice(def){
+  const stage=typeof state!=='undefined'?state.phaseStage:0;
+  let mult=1;
+  if(stage>=PRICE_SCALE_STAGE){
+    mult=2.5+PRICE_SCALE_STEP*(stage-PRICE_SCALE_STAGE);
+  }
+  let p=Math.round(def.price*mult);
+  if(def.id==='extra_urinal'&&typeof state!=='undefined'&&state.firstUrinalDiscount){
+    p=Math.round(p*0.5);
+  }
+  return p;
+}
+
+// Install item — uid=null for queue/global effects
+function installItem(uid,itemId){
+  const def=ITEM_DEFS[itemId];
+  if(!def)return false;
+  const cost=effectivePrice(def);
+  if(state.money<cost){notify(`金錢不足 £${cost}`,'var(--danger)');return false;}
+
+  // 子彈時間：便斗或等待區均可
+  if(def.effects.bulletOp){
+    state.money-=cost;state.itemSpend+=cost;
+    if(state.itemsBoughtThisRun)state.itemsBoughtThisRun.add(itemId);
+    state.bulletOpRemain=(state.bulletOpRemain||0)+CONFIG.BULLET_OP_DURATION;
+    if(!state.bulletTime)toggleBulletTime();
+    notify(`⚡ 子彈操作已購買！進入子彈時間後開始倒數 ${CONFIG.BULLET_OP_DURATION}秒`,'var(--accent)');
+    log(`ITEM bullet_op activated remain=${state.bulletOpRemain}s`,'item');
+    buildShop();return true;
+  }
+  // 等待加時道具：放在等待區
+  if(def.effects.waitBoost){
+    state.money-=cost;state.itemSpend+=cost;
+    if(state.itemsBoughtThisRun)state.itemsBoughtThisRun.add(itemId);
+    const addSec=def.effects.waitBoost,dur=def.effects.boostDuration;
+    state.waitBoostEnd=Math.max(state.waitBoostEnd,state.elapsed)+dur;
+    state.waitBoostEmoji=def.emoji;state.activeWaitBoostAmt=addSec;
+    state.queue.forEach(c=>{if(!c.isInspector)c.waitMax+=addSec;});
+    notify(`${def.emoji} 全場客人等待 +${addSec}秒！`,'var(--money)');
+    log(`ITEM wait_boost +${addSec}s`,'item');
+    updateQueueGlow();buildShop();
+    if(itemId==='newspaper')mcSayForced('use_newspaper');
+    else if(itemId==='manga')mcSayForced('use_manga');
+    else if(itemId==='barber')mcSayForced('use_barber');
+    return true;
+  }
+
+  // 以下需要 urinal
+  const u=uid!==null&&uid!==undefined?state.urinals.find(x=>x.id===uid):null;
+  if(!u){log(`installItem: no urinal for ${itemId}`,'warn');return false;}
+
+  if(def.effects.addUrinal){
+    if(state.urinals.length>=6){notify('馬桶已達上限 6 格！','var(--warn)');return false;}
+    state.money-=cost;state.itemSpend+=cost;
+    if(state.itemsBoughtThisRun)state.itemsBoughtThisRun.add(itemId);
+    if(state.firstUrinalDiscount)state.firstUrinalDiscount=false;
+    state.urinals.push(mkUrinal(state.urinals.length));
+    playSFX('extra_urinal');
+    buildUrinalDOM();notify('新增 🚽 成功！','var(--success)');mcSay('add_urinal');
+    log(`ITEM addUrinal → ${state.urinals.length}`,'item');return true;
+  }
+  if(def.effects.repairBroken){
+    if(!u.broken){notify('該馬桶未損壞','var(--warn)');return false;}
+    if(u.repairing){notify('修復中，請稍候','var(--warn)');return false;}
+    state.money-=cost;state.itemSpend+=cost;
+    if(state.itemsBoughtThisRun)state.itemsBoughtThisRun.add(itemId);
+    u.repairing=true;u.repairElapsed=0;
+    notify('🔧 修復工進場！需 '+CONFIG.REPAIR_TIME+'秒','var(--accent)');
+    log(`ITEM repair start #${uid+1}`,'item');return true;
+  }
+
+  // 一般安裝型道具
+  if(!u.items)u.items=[];
+  const replaced=u.items.find(it=>it.def.group===def.group);
+  if(replaced){
+    log(`ITEM replace ${replaced.def.id}→${itemId} #${uid+1}`,'item');
+    u.items=u.items.filter(it=>it.def.group!==def.group);
+  }
+  const inst={def,durAccum:0,cleanCount:0};
+  u.items.push(inst);
+  state.money-=cost;state.itemSpend+=cost;
+  if(state.itemsBoughtThisRun)state.itemsBoughtThisRun.add(itemId);
+  checkAchievements();
+  log(`ITEM install ${itemId} on #${uid+1} cost=£${cost}`,'item');
+  notify(`${def.emoji} ${def.name} 已安裝至 #${uid+1}`,'#c084fc');
+  playSFX('buy');
+  // 芳香劑：安裝後立即套用等待加成到現有等待區客人
+  if(def.effects&&def.effects.entryFeeBonus){
+    const mult=calcAromaWaitMult();
+    applyAromaWaitToQueue(mult);
+    const pct=mult>1?`+${Math.round((mult-1)*100)}%`:'';
+    if(pct)notify(`🌸 等待耐心全場 ${pct}！`,'var(--success)');
+  }
+  checkTip('first_item');
+  mcSay('first_item');
+  if(itemId==='aroma')checkTip('aroma_hint');
+  return true;
+}
+
+// Consume durability on item after customer finishes
+function consumeItemDur(u){
+  if(!u.items)return;
+  u.items=u.items.filter(it=>{
+    if(it.def.durLimit===null)return true; // 無次數限制
+    it.durAccum=(it.durAccum||0)+1;        // 每服務一人 +1
+    if(it.durAccum>=it.def.durLimit){
+      log(`ITEM expired ${it.def.id} on #${u.id+1} (${it.durAccum}人)`,'item');
+      notify(`${it.def.emoji} ${it.def.name} 損耗消失 (#${u.id+1})`,'var(--warn)');
+      return false;
+    }
+    return true;
+  });
+}
+// Consume clean count for assistant
+
+// 計算芳香劑等待加成倍率
+function calcAromaWaitMult(){
+  const total=state.urinals.length;
+  const withAroma=state.urinals.filter(u=>u.items&&u.items.some(it=>it.def.effects&&it.def.effects.entryFeeBonus)).length;
+  if(withAroma===0)return 1;
+  if(withAroma/total>=0.5)return 1.4;
+  return 1.2;
+}
+// 套用芳香劑加成到等待區所有客人
+function applyAromaWaitToQueue(mult){
+  if(mult<=1)return;
+  state.queue.forEach(c=>{
+    if(!c._aromaApplied){
+      c.waitMax=Math.round(c.waitMax*mult*10)/10;
+      c._aromaApplied=true;
+    }
+  });
+  log(`AROMA wait mult=${mult} applied to ${state.queue.length} customers`,'item');
+}
+// ════════════════════════════════════
+//  全球排行榜
+// ════════════════════════════════════
+async function renderGlobalLeaderboard(targetId,highlightScore,limit){
+  const el=document.getElementById(targetId);if(!el)return;
+  el.innerHTML=`<div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);text-align:center;padding:8px">載入中...</div>`;
+  const allRows=await(window.loadGlobalLeaderboard?window.loadGlobalLeaderboard():[]);
+  const rows=limit?allRows.slice(0,limit):allRows;
+  if(!rows.length){el.innerHTML=`<div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);text-align:center;padding:8px">尚無全球紀錄</div>`;return;}
+  const medals=['🥇','🥈','🥉','4','5','6','7','8','9','10'];
+  const rows_html=rows.map((r,i)=>{
+    const hl=highlightScore!==undefined&&r.score===highlightScore;
+    const st=hl?'background:rgba(255,215,0,.12);border-radius:4px':'';
+    return `<tr style="${st}">
+      <td style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);padding:3px 4px">${i<3?medals[i]:i+1}</td>
+      <td style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:${hl?'var(--money)':'var(--text)'};padding:3px 4px;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name||'???'}</td>
+      <td style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:${hl?'var(--money)':'var(--accent)'};padding:3px 4px">${r.score}</td>
+      <td style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--money);padding:3px 4px">£${typeof r.money==='number'?r.money.toFixed(2):r.money}</td>
+      <td style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);padding:3px 4px">${r.playTime||'-'}</td>
+      <td style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);padding:3px 4px">${r.date||''}</td>
+    </tr>`;
+  }).join('');
+  el.innerHTML=`<table style="width:100%;border-collapse:collapse">
+    <tr>
+      <th></th>
+      <th style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);text-align:left;padding:3px 4px">名字</th>
+      <th style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);text-align:left;padding:3px 4px">分數</th>
+      <th style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);text-align:left;padding:3px 4px">收入</th>
+      <th style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);text-align:left;padding:3px 4px">時長</th>
+      <th style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);text-align:left;padding:3px 4px">日期</th>
+    </tr>
+    ${rows_html}
+  </table>`;
+}
+
+let _pendingSubmit=null;
+async function submitScore(){
+  const nameEl=document.getElementById('rs-name-input');
+  const msgEl=document.getElementById('rs-submit-msg');
+  const name=(nameEl?.value||'').trim();
+  if(!name){msgEl.textContent='請輸入名字！';msgEl.style.color='var(--warn)';return;}
+  if(!_pendingSubmit)return;
+  msgEl.textContent='提交中...';msgEl.style.color='var(--muted)';
+  const ok=await(window.submitGlobalScore?window.submitGlobalScore(name,_pendingSubmit.score,_pendingSubmit.money,_pendingSubmit.served,_pendingSubmit.date,_pendingSubmit.playTime):false);
+  if(ok){
+    msgEl.textContent='✅ 上榜成功！';msgEl.style.color='var(--success)';
+    document.getElementById('rs-submit-area').style.display='none';
+    renderGlobalLeaderboard('global-lb-result',_pendingSubmit.score);
+    _pendingSubmit=null;
+  } else {
+    msgEl.textContent='❌ 提交失敗，請檢查網路';msgEl.style.color='var(--danger)';
+  }
+}
+
+// ════════════════════════════════════
+//  角色圖鑑
+// ════════════════════════════════════
+const CHAR_ORDER=['small','elder','med','large','drunk','phone','delinquent','soldier','gangster','inspector'];
+
+// ════════════════════════════════════
+//  成就系統
+// ════════════════════════════════════
+const ACHIEVEMENTS={
+  rainbow:   {id:'rainbow',  emoji:'🌈', name:'彩虹',       desc:'積分達7000分集齊全部顏色', check:()=>state.phaseStage>=7},
+  abyss:     {id:'abyss',    emoji:'🌑', name:'深淵',       desc:'積分達24500分墜入深淵',    check:()=>state.phaseStage>=ABYSS_STAGE},
+  wealth:    {id:'wealth',   emoji:'🌎', name:'財富自由',   desc:'單局收入達£5000',   check:()=>state.totalEarned>=5000},
+  all_items: {id:'all_items',emoji:'🚨', name:'全副武裝',   desc:'單局買過所有道具',   check:()=>checkAllItems()},
+  all_chars: {id:'all_chars',emoji:'🚀', name:'全角色圖鑑', desc:'見過所有角色',        check:()=>checkAllChars()},
+  all_broken:{id:'all_broken',emoji:'🚫',name:'一片廢墟',   desc:'六個馬桶同時損壞',   check:()=>state.urinals.length===6&&state.urinals.every(u=>u.broken)},
+  no_leave:  {id:'no_leave', emoji:'✌️', name:'零逃客',     desc:'六格前零氣走',       check:()=>state.leftCount===0&&state.urinals.length>=6},
+};
+const ACH_KEY='loole_achievements';
+
+function loadAchievements(){try{return JSON.parse(localStorage.getItem(ACH_KEY)||'{}');}catch(e){return{};}}
+function checkAllItems(){
+  const allIds=Object.keys(ITEM_DEFS);
+  if(!state.itemsBoughtThisRun||!(state.itemsBoughtThisRun instanceof Set))return false;
+  const bought=[...state.itemsBoughtThisRun];
+  const missing=allIds.filter(id=>!bought.includes(id));
+  if(missing.length>0)log(`all_items missing: ${missing.join(',')}`, 'info');
+  return missing.length===0;
+}
+function checkAllChars(){
+  const seen=JSON.parse(localStorage.getItem(CODEX_KEY)||'[]');
+  return CHAR_ORDER.every(t=>seen.includes(t));
+}
+function checkAchievements(){
+  const unlocked=loadAchievements();
+  let newUnlock=false;
+  Object.values(ACHIEVEMENTS).forEach(a=>{
+    if(!unlocked[a.id]&&a.check()){
+      unlocked[a.id]=true;newUnlock=true;
+      notify(`${a.emoji} 成就解鎖：${a.name}！`,'var(--accent3)');
+      log(`ACHIEVEMENT ${a.id}`,'ev');
+    }
+  });
+  if(newUnlock)localStorage.setItem(ACH_KEY,JSON.stringify(unlocked));
+  if(newUnlock)playSFX('achievement');
+  return unlocked;
+}
+// 彩虹膀胱解放：集滿以下六個成就即永久解鎖（深淵不計入，維持獨立里程碑）
+const RAINBOW_RELEASE_ACH_IDS=['rainbow','wealth','all_items','all_chars','all_broken','no_leave'];
+function hasRainbowRelease(){
+  const unlocked=loadAchievements();
+  return RAINBOW_RELEASE_ACH_IDS.every(id=>unlocked[id]);
+}
+// 一鍵瞬間結算所有正在使用中的便斗（免費，5分鐘冷卻）
+function rainbowRelease(){
+  if(!hasRainbowRelease())return;
+  if(!state||!state.running)return;
+  if(state.rainbowReleaseCooldownEnd>state.elapsed){
+    notify('🌈 冷卻中，請稍候','var(--warn)');
+    return;
+  }
+  const occupied=state.urinals.filter(u=>u.occupied&&!u.broken&&!u.repairing);
+  if(occupied.length===0){
+    notify('🌈 目前沒有客人可以解放','var(--warn)');
+    return;
+  }
+  const n=occupied.length;
+  occupied.forEach(u=>finishPee(u));
+  state.rainbowReleaseCooldownEnd=state.elapsed+CONFIG.RAINBOW_RELEASE_COOLDOWN;
+  notify(`🌈 彩虹膀胱解放！瞬間服務了 ${n} 位客人`,'var(--accent3)');
+  playSFX('achievement');
+  log(`RAINBOW RELEASE served=${n}`,'ev');
+  buildShop();
+}
+const CODEX_KEY='loole_seen_chars';
+
+function markCharSeen(type){
+  const seen=JSON.parse(localStorage.getItem(CODEX_KEY)||'[]');
+  if(!seen.includes(type)){seen.push(type);localStorage.setItem(CODEX_KEY,JSON.stringify(seen));}
+}
+
+function renderCharCodex(){
+  const el=document.getElementById('rs-codex-chars');
+  const msg=document.getElementById('rs-codex-msg');
+  if(!el)return;
+  const seen=JSON.parse(localStorage.getItem(CODEX_KEY)||'[]');
+  const total=CHAR_ORDER.length;
+  const unseenCount=CHAR_ORDER.filter(t=>!seen.includes(t)).length;
+
+  el.innerHTML=CHAR_ORDER.map(type=>{
+    const d=TDEFS[type];
+    const isSeen=seen.includes(type);
+    return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:44px">
+      <span style="font-size:24px;${isSeen?'':'filter:grayscale(1);opacity:0.3'}">${isSeen?d.emoji:'❓'}</span>
+      <span style="font-family:'Silkscreen',monospace;font-size:9px;color:${isSeen?'var(--muted)':'var(--border)'}">${isSeen?d.label:'?'}</span>
+    </div>`;
+  }).join('');
+
+  if(unseenCount===0){
+    msg.textContent='🎉 已探索所有角色！';
+    msg.style.color='var(--money)';
+  } else {
+    msg.textContent=`還有 ${unseenCount} 個角色等你探索！增加馬桶數量來解鎖更多。`;
+    msg.style.color='var(--accent3)';
+  }
+}
+
+// 階段分數門檻查表（index = 階段數，值 = 所需分數）
+const PHASE_THRESHOLDS=[0,1000,2000,3000,4000,5000,6000,7000,9500,12000,14500,17000,19500,22000,24500];
+
+// 1-7：彩虹色，8-14：七種金色漸層，14：深淵（暗金）
+const PHASE_COLORS=[
+  '',
+  '#a5f3fc','#bbf7d0','#fef08a','#fed7aa','#fecaca','#ede9fe','#ffd700', // 1-7
+  '#ffe066','#ffd700','#f5c518','#e6a817','#c8860a','#a86500','#6b4e00'  // 8-14（漸深金）
+];
+const PHASE_GLOW=[
+  '',
+  '','','','','','','rgba(255,215,0,.5)',                                  // 1-7
+  'rgba(255,224,102,.4)','rgba(255,215,0,.45)','rgba(245,197,24,.5)',
+  'rgba(230,168,23,.55)','rgba(200,134,10,.5)','rgba(168,101,0,.5)',
+  'rgba(80,50,0,.6)'                                                        // 14 深淵
+];
+// 深淵模式的全 UI 變暗色板
+const ABYSS_STAGE=14;
+
+function applyPhaseStyle(stage){
+  const color=PHASE_COLORS[stage]||'';
+  const glow=PHASE_GLOW[stage]||'';
+  document.querySelectorAll('.us').forEach(el=>{
+    el.style.borderColor=color||'';
+    el.style.boxShadow=glow?`0 0 10px ${glow}`:'';
+  });
+
+  // 深淵模式：全畫面暗化
+  const gameScreen=document.getElementById('screen-game');
+  if(gameScreen){
+    if(stage>=ABYSS_STAGE){
+      gameScreen.classList.add('abyss-mode');
+    } else {
+      gameScreen.classList.remove('abyss-mode');
+    }
+  }
+
+  if(stage>0){
+    const mult=Math.pow(CONFIG.PHASE_SPEED_MULT,stage);
+    const label=stage>=ABYSS_STAGE?'🌑 深淵！':'🔥 第'+stage+'階段！';
+    notify(`${label} 生成速度 ×${(1/mult).toFixed(1)}`,'var(--warn)');
+    if(stage>=ABYSS_STAGE){
+      const abyssLines=['abyss_1','abyss_2','abyss_3'];
+      const pick=abyssLines[Math.floor(Math.random()*abyssLines.length)];
+      // 音效先，BGM 和台詞延遲，讓音效有空間
+      playSFX('abyss_enter');
+      setTimeout(()=>{
+        if(!state.running)return;
+        playBGM('abyss');
+        mcSayForced(pick);
+      },2500);
+      // 啟動深淵台詞輪換（每30秒）
+      if(!_abyssInterval){
+        _abyssInterval=setInterval(()=>{
+          if(typeof state==='undefined'||!state||!state.running)return;
+          const lines=['abyss_1','abyss_2','abyss_3'];
+          mcSayForced(lines[Math.floor(Math.random()*lines.length)]);
+        },30000);
+      }
+    }
+  }
+  log(`PHASE ${stage}`,'ev');
+}
+
+// ════════════════════════════════════
+//  SAVE SYSTEM
+// ════════════════════════════════════
+const SAVE_KEY='loole_save_v1';
+let _lastSaveFloor=-1;
+
+function saveGame(){
+  if(!state||!state.running)return;
+  const data={
+    v:1,ts:Date.now(),
+    score:state.score,money:state.money,totalEarned:state.totalEarned,
+    scrubEarned:state.scrubEarned,itemSpend:state.itemSpend,
+    leftCount:state.leftCount,servedCount:state.servedCount,elapsed:state.elapsed,
+    nextPeak:state.nextPeak,peaksFired:state.peaksFired,
+    delinquentSurgeCount:state.delinquentSurgeCount,
+    soldierWavesFired:state.soldierWavesFired,
+    inspectionReady:state.inspectionReady,
+    specialEventCount:state.specialEventCount,
+    phaseStage:state.phaseStage,
+    bulletOpRemain:state.bulletOpRemain,
+    firstUrinalDiscount:state.firstUrinalDiscount,
+    rainbowReleaseCooldownEnd:state.rainbowReleaseCooldownEnd,
+    itemsBoughtThisRun:[...state.itemsBoughtThisRun],
+    urinals:state.urinals.map(u=>({
+      id:u.id,dirty:u.dirty,broken:u.broken,
+      repairing:u.repairing,repairElapsed:u.repairElapsed,
+      occupied:u.occupied?{
+        type:u.occupied.type,peeElapsed:u.peeElapsed,
+        peeBase:u.occupied.peeBase,dirtyAmt:u.occupied.dirtyAmt,
+        score:u.occupied.score,isDispatched:u.occupied.isDispatched||false,
+      }:null,
+      items:(u.items||[]).map(it=>({
+        defId:it.def.id,durAccum:it.durAccum,cleanCount:it.cleanCount||0,
+      })),
+    })),
+    queue:state.queue
+      .filter(c=>!c.isInspector)
+      .map(c=>({id:c.id,type:c.type,waitMax:c.waitMax,waitElapsed:0,isDispatched:c.isDispatched||false})),
+  };
+  try{localStorage.setItem(SAVE_KEY,JSON.stringify(data));}
+  catch(e){log('Save failed: '+e.message,'warn');}
+}
+
+function loadSave(){
+  try{
+    const raw=localStorage.getItem(SAVE_KEY);
+    if(!raw)return null;
+    const data=JSON.parse(raw);
+    if(!data||data.v!==1){localStorage.removeItem(SAVE_KEY);return null;}
+    return data;
+  }catch(e){localStorage.removeItem(SAVE_KEY);return null;}
+}
+
+function clearSave(){localStorage.removeItem(SAVE_KEY);}
+
+function restoreGame(data){
+  cidCounter=0;
+  if(_abyssInterval){clearInterval(_abyssInterval);_abyssInterval=null;}
+  state={
+    score:data.score,money:data.money,totalEarned:data.totalEarned,
+    scrubEarned:data.scrubEarned||0,itemSpend:data.itemSpend||0,
+    leftCount:data.leftCount,servedCount:data.servedCount,elapsed:data.elapsed,
+    nextPeak:data.nextPeak,peaksFired:data.peaksFired||0,spawnAccum:0,
+    urinals:[],queue:[],selectedId:null,running:true,failed:false,
+    bulletTime:false,bulletOpRemain:data.bulletOpRemain||0,bulletOpEnd:0,
+    firstUrinalDiscount:data.firstUrinalDiscount!==undefined?data.firstUrinalDiscount:true,
+    rainbowReleaseCooldownEnd:data.rainbowReleaseCooldownEnd||0,
+    surgeType:null,surgeEnd:0,waitBoostEnd:0,waitBoostEmoji:'',itemPreview:false,
+    pendingWaves:[],delinquentSurgeCount:data.delinquentSurgeCount||0,
+    gangsterSurgeEnd:0,soldierWavesFired:data.soldierWavesFired||0,
+    specialEventCount:data.specialEventCount||0,
+    inspectionReady:data.inspectionReady||false,
+    inspectionActive:false,inspectionScanIdx:0,inspectionScanElapsed:0,
+    inspectionPassed:true,inspectionCid:null,
+    phaseStage:data.phaseStage||0,
+    itemsBoughtThisRun:new Set(data.itemsBoughtThisRun||[]),
+    peakBGMEnd:0,dispatchedWaveTypes:[],
+  };
+  // 重建便斗
+  data.urinals.forEach(ud=>{
+    const u=mkUrinal(ud.id);
+    u.dirty=ud.dirty;u.broken=ud.broken;
+    u.repairing=ud.repairing;u.repairElapsed=ud.repairElapsed||0;
+    // 還原道具
+    (ud.items||[]).forEach(it=>{
+      const def=ITEM_DEFS[it.defId];
+      if(!def)return;
+      u.items.push({def,durAccum:it.durAccum||0,cleanCount:it.cleanCount||0});
+    });
+    // 還原便斗上的客人
+    if(ud.occupied){
+      const od=ud.occupied;const td=TDEFS[od.type];if(!td)return;
+      const c={id:++cidCounter,type:od.type,label:td.label,emoji:td.emoji,cv:td.cv,
+        waitMax:CONFIG[td.wk],peeBase:od.peeBase,
+        dirtyAmt:od.dirtyAmt,score:od.score,waitElapsed:0,isDispatched:od.isDispatched||false};
+      u.occupied=c;u.peeElapsed=od.peeElapsed||0;
+    }
+    state.urinals.push(u);
+  });
+  // 重建等待區
+  (data.queue||[]).forEach(qd=>{
+    const td=TDEFS[qd.type];if(!td)return;
+    const c={id:++cidCounter,type:qd.type,label:td.label,emoji:td.emoji,cv:td.cv,
+      waitMax:qd.waitMax,peeBase:CONFIG[td.pk],
+      dirtyAmt:CONFIG[td.dk],score:CONFIG[td.sk],
+      waitElapsed:0,isDispatched:qd.isDispatched||false};
+    state.queue.push(c);
+  });
+  cidCounter=Math.max(cidCounter,...state.urinals.map(u=>u.occupied?u.occupied.id:0),...state.queue.map(c=>c.id))+1;
+  logBuf.length=0;
+  log('=== GAME RESTORED ===','ok');
+  endDrag();endScrub();endItemDrag();
+  showScreen('screen-game');
+  applyPhaseStyle(state.phaseStage);
+  playBGM(_baseBGM());
+  buildUrinalDOM();buildQueueDOM();buildShop();
+  // buildQueueDOM 只清空 DOM，需手動建立已還原的等待區卡片
+  if(state.queue.length>0){
+    const qlist=document.getElementById('queue-list');
+    const ph=qlist.querySelector('.qph');if(ph)ph.remove();
+    state.queue.forEach(c=>qlist.appendChild(mkCardEl(c)));
+  }
+  updateHUD();_updateBulletBtn();
+  mcSaid.clear();mcQueue.length=0;mcBusy=false;
+  if(mcTyping)clearTimeout(mcTyping);
+  setTimeout(()=>mcSayForced('繼續遊戲，加油！'),300);
+  if(gameLoop)clearInterval(gameLoop);
+  lastTick=Date.now();
+  gameLoop=setInterval(gameTick,80);
+}
+
+function continueSave(){
+  const data=loadSave();
+  if(!data){startGame();return;}
+  clearSave();
+  restoreGame(data);
+}
+
+// 頁面載入時檢查存檔，顯示繼續遊戲按鈕
+window.addEventListener('load',()=>{
+  const data=loadSave();
+  if(!data)return;
+  const mins=Math.round((Date.now()-data.ts)/60000);
+  const btn=document.createElement('button');
+  btn.className='btn-s';btn.id='btn-continue';
+  btn.style.cssText='border-color:var(--accent);color:var(--accent)';
+  btn.textContent=`繼續遊戲 (${mins}分鐘前 · ${data.score}分) ⟳`;
+  btn.onclick=continueSave;
+  // 插在「開始遊戲」按鈕前面
+  const startBtn=document.querySelector('#screen-title .btn-p');
+  if(startBtn)startBtn.parentNode.insertBefore(btn,startBtn);
+});
+
+function startGame(){
+  cidCounter=0;
+  clearSave();
+  if(_abyssInterval){clearInterval(_abyssInterval);_abyssInterval=null;}
+  state={
+    score:0,money:0,totalEarned:0,scrubEarned:0,itemSpend:0,
+    leftCount:0,servedCount:0,elapsed:0,
+    urinals:Array.from({length:2},(_,i)=>mkUrinal(i)),
+    queue:[],selectedId:null,
+    nextPeak:CONFIG.PEAK_INTERVAL,spawnAccum:0,running:true,failed:false,
+    bulletTime:false,
+    bulletOpRemain:0,
+    firstUrinalDiscount:true,
+    rainbowReleaseCooldownEnd:0,
+    surgeType:null,surgeEnd:0,
+    bulletOpEnd:0, // legacy, replaced by bulletOpRemain
+    waitBoostEnd:0,waitBoostEmoji:'',
+    itemPreview:false,
+    pendingWaves:[],
+    delinquentSurgeCount:0,
+    gangsterSurgeEnd:0,
+    soldierWavesFired:0,
+    specialEventCount:0,
+    inspectionReady:false,
+    inspectionActive:false,
+    inspectionScanIdx:0,
+    inspectionScanElapsed:0,
+    inspectionPassed:true,
+    inspectionCid:null,
+    phaseStage:0,
+    itemsBoughtThisRun:new Set(),
+    peakBGMEnd:0,
+    peaksFired:0,
+    dispatchedWaveTypes:[],
+  };
+  logBuf.length=0;
+  log('=== GAME START ===','ok');
+  endDrag();endScrub();endItemDrag();
+  showScreen('screen-game');
+  playBGM('normal');
+  buildUrinalDOM();buildQueueDOM();buildShop();
+  updateHUD();spawnCustomer();
+  // 馬蓋仙開場
+  mcSaid.clear();mcQueue.length=0;mcBusy=false;
+  if(mcTyping)clearTimeout(mcTyping);
+  setTimeout(()=>mcSay('start'),300);
+  if(gameLoop)clearInterval(gameLoop);
+  lastTick=Date.now();
+  gameLoop=setInterval(gameTick,80);
+}
+function mkUrinal(id){
+  return{id,dirty:0,occupied:null,peeElapsed:0,
+    cleaning:false,cleanElapsed:0,cleanDuration:CONFIG.CLEAN_TIME,
+    repairing:false,repairElapsed:0,
+    broken:false,items:[]};
+}
+
+// ════════════════════════════════════
+//  GAME TICK
+// ════════════════════════════════════
+function gameTick(){
+  if(!state.running||_manualPaused)return;
+  const now=Date.now();
+  const rawDt=Math.min((now-lastTick)/1000,.15);
+  lastTick=now;
+
+  // time scale: 子彈時間 or 道具長按預覽 = 10%；elapsed 不受影響
+  const timeScale=(state.bulletTime||state.itemPreview)?CONFIG.BULLET_TIME_SCALE:1;
+  const dt=rawDt*timeScale;
+  // elapsed 永遠用 rawDt：高峰/Surge/Wave 在子彈時間中照常觸發
+  state.elapsed+=rawDt;
+
+  // 子彈操作倒數：只在子彈時間開啟時扣，用真實時間（rawDt），不受 timeScale 影響
+  if(state.bulletTime&&state.bulletOpRemain>0){
+    state.bulletOpRemain-=rawDt;
+    if(state.bulletOpRemain<=0){state.bulletOpRemain=0;}
+  }
+
+  // soft start: double spawn interval during first SOFT_START_DURATION seconds
+  const inSoftStart=state.elapsed<CONFIG.SOFT_START_DURATION;
+  const phaseSpeedMult=state.phaseStage>0?Math.pow(CONFIG.PHASE_SPEED_MULT,state.phaseStage):1;
+  const spawnInterval=CONFIG.SPAWN_INTERVAL*(inSoftStart?CONFIG.SOFT_START_SPAWN_MULT:1)*phaseSpeedMult;
+
+  if(state.elapsed>=state.nextPeak&&!state.inspectionActive&&!state.inspectionCid){
+    state.nextPeak+=Math.round(CONFIG.PEAK_INTERVAL*phaseSpeedMult*10)/10;
+    state.peaksFired++;
+    log(`PEAK #${state.peaksFired}`,'ev');showPeakBanner();
+    playBGM(_surgeBGM('peak'),12000);
+    state.peakBGMEnd=state.elapsed+30;
+    checkTip('first_peak');mcSay('first_peak');
+    if(state.peaksFired===2)mcSay('peak_second');
+    // 高峰抽籤：看是否觸發特殊事件
+    const uc=state.urinals.length;
+    let surgeTriggered=false;
+    if(uc>=CONFIG.UNLOCK_SOLDIER&&Math.random()*100<CONFIG.SOLDIER_RATE){
+      triggerSurge('soldier');surgeTriggered=true;
+    } else if(uc>=CONFIG.UNLOCK_DELINQUENT&&Math.random()*100<CONFIG.DELINQUENT_RATE){
+      triggerSurge('delinquent');surgeTriggered=true;
+    }
+    if(!surgeTriggered){
+      // 普通高峰：40% 黑尿幫混入（需已解鎖）
+      if(state.delinquentSurgeCount>=CONFIG.GANGSTER_UNLOCK_COUNT&&
+         Math.random()*100<CONFIG.GANGSTER_RATE){
+        triggerGangsterOnly();
+      }
+      for(let k=0;k<CONFIG.PEAK_COUNT;k++)spawnCustomer();
+    }
+  }
+
+  // 處理排程中的 wave 批次（巡查等待期間暫停）
+  if(!state.inspectionCid&&!state.inspectionActive&&state.pendingWaves.length>0){
+    const now=state.elapsed;
+    const due=state.pendingWaves.filter(w=>w.at<=now);
+    state.pendingWaves=state.pendingWaves.filter(w=>w.at>now);
+    due.forEach(w=>{
+      log(`WAVE ${w.type} x${w.group} at ${now.toFixed(1)}s`,'ev');
+      for(let i=0;i<w.group;i++){
+        const c=_addToQueue(w.type);
+        if(w.isDispatched&&c){
+          c.isDispatched=true;
+          // 更新卡片的 emoji 發光效果
+          const el=document.getElementById('cc-'+c.id);
+          if(el){
+            const emojiEl=el.querySelector('.cc-e');
+            if(emojiEl)emojiEl.classList.add('dispatch-glow');
+          }
+        }
+      }
+    });
+  }
+  // 生成倒數用 rawDt：子彈時間中客人照常生成，進入等待區後才慢速
+  state.spawnAccum+=rawDt;
+  if(state.spawnAccum>=spawnInterval){
+    state.spawnAccum=0;
+    // 巡查期間不生成新客人
+    if(!state.inspectionActive&&!state.inspectionCid&&state.queue.length<7)spawnCustomer();
+  }
+
+  const leaving=[];
+  state.queue.forEach(c=>{
+    c.waitElapsed+=dt; // 所有客人（含馬蓋仙）統一累積
+    if(c.isInspector)return; // 馬蓋仙不算氣走
+    if(c.waitElapsed>=c.waitMax)leaving.push(c.id);
+  });
+  leaving.forEach(customerLeave);
+
+  // 馬蓋仙等待超時 → 自動安排到第一格可用便斗
+  if(state.inspectionCid&&!state.inspectionActive){
+    const mc=state.queue.find(c=>c.id===state.inspectionCid);
+    if(mc&&mc.waitElapsed>=mc.waitMax){
+      // 節流：每秒最多嘗試一次，避免每幀重複嘗試
+      const lastTry=mc._lastAssignTry||0;
+      if(mc.waitElapsed-lastTry>=1){
+        mc._lastAssignTry=mc.waitElapsed;
+        // 馬蓋仙可繞過黑尿幫鎖定，只需排除壞掉/佔用/修復中的便斗
+        const freeU=state.urinals.find(u=>!u.occupied&&!u.broken&&!u.repairing&&!u.cleaning);
+        let success=false;
+        if(freeU){
+          success=tryAssign(state.inspectionCid,freeU.id);
+        }
+        if(!success){
+          const overtime=mc.waitElapsed-mc.waitMax;
+          const noFreeAtAll=state.urinals.every(u=>u.broken||u.repairing||u.occupied||u.cleaning);
+          if(noFreeAtAll||overtime>=20){
+            // 完全無便斗可用，或超時20秒仍無法分配 → 強制開始掃描，避免永久卡住
+            state.queue=state.queue.filter(c=>c.id!==state.inspectionCid);
+            const el=document.getElementById('cc-'+state.inspectionCid);if(el)el.remove();
+            startInspection(0);
+            state.inspectionCid=null;
+          } else {
+            log(`Inspector assign retry failed, will retry next second (wait=${Math.round(mc.waitElapsed)}s)`,'warn');
+          }
+        } else {
+          state.inspectionCid=null;
+        }
+      }
+    }
+  }
+
+  state.urinals.forEach(u=>{
+    if(u.repairing){
+      // 修復工用 rawDt：子彈時間不影響修復進度
+      u.repairElapsed+=rawDt;
+      if(u.repairElapsed>=CONFIG.REPAIR_TIME){
+        u.repairing=false;u.repairElapsed=0;
+        u.broken=false;u.dirty=30;
+        notify('🔧 馬桶修復完成！','var(--success)');
+        log(`#${u.id+1} repair done dirty=30%`,'ok');
+      }
+    } else if(u.cleaning){
+      u.cleanElapsed+=dt;
+      if(u.cleanElapsed>=u.cleanDuration){log(`#${u.id+1} clean done`,'ok');u.dirty=0;u.cleaning=false;u.cleanElapsed=0;}
+    } else if(u.occupied&&!u.broken){
+      // 尿尿用 rawDt：子彈時間中便斗照常進行
+      u.peeElapsed+=rawDt*calcSpd(u);
+      if(u.peeElapsed>=u.occupied.peeBase)finishPee(u);
+    }
+  });
+
+  // 清掃助理自動清潔：子彈時間中不啟動（不應有此能力，且會太 OP）
+  const hasAnyAssist=!state.bulletTime&&state.urinals.some(u=>u.items&&u.items.some(it=>it.def.effects&&it.def.effects.autoClean));
+  if(hasAnyAssist){
+    // 找到裝有助理的道具實例（取第一個）
+    let assistInst=null;
+    for(const u of state.urinals){
+      if(u.items){const f=u.items.find(it=>it.def.effects&&it.def.effects.autoClean);if(f){assistInst=f;break;}}
+    }
+    if(assistInst&&assistInst.cleanCount<assistInst.def.cleanLimit){
+      state.urinals.forEach(u=>{
+        if(!u.occupied&&!u.cleaning&&!u.broken&&u.dirty>=CONFIG.CLEANER_AUTO_THRESH){
+          // 啟動1秒自動清潔
+          u.cleanDuration=0.5;u.cleaning=true;u.cleanElapsed=0;
+          // 計算60%清潔費
+          const scrubs=Math.ceil(u.dirty/CONFIG.SCRUB_AMOUNT);
+          const rate=u.dirty>=CONFIG.SCRUB_TIP_HIGH_THRESH?CONFIG.SCRUB_BASE_FEE*CONFIG.SCRUB_TIP_HIGH_MULT
+            :u.dirty>=CONFIG.SCRUB_TIP_MED_THRESH?CONFIG.SCRUB_BASE_FEE*CONFIG.SCRUB_TIP_MED_MULT
+            :CONFIG.SCRUB_BASE_FEE;
+          const fee=scrubs*rate*0.6;
+          state.money+=fee;state.totalEarned+=fee;state.scrubEarned+=fee;
+          if(fee>0)showScorePop(`+£${fee.toFixed(2)}`,'var(--money)');
+          assistInst.cleanCount++;
+          log(`AUTO CLEAN #${u.id+1} dirty=${Math.round(u.dirty)}% fee=£${fee.toFixed(2)} count=${assistInst.cleanCount}/${assistInst.def.cleanLimit}`,'item');
+          if(assistInst.cleanCount>=assistInst.def.cleanLimit){
+            // 消耗完畢，從所有便斗移除
+            state.urinals.forEach(uu=>{if(uu.items)uu.items=uu.items.filter(it=>it!==assistInst);});
+            notify('🧹 清掃助理功能結束','var(--warn)');
+            log('AUTO CLEAN expired','item');
+          }
+        }
+      });
+    }
+  }
+  updateSoftStartBanner();
+  updateQueueGlow();
+  // BGM 自動回 normal：surge/waves 結束且不在巡查中
+  if(_currentBGM&&_currentBGM!==_baseBGM()&&_currentBGM!=='boss'){
+    const notInspection=!state.inspectionActive&&!state.inspectionCid;
+    const wavesDone=state.pendingWaves.length===0&&state.gangsterSurgeEnd<=state.elapsed;
+    const peakDone=(_currentBGM==='peak'||_currentBGM==='abyss_peak')?state.peakBGMEnd>0&&state.elapsed>=state.peakBGMEnd:true;
+    if(notInspection&&wavesDone&&peakDone){
+      state.peakBGMEnd=0;
+      playBGM(_baseBGM());
+    }
+  }
+  // 巡查進行中
+  if(state.inspectionActive){
+    tickInspection(dt);
+    if(state.elapsed>=state.nextPeak)state.nextPeak=safeNextPeak(state.elapsed+CONFIG.PEAK_INTERVAL);
+  }
+
+  // 分數階段變色加速
+  if(state.score>=CONFIG.PHASE_START_SCORE){
+    // 查表計算當前階段
+    let newStage=0;
+    for(let i=1;i<PHASE_THRESHOLDS.length;i++){
+      if(state.score>=PHASE_THRESHOLDS[i])newStage=i;
+    }
+    newStage=Math.min(newStage,CONFIG.PHASE_MAX_STAGES);
+    if(newStage!==state.phaseStage){
+      state.phaseStage=newStage;
+      applyPhaseStyle(newStage);
+    }
+  }
+
+  syncQueueDOM();syncUrinalDOM();updateHUD();updateEffects();
+  // 子彈時間按鈕更新倒數
+  _updateBulletBtn();
+  // 子彈時間到期自動關閉
+  if(state.bulletTime&&state.bulletOpRemain<=0){
+    state.bulletTime=false;
+    const screen=document.getElementById('screen-game');
+    if(screen)screen.classList.remove('bullet');
+    const btn=document.getElementById('bullet-btn');
+    if(btn)btn.classList.remove('active');
+    _updateBulletBtn();
+  }
+  // 等待加時效果到期
+  if(state.waitBoostEnd>0&&state.elapsed>=state.waitBoostEnd){
+    state.waitBoostEnd=0;state.waitBoostEmoji='';state.activeWaitBoostAmt=0;
+    updateQueueGlow();
+    log('wait_boost expired','item');
+  }
+  // update shop affordability
+  updateShopAfford();
+  // 自動存檔：每 30 秒一次
+  const saveFloor=Math.floor(state.elapsed/30);
+  if(saveFloor!==_lastSaveFloor){_lastSaveFloor=saveFloor;saveGame();}
+}
+
+// ════════════════════════════════════
+//  SPEED CALC (item-aware)
+// ════════════════════════════════════
+function calcSpd(u){
+  let s=1;
+  const neighbors=state.urinals.filter(x=>x.id!==u.id&&Math.abs(x.id-u.id)===1&&x.occupied);
+  if(neighbors.length>0){
+    s*=(1-CONFIG.NEIGHBOR_SLOW/100);
+    // 滴鞋老額外減速
+    if(neighbors.some(x=>x.occupied&&x.occupied.type==='elder'))
+      s*=(1-CONFIG.ELDER_NEIGHBOR_SLOW/100);
+  }
+  if(!hasEffect(u,'ignoreDirtySlow'))
+    s*=(1-(u.dirty/100)*(CONFIG.DIRTY_MAX_SLOW/100));
+  return Math.max(.05,s);
+}
+function slowTags(u){
+  if(!u.occupied)return[];
+  const t=[];
+  const neighbors=state.urinals.filter(x=>x.id!==u.id&&Math.abs(x.id-u.id)===1&&x.occupied);
+  if(neighbors.length>0){
+    t.push(`鄰近-${CONFIG.NEIGHBOR_SLOW}%`);
+    if(neighbors.some(x=>x.occupied&&x.occupied.type==='elder'))t.push(`滴鞋老-${CONFIG.ELDER_NEIGHBOR_SLOW}%`);
+  }
+  if(!hasEffect(u,'ignoreDirtySlow')){const ds=Math.round((u.dirty/100)*CONFIG.DIRTY_MAX_SLOW);if(ds>0)t.push(`髒污-${ds}%`);}
+  else if(u.dirty>0)t.push('🌸忽略髒污');
+  return t;
+}
+
+// ════════════════════════════════════
+//  SPAWN / ASSIGN
+// ════════════════════════════════════
+// 觸發特殊事件 wave 排程
+// 任何「追趕重置」nextPeak 的地方都要走這裡，確保不早於現有 pendingWaves 跑完的時間，
+// 否則新高峰觸發的新一輪波次會跟舊波次重疊，導致等待區瞬間湧入大量客人被氣走。
+function safeNextPeak(fallback){
+  const maxWaveAt=state.pendingWaves.length?Math.max(...state.pendingWaves.map(w=>w.at)):0;
+  return Math.max(fallback,maxWaveAt+1);
+}
+
+function triggerSurge(type){
+  const isDelinquent=type==='delinquent';
+  const group=isDelinquent?CONFIG.DELINQUENT_GROUP:CONFIG.SOLDIER_GROUP;
+  const waves=isDelinquent?CONFIG.DELINQUENT_WAVES:CONFIG.SOLDIER_WAVES;
+  const delay=isDelinquent?CONFIG.DELINQUENT_WAVE_DELAY:CONFIG.SOLDIER_WAVE_DELAY;
+  const bannerMsg=isDelinquent?'🧑‍🎤 中二生來了！':'💂 阿兵哥集結！';
+
+  showSurgeBanner(bannerMsg);
+  mcSayForced(isDelinquent?'delinquent':'soldier');
+  playBGM(_surgeBGM(isDelinquent?'delinquent':'soldier'),10000);
+  state.peakBGMEnd=state.elapsed+CONFIG.SURGE_PEAK_DELAY;
+
+  const isDispatched=state.dispatchedWaveTypes.includes(type);
+  
+  for(let w=0;w<waves;w++){
+    const waveObj={type,at:state.elapsed+w*delay,group};
+    if(isDispatched)waveObj.isDispatched=true;
+    state.pendingWaves.push(waveObj);
+  }
+  
+  // 派遣該 type 的 wave 後，從清單移除避免重複標記
+  if(isDispatched){
+    const idx=state.dispatchedWaveTypes.indexOf(type);
+    if(idx>=0)state.dispatchedWaveTypes.splice(idx,1);
+  }
+
+  // 中二生計數 + 黑尿幫混入
+  if(isDelinquent){
+    state.delinquentSurgeCount++;
+    if(state.delinquentSurgeCount>=CONFIG.GANGSTER_UNLOCK_COUNT&&
+       Math.random()*100<CONFIG.GANGSTER_RATE){
+      state.pendingWaves.push({type:'gangster',at:state.elapsed+5,group:1});
+      state.gangsterSurgeEnd=state.elapsed+CONFIG.GANGSTER_SURGE_DUR+5;
+      showSurgeBanner('🕴️  地頭蛇現身！旁邊的人嚇尿了！');
+      playSFX('gangster');
+      log('GANGSTER mixed into delinquent surge','ev');
+    }
+  }
+
+  if(type==='soldier'){
+    state.soldierWavesFired++;
+    if(state.soldierWavesFired===CONFIG.INSPECTION_SOLDIER_WAVES){
+      mcSayForced('soldier_done');
+      state.inspectionReady=true;
+    }
+  }
+
+  // 特殊事件計數 → 巡查觸發（延遲3秒，避免與其他banner重疊）
+  state.specialEventCount++;
+  if(state.inspectionReady&&!state.inspectionActive&&!state.inspectionCid&&
+     state.specialEventCount%CONFIG.INSPECTION_TRIGGER_COUNT===0&&
+     Math.random()*100<CONFIG.INSPECTION_RATE){
+    setTimeout(()=>{
+      // 再次確認巡查未被其他事件觸發
+      if(!state.inspectionActive&&!state.inspectionCid)triggerInspection();
+    },3000);
+  }
+
+  // 高峰鎖定需涵蓋本次波次總長度，避免下次高峰觸發新一輪波次時與尚未跑完的舊波次重疊
+  const waveSpan=(waves-1)*delay;
+  state.nextPeak=Math.max(state.nextPeak,state.elapsed+Math.max(CONFIG.SURGE_PEAK_DELAY,waveSpan+1));
+  log(`SURGE ${type} waves=${waves} delay=${delay}s`,'ev');
+}
+
+// 動態計算黑尿幫鎖定，不存狀態，每次即時判斷
+function isGangsterLocked(uid){
+  return state.urinals.some(u=>Math.abs(u.id-uid)===1&&u.occupied&&u.occupied.type==='gangster');
+}
+
+function triggerInspection(){
+  if(state.inspectionActive)return;
+  const arrive=Math.random()<0.5?'inspection_arrive_1':'inspection_arrive_2';
+  mcSayForced(arrive);
+  playSFX('inspector');
+  playBGM('boss');
+  // 加馬蓋仙到等待區
+  const c={id:++cidCounter,type:'inspector',label:'馬蓋仙',emoji:'🧙',
+    cv:'var(--accent)',waitMax:CONFIG.INSPECTION_WAIT,peeBase:CONFIG.INSPECTION_WAIT,
+    dirtyAmt:0,score:0,waitElapsed:0,isInspector:true};
+  state.queue.push(c);
+  state.inspectionCid=c.id;
+  markCharSeen('inspector');
+  const el=mkCardEl(c);
+  el.classList.add('inspector-glow');
+  const list=document.getElementById('queue-list');
+  const ph=list.querySelector('.qph');if(ph)ph.remove();
+  list.appendChild(el);
+  log('INSPECTION triggered','ev');
+}
+
+function startInspection(uid){
+  state.inspectionActive=true;
+  state.inspectionScanIdx=0;
+  state.inspectionScanElapsed=0;
+  state.inspectionPassed=true;
+  showSurgeBanner('🧙 馬蓋仙巡查開始！');
+  log('INSPECTION start from #'+(uid+1),'ev');
+}
+
+function tickInspection(dt){
+  if(!state.inspectionActive)return;
+  state.inspectionScanElapsed+=dt;
+  // 視覺：目前掃描格顯示 🧙 + 進度條 + 金色閃光
+  const scanU=state.urinals[state.inspectionScanIdx];
+  if(scanU){
+    // 清除其他格的 inspecting class
+    state.urinals.forEach(u=>{
+      const s=document.getElementById('us-'+u.id);
+      if(s)s.classList.toggle('inspecting',u.id===scanU.id);
+    });
+    const ic=document.getElementById('ui-'+scanU.id);
+    const pw=document.getElementById('upw-'+scanU.id);
+    const pb=document.getElementById('upb-'+scanU.id);
+    if(ic){ic.textContent='🧙';ic.style.opacity='1';}
+    if(pw)pw.style.visibility='visible';
+    if(pb){pb.style.width=(state.inspectionScanElapsed/CONFIG.INSPECTION_SCAN_TIME*100)+'%';pb.style.background='var(--accent3)';}
+  }
+  if(state.inspectionScanElapsed>=CONFIG.INSPECTION_SCAN_TIME){
+    state.inspectionScanElapsed=0;
+    const u=state.urinals[state.inspectionScanIdx];
+    if(u){
+      // 先判定
+      if(u.dirty>CONFIG.INSPECTION_DIRTY_THRESH||u.broken){
+        state.inspectionPassed=false;
+        mcSayForced('inspection_scan_fail');
+      } else {
+        mcSayForced('inspection_scan_ok');
+      }
+      // 後清潔
+      u.dirty=0;u.cleaning=false;
+    }
+    state.inspectionScanIdx++;
+    if(state.inspectionScanIdx>=state.urinals.length){
+      endInspection();
+    }
+  }
+}
+
+function endInspection(){
+  state.inspectionActive=false;
+  // 清除所有巡查閃光
+  state.urinals.forEach(u=>{const s=document.getElementById('us-'+u.id);if(s)s.classList.remove('inspecting');});
+  // pendingWaves 重排：從現在起依序執行，避免瞬間爆發
+  // 依原本的批次間隔（阿兵哥8s / 中二生10s）分別重新排列，不可用統一固定值，
+  // 否則等於壓縮波次密度，反而造成客人瞬間湧入（實測會被氣走一大片）
+  if(state.pendingWaves.length>0){
+    const counters={};
+    state.pendingWaves.forEach(w=>{
+      const delay=w.type==='delinquent'?CONFIG.DELINQUENT_WAVE_DELAY:
+                  w.type==='soldier'?CONFIG.SOLDIER_WAVE_DELAY:3;
+      counters[w.type]=(counters[w.type]||0)+1;
+      w.at=state.elapsed+counters[w.type]*delay;
+    });
+    log(`pendingWaves reordered count=${state.pendingWaves.length}`,'ev');
+  }
+  if(state.inspectionPassed){
+    state.score+=CONFIG.INSPECTION_SCORE;
+    state.money+=CONFIG.INSPECTION_MONEY;
+    state.totalEarned+=CONFIG.INSPECTION_MONEY;
+    showScorePop('+'+CONFIG.INSPECTION_SCORE,'var(--accent3)');
+    showScorePop(`+£${CONFIG.INSPECTION_MONEY}`,'var(--money)');
+    const key=Math.random()<0.5?'inspection_pass_1':'inspection_pass_2';
+    mcSayForced(key);
+    notify(`🧙 巡查通過！+${CONFIG.INSPECTION_SCORE}分 +£${CONFIG.INSPECTION_MONEY}`,'var(--success)');
+    playSFX('inspect_pass');
+  } else {
+    state.score=Math.max(0,state.score-CONFIG.INSPECTION_PENALTY);
+    const key=Math.random()<0.5?'inspection_fail_1':'inspection_fail_2';
+    mcSayForced(key);
+    notify(`🧙 巡查失敗！-${CONFIG.INSPECTION_PENALTY}分`,'var(--danger)');
+    playSFX('inspect_fail');
+  }
+  log(`INSPECTION end passed=${state.inspectionPassed}`,'ev');
+  // 強制重置所有巡查相關 state，防止任何殘留導致遊戲停滯
+  state.inspectionActive=false;
+  state.inspectionCid=null;
+  state.inspectionScanIdx=0;
+  state.inspectionScanElapsed=0;
+  if(state.nextPeak<=state.elapsed)state.nextPeak=safeNextPeak(state.elapsed+CONFIG.PEAK_INTERVAL);
+  playBGM(_baseBGM());
+}
+
+function triggerGangsterOnly(){
+  // 普通高峰時黑尿幫混入
+  state.gangsterSurgeEnd=state.elapsed+CONFIG.GANGSTER_SURGE_DUR;
+  state.pendingWaves.push({type:'gangster',at:state.elapsed,group:1});
+  showSurgeBanner('🕴️ 地頭蛇現身！旁邊的人嚇尿了！');
+  log('GANGSTER mixed into normal peak','ev');
+}
+
+function spawnCustomer(forcedType){
+  const type=forcedType||rndType();
+  return _addToQueue(type);
+}
+
+function _addToQueue(type){
+  if(state.queue.length>=10)return null;
+  const d=TDEFS[type];
+  const dirtyAmt=d.isDrunk?CONFIG[d.dk]+CONFIG.DRUNK_DIRTY_BONUS:CONFIG[d.dk];
+  const c={id:++cidCounter,type,label:d.label,emoji:d.emoji,cv:d.cv,
+    waitMax:CONFIG[d.wk],peeBase:CONFIG[d.pk],dirtyAmt,score:CONFIG[d.sk],waitElapsed:0};
+  // 等待加時效果進行中：新客人也獲得加時
+  if(state.waitBoostEnd>state.elapsed){c.waitMax+=state.activeWaitBoostAmt||0;}
+  // 芳香劑等待加成
+  const aromaMult=calcAromaWaitMult();
+  if(aromaMult>1){c.waitMax=Math.round(c.waitMax*aromaMult*10)/10;c._aromaApplied=true;}
+  state.queue.push(c);
+  log(`SPAWN ${c.label}(${c.id})`,'info');
+  const el=mkCardEl(c);
+  const list=document.getElementById('queue-list');
+  const ph=list.querySelector('.qph');if(ph)ph.remove();
+  list.appendChild(el);
+  checkTip('first_spawn');
+  mcSay('first_spawn');
+  return c;
+}
+function tryAssign(cid,uid){
+  const u=state.urinals.find(x=>x.id===uid);
+  if(!u){return false;}
+  if(u.broken){log(`assign FAIL #${uid+1} broken`,'warn');return false;}
+  if(u.occupied||u.cleaning){log(`assign FAIL #${uid+1} busy`,'warn');return false;}
+  // 先查客人身份，供後續判斷使用
+  const pendingC=state.queue.find(c=>c.id===cid);
+  if(isGangsterLocked(uid)){
+    if(!pendingC||(pendingC.type!=='gangster'&&!pendingC.isInspector)){
+      log(`assign FAIL #${uid+1} gangster locked`,'warn');
+      notify(`#${uid+1} 被黑尿幫嚇到，沒人敢進去！`,'var(--warn)');
+      return false;
+    }
+  }
+  const isInspectorAssign=pendingC&&pendingC.isInspector;
+  if(!isInspectorAssign&&state.inspectionActive){
+    log(`assign FAIL inspection active`,'warn');notify('巡查中，請稍候！','var(--warn)');return false;
+  }
+  const idx=state.queue.findIndex(c=>c.id===cid);if(idx===-1)return false;
+  const c=state.queue.splice(idx,1)[0];
+  // 馬蓋仙巡查
+  if(c.isInspector){
+    const list=document.getElementById('queue-list');
+    const el=document.getElementById('cc-'+c.id);if(el)el.remove();
+    if(!list.children.length)addQPH();
+    clearSelection();
+    startInspection(uid);
+    return true;
+  }
+  u.occupied=c;u.peeElapsed=0;
+  markCharSeen(c.type);
+  playSFX('assign');
+  checkAchievements();
+  // 黑尿幫：左右已有客人1秒嚇跑（鎖定改為動態計算，不需設定狀態）
+  if(c.type==='gangster'){
+    state.urinals.forEach(nb=>{
+      if(Math.abs(nb.id-u.id)===1&&nb.occupied){
+        setTimeout(()=>{
+          if(!state.running)return;
+          if(nb.occupied&&nb.occupied.type!=='gangster'){
+            log(`GANGSTER scared away ${nb.occupied.label} from #${nb.id+1}`,'ev');
+            const scared=nb.occupied;
+            // 滑機男：被嚇跑意外雙倍獲利（滑手機沒發現尿完了，直接跑掉還多賺）
+            if(scared.type==='phone'){
+              const bonusScore=scared.score*2;
+              const fee=calcEntryFee();
+              state.score+=bonusScore;state.money+=fee;state.totalEarned+=fee;state.servedCount++;
+              showScorePop(`+${bonusScore}`,'var(--money)');
+              notify(`🕴️👨‍💻 滑機男被嚇到但沒發現已經尿完，賺翻了！+${bonusScore}分`,'var(--money)');
+              log(`GANGSTER scared phone(${scared.id}) -> bonus +${bonusScore}pt +£${fee.toFixed(2)}`,'money');
+            } else {
+              notify(`🕴️ 黑尿幫嚇跑了 #${nb.id+1} 的客人！`,'var(--warn)');
+            }
+            nb.occupied=null;nb.peeElapsed=0;
+            state.queue=state.queue.filter(x=>x.id!==scared.id);
+            const el=document.getElementById('cc-'+scared.id);if(el)el.remove();
+          }
+        },1000);
+      }
+    });
+  }
+  // 鄰近減速說明
+  const hasNeighbor=state.urinals.some(x=>x.id!==u.id&&Math.abs(x.id-u.id)===1&&x.occupied);
+  if(hasNeighbor)mcSay('neighbor_slow');
+  log(`ASSIGN ${c.label}(${c.id}) -> #${uid+1}`,'ok');
+  const el=document.getElementById('cc-'+c.id);if(el)el.remove();
+  if(state.queue.length===0)addQPH();clearSelection();return true;
+}
+
+// ════════════════════════════════════
+//  SELECT / CLICK
+// ════════════════════════════════════
+function isBulletLocked(){
+  // 觀察模式已移除：子彈時間中永遠可操作
+  return false;
+}
+
+function clickSelect(cid){
+  if(drag.active||itemDrag.active)return;
+  if(isBulletLocked())return;
+  const c=state.queue.find(x=>x.id===cid);
+  if(c&&c.isInspector){
+    // 馬蓋仙不能被選取，但點擊時 MC 說話
+    mcSayForced('inspection_tap');
+    return;
+  }
+  const prev=state.selectedId;clearSelection();
+  if(prev===cid)return;
+  state.selectedId=cid;
+  const el=document.getElementById('cc-'+cid);if(el)el.classList.add('sel');
+  setAssignableClass(true);
+  // 新人物初次選中說明
+  if(c)mcSayNewChar(c.type);
+}
+function clearSelection(){
+  if(state.selectedId!==null){const el=document.getElementById('cc-'+state.selectedId);if(el)el.classList.remove('sel');}
+  state.selectedId=null;setAssignableClass(false);
+}
+function setAssignableClass(on){
+  state.urinals.forEach(u=>{
+    const el=document.getElementById('us-'+u.id);if(!el)return;
+    if(on&&!u.occupied&&!u.cleaning&&!u.broken)el.classList.add('asgn');
+    else el.classList.remove('asgn');
+  });
+}
+function clickUrinal(uid){
+  if(drag.active||itemDrag.active)return;
+  if(state.selectedId===null)return;
+  tryAssign(state.selectedId,uid);
+}
+
+// ════════════════════════════════════
+//  CUSTOMER DRAG
+// ════════════════════════════════════
+const ghost=document.getElementById('drag-ghost');
+// 清除所有長按計時器（拖曳啟動時呼叫，避免拖曳中誤觸說明）
+function clearAllLongPressTimers(){
+  // 清等待區計時器
+  if(typeof _queueLPTimer!=='undefined'&&_queueLPTimer){
+    clearTimeout(_queueLPTimer);_queueLPTimer=null;
+  }
+  // 清所有便斗計時器
+  document.querySelectorAll('.us').forEach(el=>{
+    if(el._longPressTimer){clearTimeout(el._longPressTimer);el._longPressTimer=null;}
+  });
+}
+
+function startDrag(cid,cx,cy){
+  clearAllLongPressTimers();
+  if(itemDrag.active)return;
+  if(isBulletLocked())return;
+  const c=state.queue.find(x=>x.id===cid);if(!c)return;
+  if(c.isInspector){mcSayForced('inspection_tap');return;} // 馬蓋仙不能被拖曳
+  drag.active=true;drag.cid=cid;clearSelection();
+  // 新人物初次拖曳說明
+  const cc=state.queue.find(x=>x.id===cid);
+  if(cc)mcSayNewChar(cc.type);
+  ghost.innerHTML=`<span style="font-size:24px">${c.emoji}</span><span style="font-family:'Silkscreen',monospace;font-size:8px;color:${c.cv}">${c.label}</span>`;
+  ghost.style.display='flex';moveGhost(cx,cy);
+  const src=document.getElementById('cc-'+cid);if(src)src.classList.add('dragging');
+  setAssignableClass(true);
+  const dh=document.getElementById('drag-hint');if(dh)dh.style.display='inline';
+  log(`DRAG start cid=${cid}`,'drag');
+}
+function moveGhost(x,y){ghost.style.left=(x-35)+'px';ghost.style.top=(y-50)+'px';}
+function endDrag(){
+  drag.active=false;const prev=drag.cid;drag.cid=null;
+  ghost.style.display='none';
+  if(prev){const el=document.getElementById('cc-'+prev);if(el)el.classList.remove('dragging');}
+  document.querySelectorAll('.us.drag-over').forEach(e=>e.classList.remove('drag-over'));
+  setAssignableClass(false);
+  const dh=document.getElementById('drag-hint');if(dh)dh.style.display='none';
+}
+
+// ════════════════════════════════════
+//  ITEM DRAG
+// ════════════════════════════════════
+const igh=document.getElementById('item-drag-ghost');
+function startItemDrag(itemId,cx,cy){
+  if(drag.active)return;
+  if(isBulletLocked())return; // 觀察模式不能拖道具
+  const def=ITEM_DEFS[itemId];if(!def)return;
+  if(state.money<def.price)return; // can't drag if can't afford
+  itemDrag.active=true;itemDrag.itemId=itemId;
+  igh.innerHTML=`<span>${def.emoji}</span>`;
+  igh.style.display='flex';moveItemGhost(cx,cy);
+  const src=document.getElementById('sc-'+itemId);if(src)src.classList.add('s-dragging');
+  const ih=document.getElementById('item-hint');if(ih)ih.style.display='inline';
+  log(`ITEM DRAG start ${itemId}`,'item');
+}
+function moveItemGhost(x,y){igh.style.left=(x-20)+'px';igh.style.top=(y-30)+'px';}
+function endItemDrag(){
+  itemDrag.active=false;const prev=itemDrag.itemId;itemDrag.itemId=null;
+  igh.style.display='none';
+  if(prev){const src=document.getElementById('sc-'+prev);if(src)src.classList.remove('s-dragging');}
+  document.querySelectorAll('.us.item-drag-over').forEach(e=>e.classList.remove('item-drag-over'));
+  const qa=document.getElementById('queue-area');
+  if(qa){qa.classList.remove('item-drag-over');qa.classList.remove('queue-item-over');}
+  const ih=document.getElementById('item-hint');if(ih)ih.style.display='none';
+}
+
+// ── ITEM PRESS (慢速 + 馬蓋仙說話，無展開卡片）──
+function startLongPress(itemId,cx,cy){
+  if(drag.active||itemDrag.active||lp.active||lp.itemId)return;
+  const def=ITEM_DEFS[itemId];if(!def)return;
+  const canAfford=state.money>=effectivePrice(def);
+  lp.startX=cx;lp.startY=cy;lp.moved=false;lp.active=false;
+  // 按下立即慢速
+  state.itemPreview=true;
+  if(canAfford){
+    lp.itemId=itemId;
+    // 說明永遠觸發，不受 bulletLocked 影響
+    const line=MC_PREVIEW[itemId];
+    if(line){mcQueue.unshift({text:line,explain:true});if(!mcBusy)_mcNext();}
+  } else {
+    // 沒錢：只說明，不記錄 itemId（放開不安裝）
+    mcSayCantAfford(def);
+  }
+  log(`ITEM press ${itemId} canAfford=${canAfford}`,'item');
+}
+
+function exitPreview(dropUid, forcedItemId, droppedOnQueue){
+  const itemId=forcedItemId||lp.itemId;
+  if(!itemId){state.itemPreview=false;return;}
+  lp.itemId=null;state.itemPreview=false;
+  const def=ITEM_DEFS[itemId];
+  if(!def)return;
+  const target=def.dropTarget||'urinal'; // default = urinal only
+  // validate drop position
+  if(target==='queue'){
+    if(!droppedOnQueue){log(`ITEM ${itemId} needs queue drop`,'warn');return;}
+    installItem(null,itemId);
+  } else if(target==='any'){
+    // urinal or queue both ok
+    if(droppedOnQueue){installItem(null,itemId);}
+    else if(dropUid!==null&&dropUid!==undefined){installItem(dropUid,itemId);}
+    else{log(`ITEM ${itemId} needs urinal or queue`,'warn');return;}
+  } else {
+    // urinal only
+    if(dropUid!==null&&dropUid!==undefined){installItem(dropUid,itemId);}
+    else{log(`ITEM ${itemId} needs urinal drop`,'warn');return;}
+  }
+  buildShop();
+  log(`ITEM release uid=${dropUid} queue=${droppedOnQueue} item=${itemId}`,'item');
+}
+
+// ── ITEM DRAG HIGHLIGHT (shared mouse+touch) ──
+function updateItemDragHighlight(clientX, clientY){
+  if(!itemDrag.active)return;
+  const under=document.elementFromPoint(clientX,clientY);
+  const def=ITEM_DEFS[itemDrag.itemId];
+  const target=def?def.dropTarget||'urinal':'urinal';
+
+  // 便斗 highlight — 只對允許拖到便斗的道具
+  const canUrinal=(target==='urinal'||target==='any');
+  const slot=under&&under.closest('.us');
+  document.querySelectorAll('.us.item-drag-over').forEach(s=>{
+    if(s!==slot||!canUrinal)s.classList.remove('item-drag-over');
+  });
+  if(slot&&canUrinal)slot.classList.add('item-drag-over');
+
+  // 等待區 highlight — 只對允許拖到等待區的道具
+  const canQueue=(target==='queue'||target==='any');
+  const onQueue=!slot&&!!(under&&under.closest('#queue-area'));
+  const qa=document.getElementById('queue-area');
+  if(qa)qa.classList.toggle('queue-item-over',canQueue&&onQueue);
+}
+document.addEventListener('mousemove',e=>{
+  if(drag.active){
+    moveGhost(e.clientX,e.clientY);
+    const under=document.elementFromPoint(e.clientX,e.clientY);
+    const slot=under&&under.closest('.us');
+    document.querySelectorAll('.us.drag-over').forEach(s=>{if(s!==slot)s.classList.remove('drag-over');});
+    if(slot){const uid=parseInt(slot.dataset.uid);const u=state.urinals.find(x=>x.id===uid);if(u&&!u.occupied&&!u.cleaning&&!u.broken)slot.classList.add('drag-over');}
+  }
+  if(itemDrag.active){
+    moveItemGhost(e.clientX,e.clientY);
+    updateItemDragHighlight(e.clientX,e.clientY);
+  }
+  // item press → drag conversion on mouse move
+  if(lp.itemId&&!itemDrag.active){
+    const dx=Math.abs(e.clientX-lp.startX),dy=Math.abs(e.clientY-lp.startY);
+    if(dx>10||dy>10){const id=lp.itemId;lp.itemId=null;startItemDrag(id,e.clientX,e.clientY);}
+  }
+  if(scrub.active&&!drag.active&&!itemDrag.active){
+    const dy=Math.abs(e.clientY-scrub.lastY);scrub.accum+=dy;scrub.lastY=e.clientY;checkScrubStroke();
+  }
+});
+
+document.addEventListener('mouseup',e=>{
+  if(drag.active){
+    const cid=drag.cid;const under=document.elementFromPoint(e.clientX,e.clientY);
+    const slot=under&&under.closest('.us');endDrag();
+    if(slot){const uid=parseInt(slot.dataset.uid);tryAssign(cid,uid);}
+  }
+  if(itemDrag.active){
+    const iid=itemDrag.itemId;
+    const under=document.elementFromPoint(e.clientX,e.clientY);
+    const slot=under&&under.closest('.us');
+    const onQueue=!slot&&!!(under&&under.closest('#queue-area'));
+    const uid=slot?parseInt(slot.dataset.uid):null;
+    endItemDrag();state.itemPreview=false;
+    exitPreview(uid,iid,onQueue);
+    return;
+  }
+  if(lp.itemId){const under=document.elementFromPoint(e.clientX,e.clientY);const slot=under&&under.closest('.us');const onQueue=!slot&&!!(under&&under.closest('#queue-area'));exitPreview(slot?parseInt(slot.dataset.uid):null,null,onQueue);} else {state.itemPreview=false;}
+  if(scrub.active)endScrub();
+});
+
+document.addEventListener('touchmove',e=>{
+  if(drag.active){
+    e.preventDefault();const t=e.touches[0];moveGhost(t.clientX,t.clientY);
+    const under=document.elementFromPoint(t.clientX,t.clientY);
+    const slot=under&&under.closest('.us');
+    document.querySelectorAll('.us.drag-over').forEach(s=>{if(s!==slot)s.classList.remove('drag-over');});
+    if(slot){const uid=parseInt(slot.dataset.uid);const u=state.urinals.find(x=>x.id===uid);if(u&&!u.occupied&&!u.cleaning&&!u.broken)slot.classList.add('drag-over');}
+  }
+  if(itemDrag.active){
+    e.preventDefault();const t=e.touches[0];moveItemGhost(t.clientX,t.clientY);
+    updateItemDragHighlight(t.clientX,t.clientY);
+  }
+  if(lp.itemId&&!itemDrag.active){
+    const t=e.touches[0],dx=Math.abs(t.clientX-lp.startX),dy=Math.abs(t.clientY-lp.startY);
+    if(dx>10||dy>10){e.preventDefault();const id=lp.itemId;lp.itemId=null;startItemDrag(id,t.clientX,t.clientY);}
+  }
+  if(scrub.active&&!drag.active&&!itemDrag.active){e.preventDefault();}
+  // scrub move 已由各便斗的 touchmove 自行處理
+},{passive:false});
+
+document.addEventListener('touchend',e=>{
+  if(drag.active){
+    const t=e.changedTouches[0],cid=drag.cid;
+    const under=document.elementFromPoint(t.clientX,t.clientY);const slot=under&&under.closest('.us');
+    endDrag();if(slot){const uid=parseInt(slot.dataset.uid);tryAssign(cid,uid);}
+  }
+  if(itemDrag.active){
+    const t=e.changedTouches[0],iid=itemDrag.itemId;
+    const under=document.elementFromPoint(t.clientX,t.clientY);
+    const slot=under&&under.closest('.us');
+    const onQueue=!slot&&!!(under&&under.closest('#queue-area'));
+    const uid=slot?parseInt(slot.dataset.uid):null;
+    endItemDrag();state.itemPreview=false;
+    exitPreview(uid,iid,onQueue);
+    return;
+  }
+  if(lp.itemId){const t=e.changedTouches[0];const under=document.elementFromPoint(t.clientX,t.clientY);const slot=under&&under.closest('.us');const onQueue=!slot&&!!(under&&under.closest('#queue-area'));exitPreview(slot?parseInt(slot.dataset.uid):null,null,onQueue);} else {state.itemPreview=false;}
+});
+
+// ════════════════════════════════════
+//  SCRUB
+// ════════════════════════════════════
+function startScrub(uid,cy){
+  if(isBulletLocked())return;
+  scrub.uid=uid;scrub.active=true;scrub.lastY=cy;scrub.accum=0;
+  const el=document.getElementById('us-'+uid);if(el)el.classList.add('scrubbing');
+  log(`SCRUB start #${uid+1}`,'drag');
+}
+function endScrub(){
+  if(!scrub.active)return;
+  const el=document.getElementById('us-'+scrub.uid);
+  if(el){el.classList.remove('scrubbing');el.classList.remove('scrub-hit');}
+  scrub.active=false;scrub.uid=-1;scrub.accum=0;
+}
+function checkScrubStroke(){while(scrub.accum>=CONFIG.SCRUB_DISTANCE){scrub.accum-=CONFIG.SCRUB_DISTANCE;applyScrub(scrub.uid);}}
+function applyScrub(uid){
+  const u=state.urinals.find(x=>x.id===uid);if(!u||u.dirty<=0)return;
+  let fee=CONFIG.SCRUB_BASE_FEE;
+  if(u.dirty>=CONFIG.SCRUB_TIP_HIGH_THRESH)fee*=CONFIG.SCRUB_TIP_HIGH_MULT;
+  else if(u.dirty>=CONFIG.SCRUB_TIP_MED_THRESH)fee*=CONFIG.SCRUB_TIP_MED_MULT;
+  const before=u.dirty;
+  u.dirty=Math.max(0,u.dirty-CONFIG.SCRUB_AMOUNT);
+  playSFX('scrub');
+  state.money+=fee;state.scrubEarned+=fee;state.totalEarned+=fee;
+  log(`SCRUB #${uid+1} ${Math.round(before)}%→${Math.round(u.dirty)}% +£${fee.toFixed(2)}`,'money');
+  const el=document.getElementById('us-'+uid);
+  if(el){el.classList.remove('scrub-hit');void el.offsetWidth;el.classList.add('scrub-hit');}
+  showScorePop(`+£${fee.toFixed(2)}`,'var(--money)');
+  if(before>=60){checkTip('dirty_60');mcSay('dirty_60');}
+  else if(before>=35)mcSay('dirty_35');
+}
+
+// ════════════════════════════════════
+//  LEAVE / FINISH / CLEAN
+// ════════════════════════════════════
+function customerLeave(id){
+  const idx=state.queue.findIndex(c=>c.id===id);if(idx===-1)return;
+  const c=state.queue.splice(idx,1)[0];
+  playSFX('leave');
+  state.leftCount++;state.score=Math.max(0,state.score-CONFIG.LEAVE_PENALTY);
+  log(`LEFT ${c.label}(${c.id}) left=${state.leftCount}`,'err');
+  showScorePop('-'+CONFIG.LEAVE_PENALTY,'var(--danger)');
+  if(state.leftCount===1)mcSay('left_1');
+  else if(state.leftCount===2)mcSay('left_2');
+  const el=document.getElementById('cc-'+c.id);if(el)el.remove();
+  if(state.queue.length===0)addQPH();
+  if(state.selectedId===id)clearSelection();
+  if(drag.cid===id)endDrag();
+  if(state.leftCount>=CONFIG.FAIL_LEAVE_COUNT){state.failed=true;log('=== FAIL ===','err');endGame();}
+  updateHUD();
+}
+function finishPee(u){
+  const c=u.occupied;
+  // dirty with item modifier
+  let dirtyAdd=c.dirtyAmt;
+  const dm=getEffect(u,'dirtyMult');if(dm!==undefined)dirtyAdd*=dm;
+  // entry fee (base + urinal bonus, then aroma multiplier)
+  let fee=calcEntryFee();
+  const efb=getEffect(u,'entryFeeBonus');if(efb!==undefined)fee*=efb;
+  // 派遣客人 x2
+  if(c.isDispatched)fee*=2;
+  const scoreAdd=c.isDispatched?c.score*2:c.score;
+  state.score+=scoreAdd;state.money+=fee;state.totalEarned+=fee;state.servedCount++;
+  u.dirty=Math.min(120,u.dirty+dirtyAdd);
+  // 髒污超過100%立即損壞
+  if(!u.broken&&u.dirty>=CONFIG.DIRTY_BREAK_THRESH){
+    u.broken=true;u.items=[];
+    playSFX('break');
+    notify(`💥 #${u.id+1} 號便斗因髒污過高損壞了！`,'var(--danger)');
+    log(`#${u.id+1} BROKEN by dirty=${Math.round(u.dirty)}%`,'err');
+  }
+  consumeItemDur(u);
+  // tip triggers
+  if(state.totalEarned>=10){checkTip('first_money_10');mcSay('money_10');}
+  if(state.totalEarned>=20)mcSay('money_20');
+  if(state.urinals.length>=CONFIG.UNLOCK_LARGE)checkTip('unlock_large');
+  if(state.urinals.length>=CONFIG.UNLOCK_DELINQUENT)checkTip('unlock_delinquent');
+  if(state.urinals.length>=CONFIG.UNLOCK_SOLDIER)checkTip('unlock_soldier'); // count by customer, not dirty%
+  log(`DONE #${u.id+1}: ${c.label}(${c.id}) +${c.score}pt +£${fee.toFixed(2)}${c.isDispatched?' (x2)':''} dirty=${Math.round(u.dirty)}%`,'ok');
+  u.occupied=null;u.peeElapsed=0;
+  playSFX('done');
+  // 黑尿幫：不付錢，10%贓款，20%壞馬桶，離開後解鎖相鄰
+  if(c.type==='gangster'){
+    state.money-=fee;state.totalEarned-=fee; // 扣回，不付錢
+    if(Math.random()*100<CONFIG.GANGSTER_LOOT_RATE){
+      state.money+=CONFIG.GANGSTER_LOOT;state.totalEarned+=CONFIG.GANGSTER_LOOT;
+      showScorePop(`+£${CONFIG.GANGSTER_LOOT}`,'var(--money)');
+      notify(`💰 黑尿幫不小心遺落了 £${CONFIG.GANGSTER_LOOT} 贓款！`,'var(--money)');
+      log(`GANGSTER loot £${CONFIG.GANGSTER_LOOT}`,'money');
+    }
+    if(Math.random()*100<CONFIG.GANGSTER_BREAK_RATE){
+      u.broken=true;u.items=[];
+      showScorePop('💥','var(--danger)');
+      notify(`🕴️ 黑尿幫踹爆了 #${u.id+1} 號便斗！`,'var(--danger)');
+      playSFX('break');
+      log(`GANGSTER broke #${u.id+1}`,'err');
+    }
+    // 鎖定改為動態計算，不需要解鎖
+  }
+  // 中二生：10% 機率用壞馬桶
+  if(c.type==='delinquent'&&Math.random()*100<CONFIG.DELINQUENT_BREAK_RATE){
+    u.broken=true;u.items=[];
+    showScorePop('💥','var(--danger)');
+    notify(`🧑‍🎤 中二生踹爆了 #${u.id+1} 號便斗！`,'var(--danger)');
+    playSFX('break');
+    mcSayForced('delinquent_break');
+    log(`DELINQUENT broke #${u.id+1}`,'err');
+  }
+  // 分數閃爍在HUD，不彈popup；只保留金錢popup
+  const scoreEl=document.getElementById('hud-score');
+  if(scoreEl){scoreEl.classList.remove('flash');void scoreEl.offsetWidth;scoreEl.classList.add('flash');setTimeout(()=>scoreEl.classList.remove('flash'),400);}
+  showScorePop(`+£${fee.toFixed(2)}`,'var(--money)');
+}
+// ════════════════════════════════════
+//  BUILD DOM
+// ════════════════════════════════════
+function buildUrinalDOM(){
+  const area=document.getElementById('urinals-area');area.innerHTML='';
+  area.classList.toggle('six-grid', state.urinals.length===6);
+  area.classList.toggle('tight-5', state.urinals.length===5);
+  state.urinals.forEach(u=>area.appendChild(mkUrinalEl(u)));
+  // 重建後補套用當前階段顏色，避免新馬桶顯示預設框色
+  if(typeof state!=='undefined'&&state&&state.phaseStage>0){
+    applyPhaseStyle(state.phaseStage);
+  }
+}
+function mkUrinalEl(u){
+  const el=document.createElement('div');
+  el.className='us';el.id='us-'+u.id;el.dataset.uid=u.id;
+  // 桌機 click
+  el.addEventListener('click',()=>clickUrinal(u.id));
+  el.addEventListener('mousedown',e=>{
+    if(drag.active||itemDrag.active||e.button!==0)return;
+    const uu=state.urinals.find(x=>x.id===u.id);
+    if(!uu||uu.occupied||uu.cleaning||uu.broken||uu.dirty===0)return;
+    e.preventDefault();startScrub(u.id,e.clientY);
+  });
+  // 手機：touchstart 永遠 preventDefault，記錄起始位置
+  el.addEventListener('touchstart',e=>{
+    if(drag.active||itemDrag.active)return;
+    e.preventDefault();
+    el._touchStartY=e.touches[0].clientY;
+    el._touchMoved=false;
+    el._longPressTimer=setTimeout(()=>{
+      if(!el._touchMoved){
+        // 長按不移動 → 馬蓋仙說明便斗狀態
+        const uu=state.urinals.find(x=>x.id===u.id);
+        if(!uu)return;
+        let key='explain_urinal_empty';
+        if(uu.broken)key='explain_urinal_broken';
+        else if(uu.occupied)key='explain_urinal_busy';
+        else if(uu.dirty>=CONFIG.DIRTY_WARN_THRESH)key='explain_urinal_warn';
+        else if(uu.dirty>=35)key='explain_urinal_dirty';
+        const line=MC_LINES[key];
+        if(line){mcQueue.unshift({text:line,explain:true});if(!mcBusy)_mcNext();}
+        log(`EXPLAIN urinal #${u.id+1} key=${key}`,'info');
+      }
+    },500);
+  },{passive:false});
+  // 手機：touchmove 超過閾值才啟動 scrub
+  el.addEventListener('touchmove',e=>{
+    if(drag.active||itemDrag.active)return;
+    e.preventDefault();
+    if(el._longPressTimer){clearTimeout(el._longPressTimer);el._longPressTimer=null;}
+    const dy=Math.abs(e.touches[0].clientY-(el._touchStartY||0));
+    if(dy>8&&!scrub.active){
+      const uu=state.urinals.find(x=>x.id===u.id);
+      if(uu&&!uu.occupied&&!uu.cleaning&&!uu.broken&&uu.dirty>0&&state.selectedId===null){
+        el._touchMoved=true;
+        startScrub(u.id,e.touches[0].clientY);
+      }
+    }
+    if(scrub.active){
+      const dy2=Math.abs(e.touches[0].clientY-scrub.lastY);
+      scrub.accum+=dy2;scrub.lastY=e.touches[0].clientY;
+      checkScrubStroke();
+    }
+  },{passive:false});
+  // 手機：touchend 判斷帶位或結束 scrub
+  el.addEventListener('touchend',e=>{
+    if(drag.active||itemDrag.active)return;
+    e.preventDefault();
+    if(el._longPressTimer){clearTimeout(el._longPressTimer);el._longPressTimer=null;}
+    if(scrub.active){endScrub();return;}
+    if(!el._touchMoved&&state.selectedId!==null){clickUrinal(u.id);}
+    el._touchMoved=false;
+  },{passive:false});
+  el.innerHTML=
+    `<div class="u-n">#${u.id+1}</div>`+
+    `<div class="u-ic" id="ui-${u.id}" style="opacity:.35">🚽</div>`+
+    `<div class="u-sl" id="usl-${u.id}" style="color:var(--muted)">空</div>`+
+    `<div class="u-pw" id="upw-${u.id}" style="visibility:hidden"><div class="u-pb" id="upb-${u.id}"></div></div>`+
+    `<div class="u-sp" id="usp-${u.id}" style="visibility:hidden"></div>`+
+    `<div style="display:flex;align-items:center;gap:5px;align-self:flex-start;width:100%">`+
+    `<div class="u-dl" id="udl-${u.id}">髒污 0%</div>`+
+    `<span id="uscrub-${u.id}" style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--accent);opacity:0;transition:opacity .2s;white-space:nowrap">↕<span class="uscrub-hint-text"> 摩擦清潔</span></span>`+
+    `</div>`+
+    `<div class="u-dw"><div class="u-db" id="udb-${u.id}" style="width:0%"></div></div>`+
+    `<div class="u-st" id="ust-${u.id}"></div>`+
+    `<div class="u-items" id="uit-${u.id}"></div>`;
+  return el;
+}
+function buildQueueDOM(){document.getElementById('queue-list').innerHTML='';addQPH();}
+function addQPH(){
+  const list=document.getElementById('queue-list');if(list.querySelector('.qph'))return;
+  const ph=document.createElement('span');ph.className='qph';
+  ph.style.cssText="font-family:'Silkscreen',monospace;font-size:10px;color:var(--muted)";
+  ph.textContent='等待客人中...';list.appendChild(ph);
+}
+function mkCardEl(c){
+  const el=document.createElement('div');el.className='cc';el.id='cc-'+c.id;el.title=c.label;
+  // 桌機：click = 選取，mousedown 移動才拖曳
+  el.addEventListener('click',e=>{e.stopPropagation();clickSelect(c.id);});
+  el.addEventListener('mousedown',e=>{
+    if(e.button!==0)return;
+    e.preventDefault();
+    startDrag(c.id,e.clientX,e.clientY);
+  });
+  // 手機：touchstart 記錄位置但不立即啟動 drag
+  el._ccTouchStartX=0;el._ccTouchStartY=0;el._ccDragStarted=false;
+  el.addEventListener('touchstart',e=>{
+    e.preventDefault();
+    el._ccTouchStartX=e.touches[0].clientX;
+    el._ccTouchStartY=e.touches[0].clientY;
+    el._ccDragStarted=false;
+  },{passive:false});
+  el.addEventListener('touchmove',e=>{
+    if(el._ccDragStarted)return;
+    const dx=Math.abs(e.touches[0].clientX-el._ccTouchStartX);
+    const dy=Math.abs(e.touches[0].clientY-el._ccTouchStartY);
+    if(dx>8||dy>8){
+      el._ccDragStarted=true;
+      clearAllLongPressTimers(); // 確保長按說明不被觸發
+      startDrag(c.id,e.touches[0].clientX,e.touches[0].clientY);
+    }
+  },{passive:false});
+  el.addEventListener('touchend',e=>{
+    if(el._ccDragStarted)return; // drag 的放開由全局 touchend 處理
+    // 短按 = 選取
+    e.preventDefault();
+    clickSelect(c.id);
+  },{passive:false});
+  el.innerHTML=
+    `<div class="cc-e${c.isDispatched?' dispatch-glow':''}">${c.emoji}</div>`+
+    `<div class="cc-t queue-label" style="color:${c.cv}">${c.label}</div>`+
+    `<div class="cc-t queue-spacer" style="display:none;color:${c.cv}">&nbsp;</div>`+
+    `<div class="cc-bw"><div class="cc-b" id="ccb-${c.id}" style="background:var(--success);width:0%"></div></div>`+
+    `<div class="cc-tm" id="cct-${c.id}">${c.waitMax}s</div>`;
+  return el;
+}
+
+// ════════════════════════════════════
+//  SHOP BUILD
+// ════════════════════════════════════
+function buildShop(){
+  const el=document.getElementById('shop-items');if(!el)return;
+  el.innerHTML='';
+  Object.values(ITEM_DEFS).forEach(def=>{
+    // 彩虹膀胱解放：集滿六件套後，標靶貼那一格換成解放按鈕（格子重用，跟標靶貼本身無關）
+    if(def.id==='target'&&hasRainbowRelease()){
+      const onCooldown=state.rainbowReleaseCooldownEnd>state.elapsed;
+      const noTarget=state.urinals.every(u=>!u.occupied||u.broken||u.repairing);
+      const disabled=onCooldown||noTarget;
+      const card=document.createElement('div');
+      card.className='shop-card'+(disabled?' broke':'');
+      card.id='sc-target';
+      card.title='🌈 彩虹膀胱解放：瞬間服務所有正在使用中的便斗（免費，冷卻'+CONFIG.RAINBOW_RELEASE_COOLDOWN+'秒）';
+      const badge=onCooldown
+        ? `<div class="rr-badge" style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--accent);border:1px solid var(--accent);border-radius:3px;padding:1px 4px;margin-top:1px">${Math.ceil(state.rainbowReleaseCooldownEnd-state.elapsed)}s</div>`
+        : `<div class="rr-badge sc-p">READY</div>`;
+      card.innerHTML=
+        `<div class="sc-e">🌈</div>`+
+        `<div class="sc-n">彩虹解放</div>`+
+        badge;
+      if(!disabled){card.addEventListener('click',rainbowRelease);card._rrBound=true;}
+      el.appendChild(card);
+      return;
+    }
+    const cost=effectivePrice(def);
+    const canAfford=state.money>=cost;
+    const card=document.createElement('div');
+    const isQueueItem=def.dropTarget==='queue'||def.dropTarget==='any';
+    card.className='shop-card'+(canAfford?'':' broke')+(isQueueItem?' activatable':'');
+    card.id='sc-'+def.id;
+    card.title=def.desc;
+    let extraBadge='';
+    if(def.effects&&def.effects.bulletOp&&state.bulletOpRemain>0){
+      const rem=Math.ceil(state.bulletOpRemain);
+      extraBadge=`<div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--accent);border:1px solid var(--accent);border-radius:3px;padding:1px 4px;margin-top:1px">${rem}s</div>`;
+    }
+    // 第一個馬桶折扣 badge
+    const showDiscount=def.id==='extra_urinal'&&state.firstUrinalDiscount;
+    const priceHtml=showDiscount
+      ? `<div style="display:flex;flex-direction:column;align-items:center;gap:0">`+
+        `<div style="font-family:'Silkscreen',monospace;font-size:8px;color:var(--danger);text-decoration:line-through;line-height:1">£${Math.round(def.price*(state.phaseStage>=PRICE_SCALE_STAGE?2.5+PRICE_SCALE_STEP*(state.phaseStage-PRICE_SCALE_STAGE):1))}</div>`+
+        `<div class="sc-p">£${cost}</div>`+
+        `<div style="font-family:'Silkscreen',monospace;font-size:8px;background:var(--danger);color:#fff;border-radius:2px;padding:1px 3px;line-height:1.3;letter-spacing:.5px">SALE</div>`+
+        `</div>`
+      : `<div class="sc-p">£${cost}</div>`;
+    card.innerHTML=
+      `<div class="sc-e">${def.emoji}</div>`+
+      `<div class="sc-n">${def.name}</div>`+
+      priceHtml+
+      extraBadge;
+    card.addEventListener('mousedown',e=>{if(e.button!==0)return;e.preventDefault();startLongPress(def.id,e.clientX,e.clientY);});
+    card.addEventListener('touchstart',e=>{e.preventDefault();startLongPress(def.id,e.touches[0].clientX,e.touches[0].clientY);},{passive:false});
+    el.appendChild(card);
+  });
+}
+function updateRainbowReleaseCard(){
+  const card=document.getElementById('sc-target');if(!card)return;
+  const onCooldown=state.rainbowReleaseCooldownEnd>state.elapsed;
+  const noTarget=state.urinals.every(u=>!u.occupied||u.broken||u.repairing);
+  const disabled=onCooldown||noTarget;
+  card.classList.toggle('broke',disabled);
+  const badgeEl=card.querySelector('.rr-badge');
+  if(badgeEl){
+    if(onCooldown){
+      badgeEl.className='rr-badge';
+      badgeEl.style.cssText="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--accent);border:1px solid var(--accent);border-radius:3px;padding:1px 4px;margin-top:1px";
+      badgeEl.textContent=Math.ceil(state.rainbowReleaseCooldownEnd-state.elapsed)+'s';
+    } else {
+      badgeEl.className='rr-badge sc-p';
+      badgeEl.removeAttribute('style');
+      badgeEl.textContent='READY';
+    }
+  }
+  if(!disabled&&!card._rrBound){card.addEventListener('click',rainbowRelease);card._rrBound=true;}
+}
+function updateShopAfford(){
+  if(hasRainbowRelease())updateRainbowReleaseCard();
+  Object.values(ITEM_DEFS).forEach(def=>{
+    if(def.id==='target'&&hasRainbowRelease())return; // 解放模式下不走金錢判斷
+    const card=document.getElementById('sc-'+def.id);if(!card)return;
+    const can=state.money>=effectivePrice(def);
+    const was=!card.classList.contains('broke');
+    if(can!==was){
+      card.classList.toggle('broke',!can);
+      buildShop();
+    }
+  });
+}
+
+// ════════════════════════════════════
+//  SYNC DOM
+// ════════════════════════════════════
+function syncQueueDOM(){
+  // queue_full: 等待區 ≥4 人，一局一次
+  if(state.queue.length>=4)mcSay('queue_full');
+  const qlist=document.getElementById('queue-list');
+  if(qlist){
+    // 動態計算：隊列是否超出容器寬度
+    const containerWidth=qlist.clientWidth;
+    const cardWidth=69; // 63px + 6px gap
+    const cardsWidth=state.queue.length*cardWidth;
+    const shouldNarrow=cardsWidth>containerWidth;
+    qlist.classList.toggle('queue-over-capacity',shouldNarrow);
+  }
+  state.queue.forEach(c=>{
+    const pct=Math.min(100,(c.waitElapsed/c.waitMax)*100);
+    const bc=pct>85?'var(--danger)':pct>60?'var(--warn)':'var(--success)';
+    const bar=document.getElementById('ccb-'+c.id);
+    const tim=document.getElementById('cct-'+c.id);
+    const card=document.getElementById('cc-'+c.id);
+    if(bar){bar.style.width=pct+'%';bar.style.background=bc;}
+    if(tim)tim.textContent=Math.ceil(c.waitMax-c.waitElapsed)+'s';
+    if(card){const su=pct>70,iu=card.classList.contains('urgent');if(su!==iu)card.classList.toggle('urgent',su);}
+    // urgent_wait: 有客人剩餘等待 ≤3秒，一局一次
+    if(c.waitMax-c.waitElapsed<=3)mcSay('urgent_wait');
+  });
+}
+function syncUrinalDOM(){
+  state.urinals.forEach(u=>{
+    const slot=document.getElementById('us-'+u.id);if(!slot)return;
+    // 巡查中：跳過當前掃描格，讓 tickInspection 的動畫不被蓋掉
+    if(state.inspectionActive&&u.id===state.inspectionScanIdx)return;
+    const icon=document.getElementById('ui-'+u.id);
+    const stl=document.getElementById('usl-'+u.id);
+    const pwrap=document.getElementById('upw-'+u.id);
+    const pbar=document.getElementById('upb-'+u.id);
+    const spd=document.getElementById('usp-'+u.id);
+    const dl=document.getElementById('udl-'+u.id);
+    const db=document.getElementById('udb-'+u.id);
+    const stags=document.getElementById('ust-'+u.id);
+    const hint=document.getElementById('uscrub-'+u.id);
+    const uitems=document.getElementById('uit-'+u.id);
+
+    const flags={occupied:!!u.occupied,cleaning:u.cleaning,broken:u.broken,
+      'warn-dirty':!u.broken&&u.dirty>=CONFIG.DIRTY_WARN_THRESH,
+      'gangster-locked':isGangsterLocked(u.id)&&!u.occupied};
+    Object.entries(flags).forEach(([cls,val])=>{if(slot.classList.contains(cls)!==val)slot.classList.toggle(cls,val);});
+    if(u.dirty>=CONFIG.DIRTY_WARN_THRESH){checkTip('warn_dirty');mcSay('warn_dirty');}
+    if(u.broken){checkTip('broken');if(!u.repairing)mcSay('broken');}
+
+    if(u.repairing){
+      icon.textContent='🔧';icon.style.opacity='1';icon.classList.remove('dispatch-glow');
+      const rem=Math.ceil(CONFIG.REPAIR_TIME-u.repairElapsed);
+      stl.textContent=`修復中 ${rem}s`;stl.style.color='var(--accent)';
+      const p=Math.min(100,(u.repairElapsed/CONFIG.REPAIR_TIME)*100);
+      pwrap.style.visibility='visible';pbar.style.width=p+'%';pbar.style.background='var(--accent)';
+      spd.style.visibility='hidden';
+    } else if(u.broken){
+      icon.textContent='💥';icon.style.opacity='1';icon.classList.remove('dispatch-glow');
+      stl.textContent='損壞！需修復工';stl.style.color='var(--danger)';
+      pwrap.style.visibility='hidden';spd.style.visibility='hidden';
+    } else if(u.cleaning){
+      icon.textContent='🚿';icon.style.opacity='1';icon.classList.remove('dispatch-glow');
+      const rem=Math.ceil(u.cleanDuration-u.cleanElapsed);
+      stl.textContent=`清潔中 ${rem}s`;stl.style.color='var(--accent2)';
+      const p=Math.min(100,(u.cleanElapsed/u.cleanDuration)*100);
+      pwrap.style.visibility='visible';pbar.style.width=p+'%';pbar.style.background='var(--success)';
+      spd.style.visibility='hidden';
+    } else if(u.occupied){
+      const c=u.occupied,s=calcSpd(u),pp=Math.min(100,(u.peeElapsed/c.peeBase)*100);
+      icon.textContent=c.emoji;icon.style.opacity='1';
+      // 派遣客人發白光
+      if(c.isDispatched){
+        icon.classList.add('dispatch-glow');
+      } else {
+        icon.classList.remove('dispatch-glow');
+      }
+      stl.textContent=c.label;stl.style.color=c.cv;
+      pwrap.style.visibility='visible';pbar.style.width=pp+'%';pbar.style.background=c.cv;
+      spd.textContent=Math.round(s*100)+'% 速';spd.style.visibility='visible';
+    } else {
+      icon.textContent=u.dirty>=CONFIG.DIRTY_WARN_THRESH?'⚠️':'🚽';
+      icon.style.opacity=u.dirty>=CONFIG.DIRTY_WARN_THRESH?'1':'.35';
+      icon.classList.remove('dispatch-glow');
+      stl.textContent=u.dirty>=CONFIG.DIRTY_WARN_THRESH?'瀕臨損壞':'空';
+      stl.style.color=u.dirty>=CONFIG.DIRTY_WARN_THRESH?'var(--warn)':'var(--muted)';
+      pwrap.style.visibility='hidden';spd.style.visibility='hidden';
+    }
+
+    const dp=Math.round(u.dirty);dl.textContent='髒'+dp+'%';db.style.width=Math.min(dp,100)+'%';
+
+    const newTags=slowTags(u).map(t=>`<span class="stag">${t}</span>`).join('');
+    if(stags.innerHTML!==newTags)stags.innerHTML=newTags;
+
+    // installed items display
+    if(uitems){
+      const chips=getItems(u).map(it=>{
+        const pct=it.def.durLimit?Math.max(0,100-Math.round(((it.durAccum||0)/it.def.durLimit)*100)):null;
+        const rem=it.def.durLimit?(it.def.durLimit-(it.durAccum||0))+'人':
+                  it.def.effects&&it.def.effects.autoClean?(it.def.cleanLimit-it.cleanCount)+'次':'';
+        const bar=pct!==null?`<span class="dur-bar" style="width:${Math.max(2,Math.round(pct*0.16))}px"></span>`:'';
+        return `<div class="u-item-chip" title="${it.def.name}${rem?' 剩'+rem:''}">${it.def.emoji}${rem?`<span class="item-rem" style="font-size:7px;font-family:'Silkscreen',monospace;color:var(--muted)">${rem}</span>`:''}${bar}</div>`;
+      }).join('');
+      uitems.innerHTML=chips;
+    }
+
+    if(hint){
+      const sh=!u.occupied&&!u.cleaning&&!u.broken&&u.dirty>0&&!scrub.active;
+      hint.style.opacity=sh?'1':'0';
+    }
+  });
+}
+
+// ════════════════════════════════════
+//  HUD + EFFECTS
+// ════════════════════════════════════
+function updateHUD(){
+  document.getElementById('hud-score').textContent=state.score;
+  document.getElementById('hud-money').textContent='£'+state.money.toFixed(2);
+  const le=document.getElementById('hud-left');
+  le.textContent=state.leftCount;le.className='hud-val'+(state.leftCount>=2?' dn':state.leftCount>=1?' wn':'');
+  document.getElementById('hud-served').textContent=state.servedCount;
+  const fee=calcEntryFee();
+  const feeEl=document.getElementById('hud-fee');
+  if(feeEl){feeEl.textContent='£'+fee.toFixed(2);feeEl.className='hud-val money'+(fee>1?'':' ');}
+  const m=Math.floor(state.elapsed/60),s=Math.floor(state.elapsed%60);
+  document.getElementById('hud-time').textContent=`${m}:${String(s).padStart(2,'0')}`;
+  const sb=document.getElementById('shop-bal');if(sb)sb.textContent='£'+state.money.toFixed(2);
+  // 派遣按鈕狀態
+  const dispatchBtn=document.getElementById('dispatch-btn');
+  if(dispatchBtn)dispatchBtn.classList.toggle('low-money',state.money<CONFIG.DISPATCH_COST);
+  const dispatchCostLabel=document.getElementById('dispatch-cost-label');
+  if(dispatchCostLabel)dispatchCostLabel.textContent='£'+CONFIG.DISPATCH_COST;
+}
+function updateEffects(){
+  const eff=[];
+  state.urinals.forEach(u=>{if(!u.occupied)return;slowTags(u).forEach(t=>eff.push(`#${u.id+1} ${t}`));});
+  const el=document.getElementById('eff-text');
+  const html=eff.length?eff.map(e=>`<span class="eff-item">${e}</span>`).join(' '):'<span style="color:var(--muted)">暫無</span>';
+  if(el.innerHTML!==html)el.innerHTML=html;
+}
+
+// ════════════════════════════════════
+//  END GAME
+// ════════════════════════════════════
+function endGame(){
+  clearSave();
+  _manualPaused=false;
+  const pauseBtn=document.getElementById('pause-btn');
+  if(pauseBtn){pauseBtn.textContent='⏸';pauseBtn.style.color='var(--muted)';}
+  state.running=false;clearInterval(gameLoop);endDrag();endScrub();endItemDrag();
+  if(_abyssInterval){clearInterval(_abyssInterval);_abyssInterval=null;}
+  // 失敗扣 1000 分
+  state.score=Math.max(0,state.score-1000);
+  showScorePop('-1000','var(--danger)');
+  _stopBGM();
+  playSFX('inspect_fail');
+  playSFX('inspect_fail');
+  playSFX('inspect_fail');
+  // 成就最終檢查
+  checkAchievements();
+  const s=state.score,m=state.totalEarned.toFixed(2);
+  const mm=Math.floor(state.elapsed/60),ss=Math.floor(state.elapsed%60);
+  const timeStr=`${mm}:${String(ss).padStart(2,'0')}`;
+  const totalSec=Math.floor(state.elapsed);
+  const d=new Date();
+  const dateStr=`${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  const playTime=timeStr; // 遊玩時長
+  saveHistory({score:s,money:m,served:state.servedCount,left:state.leftCount,date:dateStr,playTime});
+
+  // ── RANK ──
+  const ranks=[
+    {min:0,   sec:0,  emoji:'🚽',title:'廁所新兵',    color:'var(--muted)'},
+    {min:5,   sec:30, emoji:'🧻',title:'手忙腳亂的打工仔',color:'var(--text)'},
+    {min:15,  sec:60, emoji:'🪣',title:'資深清潔員',  color:'var(--sc)'},
+    {min:30,  sec:120,emoji:'🔑',title:'廁所主任',    color:'var(--accent)'},
+    {min:60,  sec:180,emoji:'👔',title:'便斗管理師',  color:'var(--accent3)'},
+    {min:100, sec:300,emoji:'🏆',title:'尿斗大師',    color:'var(--money)'},
+    {min:200, sec:480,emoji:'👑',title:'廁所傳說',    color:'var(--danger)'},
+  ];
+  let rank=ranks[0];
+  for(const r of ranks){if(s>=r.min&&totalSec>=r.sec)rank=r;}
+
+  // ── FEEDBACK：最多2條 ──
+  const leaveRate=state.servedCount>0?state.leftCount/(state.leftCount+state.servedCount):0;
+  const scrubRatio=state.scrubEarned>0?state.scrubEarned/parseFloat(m):0;
+  const itemsUsed=state.itemSpend>0;
+  const moneyVal=parseFloat(m);
+  const hadBroken=state.urinals.some(u=>u.broken);
+  const hadSpecial=state.delinquentSurgeCount>0||state.gangsterSurgeEnd>0;
+  const pick=arr=>arr[Math.floor(Math.random()*arr.length)];
+  const lines=[];
+
+  // 第1條：最重要結果
+  if(state.failed){
+    if(totalSec<60)
+      lines.push(pick(['💨 廁所才開業就倒了，下次加油。','💨 連馬桶都放棄你了。']));
+    else if(totalSec<180)
+      lines.push(pick(['💨 撐了'+timeStr+'，差那麼一點。','💨 客人寧可尿褲子也不想等你，你知道嗎。']));
+    else
+      lines.push(pick(s>=3000
+        ?['💨 已經很厲害了，可惜功虧一簣。','💨 就差一點點，下次必成。']
+        :['💨 已經很厲害了，可惜功虧一簣。','💨 老夫行走江湖這麼多年，沒見過管理這麼混亂的廁所。']));
+  } else if(moneyVal>=2000){
+    lines.push('💰 哇！財富自由了，管理之神！！');
+  } else if(totalSec>=300){
+    lines.push(pick(['⏱ '+timeStr+'！這個廁所幾乎是你的傳說。','⏱ 老夫宣布：這是全倫敦最乾淨的廁所。（可能啦）','⏱ 客人來了又走，走了又來，你的廁所有魔力。']));
+  } else {
+    lines.push('⏱ 撐了'+timeStr+'。');
+  }
+
+  // 第2條：候選池，符合條件的全部加入，隨機選一條
+  const pool2=[];
+  if(scrubRatio>0.35)           pool2.push('🧹 越髒越賺，你懂的。');
+  if(state.scrubEarned===0)     pool2.push(s>=3000?'🧹 讓清掃助理代勞，有眼光。':'🧹 完全沒摩擦清潔？馬桶快哭了。');
+  if(state.itemSpend>=50)       pool2.push('🛒 花了£'+state.itemSpend.toFixed(0)+'在道具上，懂得投資。');
+  if(!itemsUsed)                pool2.push('🛒 全程沒買道具，純靠技術。');
+  if(state.leftCount===0)       pool2.push('😤 零氣走！每個客人都心滿意足離開了。');
+  if(state.servedCount>=30)     pool2.push('🚽 服務了'+state.servedCount+'個人，廁所界的勞模。');
+  if(moneyVal<10)               pool2.push('💰 收入£'+m+'，連馬桶刷都買不起。');
+  else if(moneyVal<30)          pool2.push('💰 收入£'+m+'，夠買個便宜便當了。');
+  if(hadBroken)                 pool2.push('🔧 馬桶壞了還撐下去，韌性十足。');
+  if(hadSpecial)                pool2.push('🧑‍🎤 麻煩人物也擋不住你，有點東西。');
+  if(pool2.length===0)          pool2.push('💰 收入£'+m+'，'+(moneyVal>30?'夠交房租了。':'還不夠買馬桶刷。'));
+  lines.push(pick(pool2));
+
+  // 深淵模式：加第三條專屬 feedback
+  if(state.phaseStage>=ABYSS_STAGE){
+    lines.push(pick([
+      '🌑 深淵已經望不見你了。你比深淵還深。',
+      '🌑 在無盡深淵長河中穿梭自如，你是什麼樣的存在？',
+      '🌑 馬桶被你刷穿如宇宙長河的深淵。',
+    ]));
+  }
+
+  // 判斷是否新紀錄（存檔後比較）
+  const histAfter=loadHistory();
+  const isNewRecord=histAfter.length>0&&histAfter[0].score===s&&histAfter[0].money===m&&histAfter[0].date===dateStr;
+
+  document.getElementById('rs-emoji').textContent=isNewRecord?'🏆':rank.emoji;
+  document.getElementById('rs-title').textContent=state.failed?'💀 被趕出廁所！':(isNewRecord?'🏆 新紀錄！':'✅ 成功守住廁所');
+  document.getElementById('rs-rank').textContent='頭銜：'+rank.title;
+  document.getElementById('rs-rank').style.color=rank.color;
+  document.getElementById('rs-rank').style.borderColor=rank.color;
+  document.getElementById('rs-score').textContent=s;
+  document.getElementById('rs-score').style.color=isNewRecord?'var(--money)':rank.color;
+  document.getElementById('rs-money').textContent='£'+m;
+  // 統計已併入 rs-leaderboard 表格，不需要獨立更新
+  document.getElementById('rs-feedback').innerHTML=lines.map(l=>`<div>${l}</div>`).join('');
+  document.getElementById('rs-msg').textContent=`存活 ${timeStr} — 氣走 ${state.leftCount}/${CONFIG.FAIL_LEAVE_COUNT} 人`;
+
+  // 本局紀錄（合併統計）
+  const lb=document.getElementById('rs-leaderboard');
+  if(lb){
+    lb.innerHTML=`
+    <div style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);text-align:center;letter-spacing:2px;margin-bottom:4px">— 本局紀錄 —</div>
+    <table style="width:100%;border-collapse:collapse">
+      <tr>
+        <td style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);padding:3px 8px">分數</td>
+        <td style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--accent);padding:3px 8px">${s}</td>
+        <td style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);padding:3px 8px">收入</td>
+        <td style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--money);padding:3px 8px">£${m}</td>
+      </tr><tr>
+        <td style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);padding:3px 8px">服務</td>
+        <td style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--text);padding:3px 8px">${state.servedCount}</td>
+        <td style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);padding:3px 8px">時長</td>
+        <td style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--text);padding:3px 8px">${timeStr}</td>
+      </tr><tr>
+        <td style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);padding:3px 8px">清潔收入</td>
+        <td style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--money);padding:3px 8px">£${state.scrubEarned.toFixed(2)}</td>
+        <td style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--muted);padding:3px 8px">道具支出</td>
+        <td style="font-family:'Silkscreen',monospace;font-size:var(--fs-xs);color:var(--danger);padding:3px 8px">£${state.itemSpend.toFixed(2)}</td>
+      </tr>
+    </table>`;
+  }
+
+  // 成就顯示
+  const unlocked=loadAchievements();
+  const achEl=document.getElementById('rs-ach-list');
+  if(achEl){
+    const achList=Object.values(ACHIEVEMENTS);
+    const rainbow=achList.find(a=>a.id==='rainbow');
+    const abyss=achList.find(a=>a.id==='abyss');
+    const middle=achList.filter(a=>a.id!=='rainbow'&&a.id!=='abyss');
+    const renderAch=(a)=>{
+      const done=unlocked[a.id];
+      const rainbowStyle=done&&a.id==='rainbow'?'animation:rainbow-glow 2s linear infinite':'';
+      const nameStyle=done&&a.id==='rainbow'?'animation:rainbow-text 2s linear infinite;':'';
+      const abyssStyle=done&&a.id==='abyss'?'filter:drop-shadow(0 0 6px #6b4e00)':'';
+      return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:50px" title="${done?a.name+'：'+a.desc:a.name}">
+        <span style="font-size:26px;${done?(rainbowStyle||abyssStyle||''):'opacity:0.4'}">${done?a.emoji:'❓'}</span>
+        <span style="font-family:'Silkscreen',monospace;font-size:11px;${done?'color:var(--accent3);'+nameStyle:'color:var(--border)'}">${a.name}</span>
+      </div>`;
+    };
+    achEl.innerHTML=`
+      <div style="display:flex;justify-content:center;margin-bottom:8px">${renderAch(rainbow)}</div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:8px">${middle.map(renderAch).join('')}</div>
+      <div style="display:flex;justify-content:center;margin-top:4px">${renderAch(abyss)}</div>
+    `;
+  }
+
+  // 角色圖鑑
+  renderCharCodex();
+
+  // 馬蓋仙結尾
+  const abyssKeys=['end_abyss_1','end_abyss_2','end_abyss_3'];
+  const endKey=state.phaseStage>=ABYSS_STAGE
+    ?abyssKeys[Math.floor(Math.random()*abyssKeys.length)]
+    :isNewRecord?'end_record':s>=60?'end_good':s>=20?'end_mid':'end_bad';
+  setTimeout(()=>mcSayForced(endKey),600);
+  // 全球排行榜：判斷是否進前10
+  const submitArea=document.getElementById('rs-submit-area');
+  const nameInput=document.getElementById('rs-name-input');
+  const submitMsg=document.getElementById('rs-submit-msg');
+  _pendingSubmit={score:s,money:m,served:state.servedCount,date:dateStr,playTime};
+  if(submitArea){
+    submitArea.style.display='block'; // 直接顯示，不需要先讀Firebase
+    if(nameInput)nameInput.value='';
+    if(submitMsg)submitMsg.textContent='';
+  }
+  renderGlobalLeaderboard('global-lb-result',s,10);
+  showScreen('screen-result');
+}
+
+// ════════════════════════════════════
+//  馬蓋仙 MC SYSTEM
+// ════════════════════════════════════
+const MC_LINES={
+  start:       '老夫馬蓋仙，在此坐鎮。把客人拖到便斗去，別讓他們站著等。',
+  soft_end:    '熱身結束，真正的考驗來了。記住——忙而不亂，才是高手。',
+  first_spawn: '來了來了！拖曳客人到空的便斗，或點選後再點便斗都行。',
+  neighbor_slow: '糟了！兩人太近，不敢互看，尿不太出來…',
+  first_peak:  '高峰期！客人蜂擁而至。子彈時間可以讓你冷靜帶位。',
+  dirty_35:    '髒污超過35%，小費已有40%加成。刷還是不刷，你來決定。',
+  dirty_60:    '髒污超過60%，小費加成80%！繼續撐著刷，越髒越值錢。但別超過100%，那就麻煩了。',
+  warn_dirty:  '危險！再進一個客人就要壞了。快去摩擦清潔，或裝清掃助理掌控全局！',
+  broken:      '壞了壞了…去商店買修復工拖到便斗上，才能繼續用。',
+  soldier_done:    '不錯不錯！老夫將會下凡巡視，好好表現必有重賞！',
+  inspection_arrive_1: '老夫親自來視察！等你收尾，老夫要親自巡廁，給我準備好！',
+  inspection_arrive_2: '坐不住了！老夫要來巡查，馬桶髒了別想過關！',
+  inspection_tap:      '老夫下凡巡查賞罰分明，還不好好準備！',
+  inspection_scan_ok:  '嗯…這格還行…',
+  inspection_scan_fail:'髒！不行不行不行…',
+  inspection_pass_1:   '勉強及格，老夫賞你了。',
+  inspection_pass_2:   '不錯，老夫的廁所果然乾淨！',
+  inspection_fail_1:   '這是廁所？豬圈還比較乾淨呢？！真是大失所望！',
+  inspection_fail_2:   '讓老夫失望了…倒行逆施，老夫心灰意冷。',
+  left_1:      '有人等不耐煩走了。還有兩次機會，加快帶位節奏。',
+  left_2:      '第二個走了！再走一個就全盤皆輸，現在要全力帶位。',
+  money_10:    '有錢了！標靶貼只要£5，裝上去馬上少髒15%。值得投資。',
+  first_item:  '聰明！道具可以疊加——蒼蠅貼加芳香劑，效果加倍。',
+  add_urinal:  '版圖擴張！多一格便斗，入廁費也跟著提高。繼續賺。',
+  delinquent:  '中二生來了！一群3人，髒污35%，接下來30秒會持續補充，做好準備。',
+  soldier:     '阿兵哥集結！5人衝進來，髒污50%，行動要快！這是最大考驗。',
+  // 等待道具相關
+  money_20:       '有點積蓄了。報紙才£5，一塞給等候的客人，多5秒不是問題。',
+  queue_full:     '等待區快塞滿了！扔幾份報紙出去，讓他們消磨時間。',
+  urgent_wait:    '那個客人快撐不住了！報紙漫畫趕快用，不然就跑了。',
+  peak_second:    '又來了！這時候漫畫書最值——一次讓所有人多等10秒。',
+  use_newspaper:  '好，讓他們看看八卦。時間換位置，值得。',
+  use_manga:      '漫畫的威力大多了。客人看得入神，老夫也放心了。',
+  use_barber:     '理髮服務！高端大氣，整整15秒，讓老夫好好喘口氣。',
+  cant_afford:    '', // 動態產生，見 mcSayCantAfford()
+  // 新人物初次說明（閃爍）
+  new_char_large:      '這位是爆尿人！憋太久了，分數高但很髒，優先處理。',
+  new_char_drunk:      '醉漢進場！尿量驚人、時間長，能賺錢但馬桶很快就撐不住。',
+  new_char_elder:      '細漢泉過溪，老來滴到鞋，來來來～慢慢來～誒！滴到隔壁了啦！',
+  new_char_phone:      '這位滑機男，一站就是半天，不知道在滑什麼，但賺得可不少，耐心留著他！',
+  new_char_gangster:   '完了，黑尿幫來了，沒人敢在他旁邊！',
+  new_char_delinquent: '中二生！而且是成群的，一次三個，接下來30秒持續補充，撐住！',
+  new_char_soldier:    '阿兵哥！五個人一起衝進來，等不了多久，動作要快，這是最大考驗！',
+  // 派遣客人
+  dispatch:            'oh!! 游刃有餘啊，不錯不錯，照顧客人的膀胱是我們的天職',
+  // 深淵台詞（隨機穿插）
+  abyss_1: '老夫活了兩百年，沒見過這種場面。你究竟是何方神聖？',
+  abyss_2: '廁所管理到這個境界，連老夫都要叫你一聲師傅。',
+  abyss_3: '這裡已經不是廁所了，這是修羅場。老夫建議你去看個醫生。',
+  // 長按區域說明
+  explain_urinal_empty:  '這是便斗。把客人拖過來安排，或手指上下摩擦清潔。',
+  explain_urinal_dirty:  '髒污超過35%，清潔費就有加成。越髒越值錢——但別讓它超過100%！',
+  explain_urinal_warn:   '危險！再有客人進來就要壞了。快去摩擦清潔！',
+  explain_urinal_broken: '壞掉了。買個修復工拖過來才能恢復使用。',
+  explain_urinal_busy:   '客人正在使用中。等他出來再清潔。',
+  explain_queue:         '這是等待區。客人在這裡排隊，等待條見底就會離開。報紙漫畫可以拖到這裡延長等待時間。',
+  end_good:    '不錯，老夫認可你的廁所管理之道。',
+  end_mid:     '還有進步空間。記住——髒了要刷，缺了要買，快了才能撐。',
+  end_bad:     '唉…連老夫都看不下去了。下次，先學會帶位再說。',
+  end_record:  '老夫活了這麼久，沒見過這麼厲害的廁所管理員。新紀錄！',
+  end_abyss_1: '深淵已經望不見你了。你比深淵還深。',
+  end_abyss_2: '在無盡深淵長河中穿梭自如，你是什麼樣的存在？',
+  end_abyss_3: '馬桶被你刷穿如宇宙長河的深淵。',
+};
+
+let mcTyping=null; // current typing timeout
+let mcQueue=[];    // queued lines
+let mcBusy=false;
+// track which one-time lines already said
+const mcSaid=new Set();
+
+// 新手提示 key 清單：3000 分以上不再自動觸發
+const NOVICE_TIPS=new Set(['first_spawn','first_peak','peak_second','first_item','aroma_hint',
+  'add_urinal','first_money_10','money_10','money_20','dirty_35','dirty_60','warn_dirty',
+  'queue_full','urgent_wait','neighbor_slow','unlock_large','unlock_delinquent','start','soft_end']);
+
+function mcSay(key,force=false){
+  if(!force&&mcSaid.has(key))return;
+  // 3000 分以上不再自動觸發新手提示
+  if(!force&&NOVICE_TIPS.has(key)&&typeof state!=='undefined'&&state&&state.score>=3000)return;
+  if(!force)mcSaid.add(key);
+  const text=MC_LINES[key];if(!text)return;
+  mcQueue.push(text);
+  if(!mcBusy)_mcNext();
+}
+
+function _mcNext(){
+  if(!mcQueue.length){mcBusy=false;return;}
+  mcBusy=true;
+  const item=mcQueue.shift();
+  const text=typeof item==='string'?item:item.text;
+  const isExplain=typeof item==='object'&&item.explain;
+  _mcType(text,0,isExplain);
+}
+
+function _mcType(text,i,isExplain){
+  const el=document.getElementById('mc-content');
+  const panel=document.getElementById('mc-panel');
+  if(!el)return;
+  if(i===0){
+    el.textContent='';
+    if(panel)panel.classList.remove('speaking'); // 每次新台詞先清
+    if(panel&&isExplain)panel.classList.add('speaking');
+  }
+  if(i<text.length){
+    el.textContent+=text[i];
+    mcTyping=setTimeout(()=>_mcType(text,i+1,isExplain),60);
+  } else {
+    if(panel&&isExplain){
+      setTimeout(()=>panel.classList.remove('speaking'),3000);
+    }
+    mcTyping=setTimeout(()=>{mcBusy=false;if(mcQueue.length)_mcNext();},300);
+  }
+}
+
+function mcSayForced(key){mcSay(key,true);}  // repeatable lines
+
+function mcSayNewChar(type){
+  const keyMap={large:'new_char_large',drunk:'new_char_drunk',
+    delinquent:'new_char_delinquent',soldier:'new_char_soldier',
+    elder:'new_char_elder',gangster:'new_char_gangster',phone:'new_char_phone'};
+  const key=keyMap[type];if(!key)return;
+  if(mcSaid.has('char_'+type))return;
+  mcSaid.add('char_'+type);
+  const line=MC_LINES[key];
+  const isSpecial=(type==='gangster'||type==='delinquent'||type==='soldier');
+  if(line){mcQueue.unshift({text:line,explain:isSpecial});if(!mcBusy)_mcNext();}
+  log(`NEW CHAR intro: ${type}`,'info');
+}
+
+function mcSayCantAfford(def){
+  const diff=(effectivePrice(def)-state.money).toFixed(2);
+  const preview=MC_PREVIEW[def.id]||'好道具。';
+  const line=`${preview} 不過現在還差£${diff}，有錢馬上就能用。`;
+  mcQueue.unshift({text:line,explain:true});if(!mcBusy)_mcNext();
+}
+
+// ── 等待區長按說明 + 防頁面滑動 ──
+var _queueLPTimer=null;
+window.addEventListener('load',()=>{
+  const qa=document.getElementById('queue-area');
+  if(!qa)return;
+  qa.addEventListener('touchstart',e=>{
+    e.preventDefault();
+    handleQueueTouchStart(e);
+  },{passive:false});
+  qa.addEventListener('touchend',handleQueueTouchEnd,{passive:false});
+  // 主選單成就初始化（在主 script 執行後才跑，確保 ACHIEVEMENTS 已定義）
+  renderTitleAch();
+});
+function handleQueueTouchStart(e){
+  // 阻止縱向滑動頁面，但允許水平捲動 queue-list
+  if(e.target.closest('.queue-list')){return;} // 讓 queue-list 自己處理水平捲動
+  e.preventDefault();
+  if(drag.active||itemDrag.active)return;
+  _queueLPTimer=setTimeout(()=>{
+    const line=MC_LINES['explain_queue'];
+    if(line){mcQueue.unshift({text:line,explain:true});if(!mcBusy)_mcNext();}
+  },500);
+}
+function handleQueueTouchEnd(e){
+  if(_queueLPTimer){clearTimeout(_queueLPTimer);_queueLPTimer=null;}
+}
+const TIPS_DEFS=[
+  {id:'first_spawn',    text:'💡 拖曳客人到便斗幫他帶位，或點選後再點便斗！'},
+  {id:'dirty_60',       text:'🧹 髒污超過35%清潔費會加成40%，超過60%加成80%，越髒越值得刷！'},
+  {id:'warn_dirty',     text:'⚠️ 馬桶快爆了！超過100%還有客人使用會直接損壞，快去清潔！'},
+  {id:'first_money_10', text:'🛒 現在有£10了！去商店買標靶貼，減少髒污累積速度。'},
+  {id:'first_item',     text:'🔗 道具可以疊加！蒼蠅貼（減髒污）+芳香劑（加收入）可以同時裝。'},
+  {id:'unlock_large',   text:'🏃 3格解鎖爆尿人！他分數高但髒污更重，及時清潔很重要。'},
+  {id:'first_peak',     text:'⚡ 高峰期來了！子彈時間可以幫你慢下來思考帶位策略。'},
+  {id:'broken',         text:'🔧 馬桶損壞了！去商店買修復工（£15）拖到壞掉的馬桶上修復。'},
+  {id:'aroma_hint',     text:'🌸 芳香劑不只減髒污，入廁費還會變×1.5！裝在忙的格子最划算。'},
+  {id:'unlock_delinquent',text:'🧑‍🎤 5格解鎖中二生！他們成群3人出現，持續30秒壓力，要做好清潔準備！'},
+  {id:'unlock_soldier', text:'💂 6格解鎖阿兵哥！5人衝進來又快又髒，是最大考驗！'},
+];
+const unlockedTips=new Set();
+function checkTip(id){
+  if(unlockedTips.has(id))return;
+  const def=TIPS_DEFS.find(t=>t.id===id);if(!def)return;
+  unlockedTips.add(id);
+  log(`TIP unlocked: ${id}`,'info');
+  renderTips();
+  // flash tips button
+  const btn=document.querySelector('button[onclick="toggleTips()"]');
+  if(btn){btn.style.borderColor='var(--warn)';btn.style.color='var(--warn)';
+    setTimeout(()=>{btn.style.borderColor='';btn.style.color='';},3000);}
+}
+function renderTips(){
+  const el=document.getElementById('tips-list');if(!el)return;
+  const tips=[...unlockedTips].map(id=>TIPS_DEFS.find(t=>t.id===id)).filter(Boolean);
+  el.innerHTML=tips.map(t=>`<div style="padding:4px 8px;background:rgba(255,184,0,.07);border-radius:4px;border-left:2px solid var(--warn)">${t.text}</div>`).join('');
+}
+function toggleTips(){
+  const p=document.getElementById('tips-panel');
+  p.style.display=p.style.display==='none'?'block':'none';
+  if(p.style.display==='block')renderTips();
+}
+
+// ════════════════════════════════════
+//  SURGE BANNER
+// ════════════════════════════════════
+function showSurgeBanner(msg){
+  const el=document.createElement('div');el.className='surge-banner';
+  el.textContent=msg;
+  document.body.appendChild(el);setTimeout(()=>el.remove(),3000);
+}
+const DFIELDS=[
+  {sec:'客人等待時間',fields:[{k:'WAIT_MAX_SMALL',l:'小尿等待(s)'},{k:'WAIT_MAX_MED',l:'中尿等待(s)'},{k:'WAIT_MAX_LARGE',l:'大尿等待(s)'}]},
+  {sec:'如廁時長',fields:[{k:'PEE_TIME_SMALL',l:'小尿(s)'},{k:'PEE_TIME_MED',l:'中尿(s)'},{k:'PEE_TIME_LARGE',l:'大尿(s)'},{k:'PEE_TIME_DRUNK',l:'酒醉(s)'}]},
+  {sec:'髒污設定',fields:[{k:'DIRTY_SMALL',l:'小尿髒污(%)'},{k:'DIRTY_MED',l:'中尿髒污(%)'},{k:'DIRTY_LARGE',l:'大尿髒污(%)'},{k:'DRUNK_DIRTY_BONUS',l:'酒醉加成(%)'},{k:'DIRTY_MAX_SLOW',l:'髒污最大減速(%)'},{k:'DIRTY_WARN_THRESH',l:'警告閾值(%)'},{k:'DIRTY_BREAK_THRESH',l:'損壞閾值(%)'}]},
+  {sec:'速度與清潔',fields:[{k:'NEIGHBOR_SLOW',l:'鄰近減速(%)'},{k:'CLEANER_AUTO_THRESH',l:'助理自動觸發(%)'},{k:'REPAIR_TIME',l:'修復時間(s)'},{k:'SCRUB_DISTANCE',l:'摩擦距離(px)'},{k:'SCRUB_AMOUNT',l:'每次清潔量(%)'},{k:'SPAWN_INTERVAL',l:'生成間隔(s)'}]},
+  {sec:'金錢設定',fields:[{k:'ENTRY_FEE_BASE',l:'基礎入廁費(£)'},{k:'ENTRY_FEE_PER_URINAL',l:'每格加成(£)'},{k:'SCRUB_BASE_FEE',l:'摩擦基礎費(£)'},{k:'SCRUB_TIP_MED_THRESH',l:'中小費閾值(%)'},{k:'SCRUB_TIP_MED_MULT',l:'中小費倍率'},{k:'SCRUB_TIP_HIGH_THRESH',l:'高小費閾值(%)'},{k:'SCRUB_TIP_HIGH_MULT',l:'高小費倍率'}]},
+  {sec:'積分與規則',fields:[{k:'SCORE_SMALL',l:'小尿得分'},{k:'SCORE_MED',l:'中尿得分'},{k:'SCORE_LARGE',l:'大尿得分'},{k:'SCORE_DRUNK',l:'酒醉得分'},{k:'LEAVE_PENALTY',l:'氣走扣分'},{k:'FAIL_LEAVE_COUNT',l:'失敗氣走數'},{k:'DRUNK_RATE',l:'酒醉出現率(%)'},{k:'UNLOCK_LARGE',l:'大尿解鎖格數'},{k:'UNLOCK_DRUNK',l:'酒醉解鎖格數'}]},
+  {sec:'滴鞋老設定',fields:[{k:'ELDER_WAIT',l:'等待(s)'},{k:'ELDER_PEE',l:'如廁(s)'},{k:'ELDER_DIRTY',l:'髒污(%)'},{k:'ELDER_SCORE',l:'得分'},{k:'ELDER_NEIGHBOR_SLOW',l:'額外鄰近減速(%)'}]},
+  {sec:'滑機男設定',fields:[{k:'PHONE_UNLOCK_SCORE',l:'解鎖分數'},{k:'PHONE_WAIT',l:'等待(s)'},{k:'PHONE_PEE',l:'如廁(s)'},{k:'PHONE_DIRTY',l:'髒污(%)'},{k:'PHONE_SCORE',l:'得分'},{k:'PHONE_SPAWN_RATE',l:'生成機率(%)'}]},
+  {sec:'彩虹膀胱解放',fields:[{k:'RAINBOW_RELEASE_COOLDOWN',l:'冷卻時間(s)'}]},
+  {sec:'黑尿幫設定',fields:[{k:'GANGSTER_WAIT',l:'等待(s)'},{k:'GANGSTER_PEE',l:'如廁(s)'},{k:'GANGSTER_DIRTY',l:'髒污(%)'},{k:'GANGSTER_SCORE',l:'得分'},{k:'GANGSTER_RATE',l:'混入高峰機率(%)'},{k:'GANGSTER_SURGE_DUR',l:'surge持續(s)'},{k:'GANGSTER_SURGE_RATE',l:'surge spawn率(%)'},{k:'GANGSTER_BREAK_RATE',l:'壞馬桶機率(%)'},{k:'GANGSTER_LOOT',l:'贓款金額(£)'},{k:'GANGSTER_LOOT_RATE',l:'贓款機率(%)'},{k:'GANGSTER_UNLOCK_COUNT',l:'解鎖所需中二生次數'}]},
+  {sec:'中二生設定',fields:[{k:'UNLOCK_DELINQUENT',l:'解鎖格數'},{k:'DELINQUENT_RATE',l:'高峰觸發率(%)'},{k:'DELINQUENT_GROUP',l:'每批人數'},{k:'DELINQUENT_WAVES',l:'總批次數'},{k:'DELINQUENT_WAIT',l:'等待(s)'},{k:'DELINQUENT_PEE',l:'如廁(s)'},{k:'DELINQUENT_DIRTY',l:'髒污(%)'},{k:'DELINQUENT_SCORE',l:'得分'},{k:'DELINQUENT_WAVE_DELAY',l:'批次間隔(s)'},{k:'DELINQUENT_BREAK_RATE',l:'用壞機率(%)'}]},
+  {sec:'阿兵哥設定',fields:[{k:'UNLOCK_SOLDIER',l:'解鎖格數'},{k:'SOLDIER_RATE',l:'高峰觸發率(%)'},{k:'SOLDIER_GROUP',l:'每批人數'},{k:'SOLDIER_WAVES',l:'總批次數'},{k:'SOLDIER_WAIT',l:'等待(s)'},{k:'SOLDIER_PEE',l:'如廁(s)'},{k:'SOLDIER_DIRTY',l:'髒污(%)'},{k:'SOLDIER_SCORE',l:'得分'},{k:'SOLDIER_WAVE_DELAY',l:'批次間隔(s)'}]},
+  {sec:'高峰設定',fields:[{k:'PEAK_INTERVAL',l:'高峰間隔(s)'},{k:'PEAK_COUNT',l:'高峰人數'},{k:'SURGE_PEAK_DELAY',l:'特殊事件後高峰延遲(s)'}]},
+  {sec:'新手輔助',fields:[{k:'SOFT_START_DURATION',l:'慢速開局時間(s)'},{k:'SOFT_START_SPAWN_MULT',l:'開局生成倍率'},{k:'BULLET_TIME_SCALE',l:'子彈時間流速(0~1)'}]},
+];
+function renderDash(tid){
+  const el=document.getElementById(tid);if(!el)return;
+  const uiRow=`<div style="margin-bottom:10px">
+    <div class="dash-ttl">顯示設定</div>
+    <div class="dash-slider-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:100%">
+      <div>
+        <div style="font-family:'Silkscreen',monospace;font-size:8px;color:var(--muted);margin-bottom:4px">字體大小</div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap;min-width:0">
+          <span style="font-family:'Silkscreen',monospace;font-size:8px;color:var(--muted);flex-shrink:0">小</span>
+          <input type="range" min="0.7" max="2.5" step="0.05" value="${CONFIG.UI_SCALE}"
+            style="flex:1;min-width:0;accent-color:var(--accent2)" oninput="applyUIScale(this.value)">
+          <span style="font-family:'Silkscreen',monospace;font-size:8px;color:var(--muted);flex-shrink:0">大</span>
+          <span id="ui-scale-lbl-${tid}" style="font-family:'Silkscreen',monospace;font-size:8px;color:var(--accent2);min-width:30px;flex-shrink:0">${CONFIG.UI_SCALE}x</span>
+        </div>
+      </div>
+      <div>
+        <div style="font-family:'Silkscreen',monospace;font-size:8px;color:var(--muted);margin-bottom:4px">亮度</div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap;min-width:0">
+          <span style="font-family:'Silkscreen',monospace;font-size:8px;color:var(--muted);flex-shrink:0">暗</span>
+          <input type="range" min="60" max="130" step="5" value="${CONFIG.BRIGHTNESS||100}"
+            style="flex:1;min-width:0;accent-color:var(--accent2)" oninput="applyBrightness(this.value)">
+          <span style="font-family:'Silkscreen',monospace;font-size:8px;color:var(--muted);flex-shrink:0">亮</span>
+          <span id="brightness-lbl-${tid}" style="font-family:'Silkscreen',monospace;font-size:8px;color:var(--accent2);min-width:36px;flex-shrink:0">${CONFIG.BRIGHTNESS||100}%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <style>@media(max-width:480px){#${tid} .slider-grid{grid-template-columns:1fr!important}}</style>`;
+  el.innerHTML=uiRow+DFIELDS.map(s=>`<div><div class="dash-ttl">${s.sec}</div><div class="dash-sec">${s.fields.map(f=>`<div class="df"><label>${f.l}</label><input type="number" id="c-${tid}-${f.k}" value="${CONFIG[f.k]}" step="0.05"></div>`).join('')}</div></div>`).join('')+`<button class="dash-apply" onclick="applyConfig('${tid}')">APPLY ▶</button>`;
+}
+function applyUIScale(val){
+  CONFIG.UI_SCALE=parseFloat(val);
+  document.documentElement.style.setProperty('--ui-scale',CONFIG.UI_SCALE);
+  document.querySelectorAll('[id^="ui-scale-lbl-"]').forEach(e=>e.textContent=CONFIG.UI_SCALE+'x');
+}
+function applyBrightness(val){
+  CONFIG.BRIGHTNESS=parseInt(val);
+  document.body.style.filter=`brightness(${CONFIG.BRIGHTNESS}%)`;
+  document.querySelectorAll('[id^="brightness-lbl-"]').forEach(e=>e.textContent=CONFIG.BRIGHTNESS+'%');
+}
+function applyConfig(tid){
+  DFIELDS.forEach(s=>s.fields.forEach(f=>{const e=document.getElementById('c-'+tid+'-'+f.k);if(e){const v=parseFloat(e.value);if(!isNaN(v))CONFIG[f.k]=v;}}));
+  log('Config applied','ok');
+}
+function dispatchCustomer(){
+  if(!state.running)return;
+  
+  const DISPATCH_COST=CONFIG.DISPATCH_COST;
+
+  // 檢查金錢
+  if(state.money<DISPATCH_COST){
+    const shortage=DISPATCH_COST-Math.floor(state.money);
+    const msg=`錢不夠啊！派遣客人需要£5，你還差£${shortage}。先去賺錢吧。`;
+    mcQueue.push(msg);
+    if(!mcBusy)_mcNext();
+    return;
+  }
+  
+  // 扣錢
+  state.money-=DISPATCH_COST;
+  
+  // 決定觸發哪個 Surge
+  const uc=state.urinals.length;
+  let triggered=false;
+  let surgeType='peak'; // 預設
+  
+  if(uc>=CONFIG.UNLOCK_SOLDIER&&Math.random()*100<CONFIG.SOLDIER_RATE){
+    state.dispatchedWaveTypes.push('soldier');
+    triggerSurge('soldier');
+    triggered=true;
+  } else if(uc>=CONFIG.UNLOCK_DELINQUENT&&Math.random()*100<CONFIG.DELINQUENT_RATE){
+    state.dispatchedWaveTypes.push('delinquent');
+    triggerSurge('delinquent');
+    triggered=true;
+  }
+  
+  // 若都沒觸發，進普通高峰
+  if(!triggered){
+    for(let k=0;k<CONFIG.PEAK_COUNT;k++){
+      const c=spawnCustomer();
+      if(c){
+        c.isDispatched=true;
+        const el=document.getElementById('cc-'+c.id);
+        if(el){
+          const emojiEl=el.querySelector('.cc-e');
+          if(emojiEl)emojiEl.classList.add('dispatch-glow');
+        }
+      }
+    }
+    state.peaksFired++;
+  } else {
+    // surge 已在上面的 triggerSurge 之前標記完成
+  }
+  
+  // 播放音效
+  playSFX('buy');
+  
+  // 馬蓋仙台詞
+  mcSay('dispatch',true);
+  
+  updateHUD();
+}
+
+function toggleBulletTime(){
+  if(!state.running)return;
+  // 沒有 bullet_op 不能啟動
+  if(!state.bulletTime&&state.bulletOpRemain<=0)return;
+  state.bulletTime=!state.bulletTime;
+  if(state.bulletTime)playSFX('bullet');
+  const btn=document.getElementById('bullet-btn');
+  const screen=document.getElementById('screen-game');
+  if(state.bulletTime){
+    btn.classList.add('active');
+    screen.classList.add('bullet');
+    log('Bullet time ON remain='+state.bulletOpRemain,'info');
+  } else {
+    btn.classList.remove('active');
+    screen.classList.remove('bullet');
+    log('Bullet time OFF remain='+state.bulletOpRemain,'info');
+  }
+  _updateBulletBtn();
+}
+
+function _updateBulletBtn(){
+  const btn=document.getElementById('bullet-btn');
+  if(!btn)return;
+  if(state.bulletTime){
+    const rem=Math.ceil(state.bulletOpRemain);
+    btn.textContent=`⚡ 子彈時間 ON — ${rem}s`;
+  } else if(state.bulletOpRemain>0){
+    const rem=Math.ceil(state.bulletOpRemain);
+    btn.textContent=`🐌 子彈時間 [剩餘 ${rem}s]`;
+    btn.style.opacity='1';btn.style.cursor='pointer';
+  } else {
+    btn.textContent='🐌 子彈時間 [需購買 ⚡]';
+    btn.style.opacity='0.45';btn.style.cursor='not-allowed';
+  }
+}
+function toggleTitleDash(){const w=document.getElementById('title-dash-wrap');if(w.style.display==='none'){w.style.display='block';renderDash('title-dash-inner');}else w.style.display='none';}
+function toggleGameDash(){const p=document.getElementById('game-dashboard'),a=document.getElementById('dash-arrow');const o=p.classList.toggle('open');a.textContent=o?'▲':'▼';if(o)renderDash('game-dashboard');}
+function updateQueueGlow(){
+  const qa=document.getElementById('queue-area');
+  const badge=document.getElementById('wait-boost-badge');
+  if(!qa||!badge)return;
+  const active=state.waitBoostEnd>state.elapsed;
+  if(active){
+    const rem=Math.ceil(state.waitBoostEnd-state.elapsed);
+    qa.classList.add('boosted');
+    badge.style.display='block';
+    badge.textContent=`${state.waitBoostEmoji} ${rem}s`;
+  } else {
+    qa.classList.remove('boosted');
+    badge.style.display='none';
+  }
+}
+function updateSoftStartBanner(){
+  const banner=document.getElementById('softstart-banner');if(!banner)return;
+  const inSoft=state.elapsed<CONFIG.SOFT_START_DURATION;
+  if(inSoft){
+    const rem=Math.ceil(CONFIG.SOFT_START_DURATION-state.elapsed);
+    banner.style.display='block';
+    banner.textContent=`🟢 慢速開局 — 生成速度減半，還剩 ${rem}s`;
+  } else {
+    if(banner.style.display!=='none'){
+      banner.style.display='none';
+      mcSay('soft_end');
+    }
+  }
+}
+
+// ════════════════════════════════════
+//  UTILS
+// ════════════════════════════════════
+function renderTitleAch(){
+  const titleAch=document.getElementById('title-ach-list');
+  if(!titleAch||typeof ACHIEVEMENTS==='undefined')return;
+  const unlocked=loadAchievements();
+  titleAch.innerHTML=Object.values(ACHIEVEMENTS).map(a=>{
+    const done=unlocked[a.id];
+    const s=done&&a.id==='rainbow'?'animation:rainbow-glow 2s linear infinite':'';
+    return `<span title="${done?a.name:'???'}" style="font-size:18px;${done?s:'opacity:0.3'}">${done?a.emoji:'❓'}</span>`;
+  }).join('');
+}
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');lastTick=Date.now();
+  if(id==='screen-title'){
+    renderGlobalLeaderboard('global-lb-title',undefined,5);
+    renderTitleAch();
+  }
+}
+function showScorePop(txt,color){
+  const el=document.createElement('div');el.className='score-pop';el.textContent=txt;el.style.color=color;
+  const ar=document.getElementById('urinals-area');if(!ar)return;
+  const r=ar.getBoundingClientRect();
+  el.style.left=(r.left+r.width/2+(Math.random()-.5)*100)+'px';
+  el.style.top=(r.top+r.height/3)+'px';
+  document.body.appendChild(el);setTimeout(()=>el.remove(),900);
+}
+function showPeakBanner(){
+  const el=document.createElement('div');el.className='peak-banner';el.textContent='⚠ 高峰期！';
+  document.body.appendChild(el);setTimeout(()=>el.remove(),3000);
+  playSFX('peak');
+}
+function notify(msg,color='var(--accent)'){
+  const el=document.createElement('div');el.className='notify-banner';el.textContent=msg;
+  el.style.background=color==='var(--danger)'?'rgba(255,51,85,.9)':color==='var(--warn)'?'rgba(255,184,0,.9)':color==='var(--success)'?'rgba(0,229,160,.9)':'rgba(192,132,252,.9)';
+  el.style.color='#000';
+  document.body.appendChild(el);setTimeout(()=>el.remove(),2400);
+}
+renderHistory();
+</script>
+</body>
+</html>
