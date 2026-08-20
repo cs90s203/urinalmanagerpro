@@ -2,7 +2,7 @@
 
 A fast-paced, single-file HTML5 management game where you run a public restroom under increasing chaos. Assign customers to urinals, keep them clean, manage the queue, and survive escalating waves of... very impatient people.
 
-**[▶ Play now](https://s90s203.github.io/urinalmanagerpro/)**
+**[▶ Play now](https://cs90s203.github.io/urinalmanagerpro/)**
 
 ## Gameplay
 
