@@ -1,6 +1,10 @@
 # CHANGELOG — 尿斗管理大師
 
-## v5.3.1（目前穩定版）
+## v5.3.2（目前穩定版）
+- **安全性修正（儲存型 XSS）**：全球排行榜 `renderGlobalLeaderboard()` 把玩家送出的 `name`/`score`/`money`/`playTime`/`date` 未經跳脫直接塞進 `innerHTML`。Firebase Realtime Database 的 write 規則 `!data.exists()` 只擋「覆蓋既有資料」，擋不住「新增任意內容」，任何人可不經遊戲畫面直接對資料庫寫入惡意 HTML，之後每個打開排行榜的玩家都會執行到——新增 `escapeHtml()`，五個欄位全部跳脫後才插入樣板
+- 建議另外收緊 Firebase Realtime Database 的 `.validate` 規則（限制 name 長度、score 數值範圍），需要在 Firebase Console 手動設定，不在程式碼範圍內
+
+## v5.3.1
 - **Bug fix**：加馬桶等道具在「折扣後價格 < 原價」情境下（例如加馬桶首購五折）無法拖曳安裝——`startItemDrag()` 誤用未打折的 `def.price` 判斷能不能拖，跟按下當下用的 `effectivePrice(def)` 不一致，改成統一用 `effectivePrice(def)`
 - **Bug fix**：手機瀏覽器拖曳道具/客人到便斗時，偶發被系統原生滾動手勢搶走，導致拖曳失敗——`.shop-card`、`.cc` 加上 `touch-action:none`，從 CSS 層面阻止瀏覽器把觸控當滾動處理
 - 移除已停用的 GA4 追蹤碼（含文件內殘留說明）
